@@ -97,5 +97,5 @@ On `No milestone <project>/<n> on <server>.`, check the project's slug and the m
 | `end_goal` | 1–10 000 characters |
 | `milestones` | 1–50, each `title` 1–200 characters |
 | `repos` | 1–10 per milestone, no repeats, each `^[a-z0-9][a-z0-9._-]{0,99}$` |
-| `spec` | optional at creation; 1–100 000 characters, UTF-8, no NUL |
+| `spec` | optional at creation; 1–100 000 characters, not blank, UTF-8, no NUL |
 | `canvas_url`, `design_url` | optional; `https://` followed by no spaces, up to 2 000 characters |

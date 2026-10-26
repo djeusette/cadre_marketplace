@@ -71,7 +71,7 @@ class SkillTest < Minitest::Test
   end
 
   def test_limits_name_the_spec_and_link_rules
-    ["100 000", "https://", "2 000"].each { |text| assert_includes skill, text }
+    ["100 000", "not blank", "https://", "2 000"].each { |text| assert_includes skill, text }
   end
 
   def test_it_turns_the_spec_into_bare_repo_names
