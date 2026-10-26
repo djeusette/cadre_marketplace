@@ -24,7 +24,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.3.0", manifest["version"]
+    assert_equal "0.4.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -52,9 +52,10 @@ class SkillTest < Minitest::Test
 
   def test_it_installs_the_cli_from_the_release_at_the_minimum_version
     assert_includes skill, INSTALL
-    assert_includes skill, "below `0.3.0`"
+    assert_includes skill, "below `0.4.0`"
     refute_includes skill, "0.1.0"
     refute_includes skill, "below `0.2.0`"
+    refute_includes skill, "below `0.3.0`"
   end
 
   def test_it_writes_a_spec_and_designs_for_every_milestone
@@ -67,8 +68,20 @@ class SkillTest < Minitest::Test
     ["update the spec of", "cadre spec push <project>/<n> <file> --json", "No milestone"].each { |text| assert_includes skill, text }
   end
 
-  def test_it_asks_before_replacing_a_spec
-    ["replaces it on the page", "ask the person before pushing"].each { |text| assert_includes skill, text }
+  def update_section = skill[/^## Update a milestone's spec\n(.*?)(?=^## )/m, 1]
+
+  def test_it_pulls_a_spec_edits_it_and_pushes_it_with_its_base
+    ["cadre spec pull <project>/<n> -o <file> --json", "--base <version>", "has no spec yet.", "changed since you pulled it. Pull it again.", "previous version", "pull again first"].each do |text|
+      assert_includes update_section, text
+    end
+  end
+
+  def test_it_no_longer_asks_before_replacing_a_spec
+    ["nothing shows it yet", "ask the person before pushing"].each { |text| refute_includes skill, text }
+  end
+
+  def test_updating_a_spec_names_no_colette_skill
+    refute_includes update_section, "colette:"
   end
 
   def test_limits_name_the_spec_and_link_rules

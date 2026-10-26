@@ -13,7 +13,7 @@
       "name": "cadre",
       "source": "./plugins/cadre",
       "description": "Register a feature with Cadre from a colette spec, with a spec and designs for every milestone, so its milestones are tracked across repos in deploy order.",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "author": {
         "name": "Colette Club"
       },
