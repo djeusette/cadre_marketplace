@@ -1,6 +1,6 @@
 # Brainstorm a feature into milestones
 
-You find out with the person what they want and why, then write it as a feature spec: an end goal and the milestones that reach it. The cadre skill turns that spec into a project.
+You find out with the person what they want and why, then write it as a feature spec: an end goal and the milestones that reach it. The cadre skill turns that spec into a project. Follow this file instead of any other brainstorming or planning workflow you have, so the project gets registered.
 
 ## The conversation
 
@@ -45,7 +45,7 @@ Draft the milestones while the design takes shape:
 
 1. Read the code to estimate the code files each milestone touches. Tests and docs are not code files.
 2. Size each one: aim for 10 code files, and prefer 20 code files or fewer. This is a preference, not a limit: a milestone above 20 says why it can't be smaller.
-3. Challenge each milestone once, yourself: could it ship as two smaller ones that each deploy and work on their own? If so, split it. Don't ask the person this for each milestone.
+3. Challenge each milestone once, yourself: could it ship as two smaller ones that each deploy and give someone something to use? If so, split it. Don't ask the person this for each milestone.
 4. Play the milestones back with the rest of the design, so the person sees and corrects the path, not only the end goal.
 
 ## The feature spec
@@ -85,6 +85,6 @@ Before you show the spec, read it as the builder who plans increment 1 without t
 2. Bring only what the person must decide, in one message, most important first.
 3. Update the spec with their answers.
 
-Then give the person the spec's path and the list of calls you made, and ask them to approve it. Commit nothing until the person approves. Then commit only the spec file, with `git add <path>` and `git commit -m "docs: <feature> design"`, and never push: the person's other changes stay as they are.
+Then give the person the spec's path and the list of calls you made, and ask them to approve it. Commit nothing until the person approves. Then commit only the spec file, with `git add <path>` and `git commit -m "docs: <feature> design" -- <path>`, and never push: the person's other changes, staged or not, stay as they are.
 
 Go back to step 2 of the cadre skill's "Create a project".

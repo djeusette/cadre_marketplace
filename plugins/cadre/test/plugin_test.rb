@@ -121,6 +121,14 @@ class SkillTest < Minitest::Test
     assert_includes json, "Members get a reminder before a wish expires"
   end
 
+  def test_a_corrected_spec_is_committed_alone_or_left_to_the_person
+    ['git commit -m "docs: <feature> design" -- <path>', "leave the commit to them"].each { |text| assert_includes create_section, text }
+  end
+
+  def test_no_skill_file_pushes_or_commits_everything
+    skill_files.each { |path| refute_match(/git (push|commit -a|add (\.|-A))/, File.read(path), path) }
+  end
+
   def test_limits_name_the_spec_and_link_rules
     ["100 000", "not blank", "https://", "2 000"].each { |text| assert_includes skill, text }
   end
@@ -175,6 +183,18 @@ class BrainstormTest < Minitest::Test
   def test_skipping_the_questions_leaves_one_approval_before_the_commit
     skip_path = brainstorm[/^When the person says to skip the questions(.*?)$/, 1]
     ["mark every open point as your call", "approve the spec"].each { |text| assert_includes skip_path, text }
+  end
+
+  def test_it_commits_only_the_spec_file
+    assert_includes brainstorm, 'git commit -m "docs: <feature> design" -- <path>'
+  end
+
+  def test_it_hands_back_to_the_cadre_skill_instead_of_another_workflow
+    ["instead of any other brainstorming or planning workflow", "Go back to step 2"].each { |text| assert_includes brainstorm, text }
+  end
+
+  def test_the_split_challenge_keeps_each_part_usable
+    assert_includes brainstorm, "two smaller ones that each deploy and give someone something to use"
   end
 
   def test_it_writes_and_commits_the_feature_spec
