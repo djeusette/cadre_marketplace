@@ -1,6 +1,6 @@
 ---
 name: cadre
-description: Use when the person asks to register, create or track a project, feature or milestones in Cadre, to write or update a milestone's spec in Cadre ("update the spec of <project>/<n>"), or to sign in to Cadre.
+description: Use when the person asks to register, create or track a project, feature or milestones in Cadre, to read, write or update a milestone's spec in Cadre ("update the spec of <project>/<n>"), or to sign in to Cadre.
 ---
 
 # Cadre
@@ -14,7 +14,7 @@ Cadre shows where every milestone of a feature stands, on every repo, in deploy 
 
 ## Install or update the CLI
 
-Run `cadre version`. When the command is missing or reports a version below `0.3.0`, run:
+Run `cadre version`. When the command is missing or reports a version below `0.4.0`, run:
 
 ```bash
 mkdir -p ~/.local/bin
@@ -81,12 +81,17 @@ A milestone's spec is markdown that starts with `# <name> <n>: <title>`, for exa
 
 ## Update a milestone's spec
 
-When the person asks to "update the spec of `<project>/<n>`", for example because a card in Cadre says "No spec or designs yet":
+When the person asks to "update the spec of `<project>/<n>`", for example because a card in Cadre says "No spec or designs yet", or because an earlier milestone taught something:
 
-1. Find the feature spec in `docs/superpowers/specs/`, and write the milestone's spec as above into a temporary `.md` file. A push changes only the spec: a design link is set when the project is created.
-2. When the milestone already has a spec (its card in Cadre says `Spec · updated by …`, or its line says `spec ready`), say that the push replaces it on the page, and ask the person before pushing: Cadre keeps the earlier version, but nothing shows it yet.
-3. Run `cadre spec push <project>/<n> <file> --json`. Cadre keeps the file exactly as written, as the milestone's newest spec; earlier versions stay.
-4. Report the `url` field of the JSON body.
+1. Pull the spec into a temporary `.md` file: `cadre spec pull <project>/<n> -o <file> --json`. Keep the JSON's `version` and `updated_by`. The file holds the spec exactly as Cadre stores it.
+2. On `<project>/<n> has no spec yet.`, nothing is written: write the milestone's spec into the file as the section above says, then push it without a base, `cadre spec push <project>/<n> <file> --json`, and go to step 5.
+3. Otherwise edit the pulled file with the person: what they asked for, and what earlier milestones taught. Keep its title line and its sections. A push changes only the spec: a design link is set when the project is created.
+4. Push it with the version you pulled as its base: `cadre spec push <project>/<n> <file> --base <version> --json`. Cadre keeps the file exactly as written, as the milestone's newest spec.
+5. Report the `url` field of the JSON body and the change in one or two lines. The milestone's card in Cadre now offers the text the push replaced as its previous version.
+
+On `The spec of <project>/<n> changed since you pulled it. Pull it again.`, someone pushed after your pull. Pull again, tell the person who (`updated_by`), apply the same edit to the new text, and push with the new `version`. For a further change after a push, pull again first: each push needs the newest `version` as its base.
+
+To show the person a spec, run `cadre spec pull <project>/<n>` and show what it prints.
 
 On `No milestone <project>/<n> on <server>.`, check the project's slug and the milestone's number with the person. On `spec: …`, the file broke a limit below: fix it and push again. On `Your key for <url> is no longer valid. Run cadre login --url <url>.`, go back to Sign in, then push again.
 
