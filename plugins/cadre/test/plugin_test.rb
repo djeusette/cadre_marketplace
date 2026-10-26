@@ -10,10 +10,21 @@ class ManifestTest < Minitest::Test
   def marketplace = JSON.parse(File.read(File.join(ROOT, ".claude-plugin", "marketplace.json")))
   def entry = marketplace.fetch("plugins").find { |plugin| plugin["name"] == "cadre" }
 
-  def test_plugin_depends_on_colette_from_the_colette_marketplace
+  def test_plugin_depends_on_no_other_plugin
     assert_equal "cadre", manifest["name"]
-    assert_equal ["colette@colette-club"], manifest["dependencies"]
-    assert_equal ["colette-club"], marketplace["allowCrossMarketplaceDependenciesOn"]
+    refute manifest.key?("dependencies")
+    refute marketplace.key?("allowCrossMarketplaceDependenciesOn")
+  end
+
+  def test_manifests_name_colette_only_as_the_author
+    refute_match(/colette/i, JSON.generate(manifest.except("author")))
+    refute_match(/colette/i, JSON.generate(marketplace.merge("plugins" => marketplace["plugins"].map { |plugin| plugin.except("author") })))
+  end
+
+  def test_readme_installs_cadre_alone
+    readme = File.read(File.join(ROOT, "README.md"))
+    ["/plugin marketplace add djeusette/cadre_marketplace", "/plugin install cadre@cadre", "needs no other plugin"].each { |text| assert_includes readme, text }
+    refute_match(/colette/i, readme.sub("(https://colette-cadre.fly.dev)", ""))
   end
 
   def test_marketplace_is_cadre_and_links_its_repo
@@ -24,7 +35,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.5.0", manifest["version"]
+    assert_equal "0.6.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -80,8 +91,42 @@ class SkillTest < Minitest::Test
     ["nothing shows it yet", "ask the person before pushing"].each { |text| refute_includes skill, text }
   end
 
-  def test_updating_a_spec_names_no_colette_skill
-    refute_includes update_section, "colette:"
+  def skill_files = Dir[File.join(PLUGIN, "skills", "**", "*")].select { |path| File.file?(path) }
+  def create_section = skill[/^## Create a project\n(.*?)(?=^## )/m, 1]
+
+  def test_no_skill_file_names_colette
+    skill_files.each { |path| refute_match(/colette/i, File.read(path), path) }
+  end
+
+  def test_no_skill_file_calls_another_plugin
+    skill_files.each { |path| refute_match(/`[a-z][a-z0-9-]*:[a-z][a-z0-9-]*`|\bEP-[A-Z]\d/, File.read(path), path) }
+  end
+
+  def test_creating_a_project_brainstorms_with_the_plugins_own_workflow
+    assert_includes create_section, "[brainstorm.md](brainstorm.md)"
+    refute_match(/available skills|must be installed/, skill)
+  end
+
+  def test_it_builds_from_a_spec_the_person_names
+    ["already has an `## End goal` and an `## Increments` section", "Never pick a spec on your own"].each { |text| assert_includes create_section, text }
+  end
+
+  def test_nothing_is_registered_before_the_person_approves
+    assert_operator create_section.index("Register nothing until the person approves"), :<, create_section.index("cadre project create <file> --json")
+  end
+
+  def test_its_example_milestones_are_usable_slices_not_layers
+    json = skill[/```json\n(.*?)```/m, 1]
+    refute_includes json, "The API stores a reminder date"
+    assert_includes json, "Members get a reminder before a wish expires"
+  end
+
+  def test_a_corrected_spec_is_committed_alone_or_left_to_the_person
+    ['git commit -m "docs: <feature> design" -- <path>', "leave the commit to them"].each { |text| assert_includes create_section, text }
+  end
+
+  def test_no_skill_file_pushes_or_commits_everything
+    skill_files.each { |path| refute_match(/git (push|commit -a|add (\.|-A))/, File.read(path), path) }
   end
 
   def test_limits_name_the_spec_and_link_rules
@@ -89,7 +134,7 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_turns_the_spec_into_bare_repo_names
-    ["bare", "not `colette-club/colette-api`", "gh repo view --json name -q .name", "A file path is never a repo", "ask when unsure"].each { |text| assert_includes skill, text }
+    ["bare", "not `acme/shop-api`", "gh repo view --json name -q .name", "A file path is never a repo", "ask when unsure"].each { |text| assert_includes skill, text }
   end
 
   def test_it_handles_a_key_that_stops_working
@@ -119,5 +164,43 @@ end
     ["Signed in as <email>.", "Not signed in. Run cadre login --url <url>.", "Your key for <url> is no longer valid. Run cadre login --url <url>.", "The code expired. Run cadre login --url <url> again.", "--url must be an http:// or https:// URL with a host"].each do |text|
       assert_includes skill, text
     end
+  end
+end
+
+class BrainstormTest < Minitest::Test
+  def brainstorm = File.read(File.join(PLUGIN, "skills", "cadre", "brainstorm.md"))
+
+  def test_it_asks_one_question_at_a_time_and_plays_back
+    ["skip the questions", "one question", "Play back", "what's wrong or missing"].each { |text| assert_includes brainstorm, text }
+  end
+
+  def test_a_milestone_is_the_smallest_step_that_ships_one_feature_and_deploys_alone
+    ["one feature", "smallest step", "previous version still runs", "out of users' reach", "a rollback loses no data",
+     "installed mobile app versions", "deploy order", "never on a later one", "aim for 10", "20 code files",
+     "two smaller", "never invent a split"].each { |text| assert_includes brainstorm, text }
+  end
+
+  def test_skipping_the_questions_leaves_one_approval_before_the_commit
+    skip_path = brainstorm[/^When the person says to skip the questions(.*?)$/, 1]
+    ["mark every open point as your call", "approve the spec"].each { |text| assert_includes skip_path, text }
+  end
+
+  def test_it_commits_only_the_spec_file
+    assert_includes brainstorm, 'git commit -m "docs: <feature> design" -- <path>'
+  end
+
+  def test_it_hands_back_to_the_cadre_skill_instead_of_another_workflow
+    ["instead of any other brainstorming or planning workflow", "Go back to step 2"].each { |text| assert_includes brainstorm, text }
+  end
+
+  def test_the_split_challenge_keeps_each_part_usable
+    assert_includes brainstorm, "two smaller ones that each deploy and give someone something to use"
+  end
+
+  def test_it_writes_and_commits_the_feature_spec
+    ["docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md", "`-2`", "## End goal", "## Increments", "### Increment <i> — ",
+     "**Delivers:**", "**Deployable alone:**", "**Consumers:**", "**Code files:**",
+     "until the person approves", "commit only the spec file", "never push"].each { |text| assert_includes brainstorm, text }
+    refute_includes brainstorm, "Not shipped"
   end
 end

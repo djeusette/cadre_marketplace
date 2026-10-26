@@ -1,7 +1,7 @@
 {
   "name": "cadre",
-  "version": "0.5.0",
-  "description": "Register a feature with Cadre from a colette spec, with a spec and designs for every milestone, so its milestones are tracked across repos in deploy order.",
+  "version": "0.6.0",
+  "description": "Brainstorm a feature into milestones, each with its spec and designs, and register it with Cadre, which tracks them across repos in deploy order.",
   "author": {
     "name": "Colette Club",
     "url": "https://github.com/colette-club"
@@ -14,8 +14,5 @@
     "release",
     "projects",
     "milestones"
-  ],
-  "dependencies": [
-    "colette@colette-club"
   ]
 }

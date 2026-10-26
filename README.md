@@ -4,10 +4,7 @@ Claude Code plugins for [Cadre](https://colette-cadre.fly.dev), which shows wher
 
 ## Use it
 
-The `cadre` plugin needs the `colette` plugin from colette-club/colette-marketplace, so add both marketplaces:
-
 ```
-/plugin marketplace add colette-club/colette-marketplace
 /plugin marketplace add djeusette/cadre_marketplace
 /plugin install cadre@cadre
 ```
@@ -16,13 +13,16 @@ Or commit them to a repo's `.claude/settings.json` so the whole team gets them a
 
 ## Plugins
 
-- **cadre** — registers a feature with Cadre from a colette spec: one milestone per
-  increment, each with its repos in deploy order, its own spec and a page in the
-  project's Claude Design canvas. Asked to "update the spec of <project>/<n>", it pulls
+- **cadre** — registers a feature with Cadre. Asked to "create a cadre project", it
+  brainstorms the feature with the person, one question at a time, into an end goal and
+  milestones, each the smallest step that ships one feature and deploys on its own. It
+  commits that feature spec, or builds from one the person names, then registers one
+  milestone per increment, each with its repos in deploy order, its own spec and a page in
+  the project's Claude Design canvas. Asked to "update the spec of <project>/<n>", it pulls
   the spec with `cadre spec pull`, edits it with the person, and pushes it back with
   `cadre spec push --base`, so an edit never replaces a newer one. It installs the `cadre` CLI from its
   GitHub release (needs `gh`) and updates it with `cadre upgrade`, signs the person in through the browser to the Cadre URL they give, and reports the
-  project's URL. It needs the `colette` plugin.
+  project's URL. It needs no other plugin.
 
 ## Development
 

@@ -5,12 +5,11 @@ description: Use when the person asks to register, create or track a project, fe
 
 # Cadre
 
-Cadre shows where every milestone of a feature stands, on every repo, in deploy order. You register a project there from a colette spec with the `cadre` CLI: one milestone per spec increment, each with the repos it touches, its own spec and a link to its designs.
+Cadre shows where every milestone of a feature stands, on every repo, in deploy order. You register a project there from the feature's spec with the `cadre` CLI: one milestone per increment of the spec, each with the repos it touches, its own spec and a link to its designs. When the feature has no spec yet, you brainstorm it with the person first.
 
 ## Before you start
 
-1. Check that `colette:brainstorming` is among your available skills. When it is missing, say the `colette` plugin must be installed and enabled, and stop.
-2. Run `gh auth status`. When it fails, tell the person to run `gh auth login`, and stop. The CLI is downloaded with `gh`.
+Run `gh auth status`. When it fails, tell the person to run `gh auth login`, and stop. The CLI is downloaded with `gh`.
 
 ## Install or update the CLI
 
@@ -39,16 +38,19 @@ The person never types or copies a key.
 
 ## Create a project
 
-1. Find the spec of the feature in `docs/superpowers/specs/`. When there is none, run `colette:brainstorming` first and come back with its spec.
+1. Get the feature's spec:
+   - When the person names a spec that already has an `## End goal` and an `## Increments` section, build from it, without the questions.
+   - Never pick a spec on your own: when one in `docs/superpowers/specs/` might be this feature, ask the person whether it is.
+   - Otherwise, read [brainstorm.md](brainstorm.md) and brainstorm the feature with the person as it says. It ends with the spec committed.
 2. Build the project from the spec:
    - `name`: the spec's title without ` — design`.
    - `slug`: the name in kebab case, lowercase letters and digits only.
    - `end_goal`: the text of the End goal section.
    - `milestones`: one per `### Increment`, in spec order, its `title` the increment's title. Its `repos` are the repositories the increment changes, in deploy order: the order the spec's Consumers and deploy-order lines give, the repo that must deploy first listed first.
-   Repo names are bare, `colette-api` and not `colette-club/colette-api`, and match the limits below. The current repository (`gh repo view --json name -q .name`) is a repo of every increment whose Code files live in it. A file path is never a repo. Consumers can say "none".
-3. Play the repos of each milestone back, and ask the person once to confirm them. Take a repo name only from the spec or from the person, and ask when unsure.
-4. Design every milestone: create one Claude Design canvas for the project, with one page per milestone. A milestone without a screen gets a diagram as its page instead: its data flow or its API contract. Keep the canvas link and each page's link.
-5. Write one spec per milestone, as the next section describes.
+   Repo names are bare, `shop-api` and not `acme/shop-api`, and match the limits below. The current repository (`gh repo view --json name -q .name`) is a repo of every increment whose Code files live in it. A file path is never a repo. Consumers can say "none".
+3. Design every milestone: create one Claude Design canvas for the project, with one page per milestone. A milestone without a screen gets a diagram as its page instead: its data flow or its API contract. Keep the canvas link and each page's link.
+4. Write one spec per milestone, as the next section describes.
+5. Play every milestone back one last time, as it will be registered: its title, its repos in deploy order, its consumers, what it delivers and its design link. Take a repo name only from the spec or from the person, and ask when unsure. Register nothing until the person approves them. Fix what they correct first. When a correction changes the feature spec, update the spec. If the brainstorm committed it, commit only that file again with `git commit -m "docs: <feature> design" -- <path>`, and never push. If the person named it, leave the commit to them.
 6. Add them to the project: `canvas_url` is the canvas link and, per milestone, `spec` is its markdown and `design_url` the link to its page in the canvas, or the canvas link when there is no page link.
 7. Write the JSON to a temporary file and run `cadre project create <file> --json`.
    When it prints `Your key for <url> is no longer valid. Run cadre login --url <url>.`, go back to Sign in, then run it again.
@@ -59,18 +61,18 @@ The person never types or copies a key.
 {
   "name": "Wish reminders",
   "slug": "wish-reminders",
-  "end_goal": "Members get a reminder before a wish expires.",
+  "end_goal": "Members never miss a wish that is about to expire.",
   "milestones": [
     {
-      "title": "The API stores a reminder date",
-      "repos": ["colette-api"],
-      "spec": "# Wish reminders 1: The API stores a reminder date\n\n...",
+      "title": "Members get a reminder before a wish expires",
+      "repos": ["shop-api"],
+      "spec": "# Wish reminders 1: Members get a reminder before a wish expires\n\n...",
       "design_url": "https://claude.ai/design/p/…?page=1"
     },
     {
-      "title": "The app lets members set it",
-      "repos": ["colette-api", "club-mobile"],
-      "spec": "# Wish reminders 2: The app lets members set it\n\n...",
+      "title": "Members choose when they are reminded",
+      "repos": ["shop-api", "shop-mobile"],
+      "spec": "# Wish reminders 2: Members choose when they are reminded\n\n...",
       "design_url": "https://claude.ai/design/p/…?page=2"
     }
   ],
@@ -80,7 +82,7 @@ The person never types or copies a key.
 
 ## Write a milestone's spec
 
-A milestone's spec is markdown that starts with `# <name> <n>: <title>`, for example `# Wish reminders 2: The app lets members set it`. Then it gives that increment's Delivers, Deployable alone, Consumers and Code files from the feature spec, and whatever the feature spec's other sections say about this milestone: its screens, data, API, rules and errors. It has no `## Increments` section and no `- [ ] Not shipped` line.
+A milestone's spec is markdown that starts with `# <name> <n>: <title>`, for example `# Wish reminders 2: Members choose when they are reminded`. Then it gives that increment's Delivers, Deployable alone, Consumers and Code files from the feature spec, and whatever the feature spec's other sections say about this milestone: its screens, data, API, rules and errors. It has no `## Increments` section and no `- [ ] Not shipped` line.
 
 ## Update a milestone's spec
 
