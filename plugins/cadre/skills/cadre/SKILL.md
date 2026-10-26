@@ -1,11 +1,11 @@
 ---
 name: cadre
-description: Use when the person asks to register, create or track a project, feature or milestones in Cadre, or to sign in to Cadre.
+description: Use when the person asks to register, create or track a project, feature or milestones in Cadre, to write or update a milestone's spec in Cadre ("update the spec of <project>/<n>"), or to sign in to Cadre.
 ---
 
 # Cadre
 
-Cadre shows where every milestone of a feature stands, on every repo, in deploy order. You register a project there from a colette spec with the `cadre` CLI: one milestone per spec increment, each with the repos it touches.
+Cadre shows where every milestone of a feature stands, on every repo, in deploy order. You register a project there from a colette spec with the `cadre` CLI: one milestone per spec increment, each with the repos it touches, its own spec and a link to its designs.
 
 ## Before you start
 
@@ -14,7 +14,7 @@ Cadre shows where every milestone of a feature stands, on every repo, in deploy 
 
 ## Install or update the CLI
 
-Run `cadre version`. When the command is missing or reports a version below `0.1.0`, run:
+Run `cadre version`. When the command is missing or reports a version below `0.2.0`, run:
 
 ```bash
 mkdir -p ~/.local/bin
@@ -42,10 +42,13 @@ The person never types or copies a key.
    - `milestones`: one per `### Increment`, in spec order, its `title` the increment's title. Its `repos` are the repositories the increment changes, in deploy order: the order the spec's Consumers and deploy-order lines give, the repo that must deploy first listed first.
    Repo names are bare, `colette-api` and not `colette-club/colette-api`, and match the limits below. The current repository (`gh repo view --json name -q .name`) is a repo of every increment whose Code files live in it. A file path is never a repo. Consumers can say "none".
 3. Play the repos of each milestone back, and ask the person once to confirm them. Take a repo name only from the spec or from the person, and ask when unsure.
-4. Write the JSON to a temporary file and run `cadre project create <file> --json`.
+4. Design every milestone: create one Claude Design canvas for the project, with one page per milestone. A milestone without a screen gets a diagram as its page instead: its data flow or its API contract. Keep the canvas link and each page's link.
+5. Write one spec per milestone, as the next section describes.
+6. Add them to the project: `canvas_url` is the canvas link and, per milestone, `spec` is its markdown and `design_url` the link to its page in the canvas, or the canvas link when there is no page link.
+7. Write the JSON to a temporary file and run `cadre project create <file> --json`.
    When it prints `Your key is no longer valid. Run cadre login.`, go back to Sign in, then run it again.
-5. On a `422`, the CLI prints one `<path>: <message>` line per error, for example `milestones.1.repos.0: …`. Fix the fields those paths name, then run the command again. Error paths are 0-based positions in the JSON arrays: `milestones.1.repos.0` is the first repo of the second milestone, while milestone numbers shown elsewhere start at 1.
-6. Report the `url` field of the JSON body the command printed.
+8. On a `422`, the CLI prints one `<path>: <message>` line per error, for example `milestones.1.repos.0: …`. Fix the fields those paths name, then run the command again. Error paths are 0-based positions in the JSON arrays: `milestones.1.repos.0` is the first repo of the second milestone, while milestone numbers shown elsewhere start at 1.
+9. Report the `url` field of the JSON body the command printed, and remind the person to share the canvas with the team: you can't change its sharing.
 
 ```json
 {
@@ -53,11 +56,37 @@ The person never types or copies a key.
   "slug": "wish-reminders",
   "end_goal": "Members get a reminder before a wish expires.",
   "milestones": [
-    {"title": "The API stores a reminder date", "repos": ["colette-api"]},
-    {"title": "The app lets members set it", "repos": ["colette-api", "club-mobile"]}
-  ]
+    {
+      "title": "The API stores a reminder date",
+      "repos": ["colette-api"],
+      "spec": "# Wish reminders 1: The API stores a reminder date\n\n...",
+      "design_url": "https://claude.ai/design/p/…?page=1"
+    },
+    {
+      "title": "The app lets members set it",
+      "repos": ["colette-api", "club-mobile"],
+      "spec": "# Wish reminders 2: The app lets members set it\n\n...",
+      "design_url": "https://claude.ai/design/p/…?page=2"
+    }
+  ],
+  "canvas_url": "https://claude.ai/design/p/…"
 }
 ```
+
+## Write a milestone's spec
+
+A milestone's spec is markdown that starts with `# <name> <n>: <title>`, for example `# Wish reminders 2: The app lets members set it`. Then it gives that increment's Delivers, Deployable alone, Consumers and Code files from the feature spec, and whatever the feature spec's other sections say about this milestone: its screens, data, API, rules and errors. It has no `## Increments` section and no `- [ ] Not shipped` line.
+
+## Update a milestone's spec
+
+When the person asks to "update the spec of `<project>/<n>`", for example because a card in Cadre says "No spec or designs yet":
+
+1. Find the feature spec in `docs/superpowers/specs/`, and write the milestone's spec as above into a temporary `.md` file. A push changes only the spec: a design link is set when the project is created.
+2. When the milestone already has a spec (its card in Cadre says `Spec · updated by …`, or its line says `spec ready`), say that the push replaces it on the page, and ask the person before pushing: Cadre keeps the earlier version, but nothing shows it yet.
+3. Run `cadre spec push <project>/<n> <file> --json`. Cadre keeps the file exactly as written, as the milestone's newest spec; earlier versions stay.
+4. Report the `url` field of the JSON body.
+
+On `No milestone <project>/<n> on <server>.`, check the project's slug and the milestone's number with the person. On `spec: …`, the file broke a limit below: fix it and push again. On `Your key is no longer valid. Run cadre login.`, go back to Sign in, then push again.
 
 ## Limits
 
@@ -68,3 +97,5 @@ The person never types or copies a key.
 | `end_goal` | 1–10 000 characters |
 | `milestones` | 1–50, each `title` 1–200 characters |
 | `repos` | 1–10 per milestone, no repeats, each `^[a-z0-9][a-z0-9._-]{0,99}$` |
+| `spec` | optional at creation; 1–100 000 characters, not blank, UTF-8, no NUL |
+| `canvas_url`, `design_url` | optional; `https://` followed by no spaces, up to 2 000 characters |

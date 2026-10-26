@@ -24,7 +24,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.1.1", manifest["version"]
+    assert_equal "0.2.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -52,7 +52,26 @@ class SkillTest < Minitest::Test
 
   def test_it_installs_the_cli_from_the_release_at_the_minimum_version
     assert_includes skill, INSTALL
-    assert_includes skill, "0.1.0"
+    assert_includes skill, "below `0.2.0`"
+    refute_includes skill, "0.1.0"
+  end
+
+  def test_it_writes_a_spec_and_designs_for_every_milestone
+    json = skill[/```json\n(.*?)```/m, 1]
+    ["\"canvas_url\"", "\"design_url\"", "\"spec\""].each { |key| assert_includes json, key }
+    ["one Claude Design canvas", "one page per milestone", "diagram", "share the canvas"].each { |text| assert_includes skill, text }
+  end
+
+  def test_it_pushes_a_missing_spec_when_asked
+    ["update the spec of", "cadre spec push <project>/<n> <file> --json", "No milestone"].each { |text| assert_includes skill, text }
+  end
+
+  def test_it_asks_before_replacing_a_spec
+    ["replaces it on the page", "ask the person before pushing"].each { |text| assert_includes skill, text }
+  end
+
+  def test_limits_name_the_spec_and_link_rules
+    ["100 000", "not blank", "https://", "2 000"].each { |text| assert_includes skill, text }
   end
 
   def test_it_turns_the_spec_into_bare_repo_names
