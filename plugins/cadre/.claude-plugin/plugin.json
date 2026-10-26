@@ -1,6 +1,6 @@
 {
   "name": "cadre",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Brainstorm a feature into milestones, each with its spec and designs, and register it with Cadre, which tracks them across repos in deploy order.",
   "author": {
     "name": "Colette Club",
