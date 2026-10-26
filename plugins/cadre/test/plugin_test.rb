@@ -24,7 +24,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.2.0", manifest["version"]
+    assert_equal "0.3.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -52,8 +52,9 @@ class SkillTest < Minitest::Test
 
   def test_it_installs_the_cli_from_the_release_at_the_minimum_version
     assert_includes skill, INSTALL
-    assert_includes skill, "below `0.2.0`"
+    assert_includes skill, "below `0.3.0`"
     refute_includes skill, "0.1.0"
+    refute_includes skill, "below `0.2.0`"
   end
 
   def test_it_writes_a_spec_and_designs_for_every_milestone
@@ -91,12 +92,18 @@ def test_it_reports_the_json_url_and_explains_zero_based_paths
   refute_includes skill, "Report the URL from"
 end
 
+  def test_it_asks_the_person_for_the_cadre_url
+    ["ask the person for their Cadre URL", "Never guess it", "cadre login --url <url>"].each { |text| assert_includes skill, text }
+    refute_match(/colette-cadre\.fly\.dev|CADRE_URL/, skill)
+    refute_match(/run `cadre login`(?! --url)/, skill)
+  end
+
   def test_it_never_asks_for_a_pasted_key
     refute_match(/paste/i, skill)
   end
 
   def test_it_uses_the_cli_copy
-    ["Signed in as <email>.", "Not signed in. Run cadre login.", "Your key is no longer valid. Run cadre login.", "The code expired. Run cadre login again."].each do |text|
+    ["Signed in as <email>.", "Not signed in. Run cadre login --url <url>.", "Your key for <url> is no longer valid. Run cadre login --url <url>.", "The code expired. Run cadre login --url <url> again.", "--url must be an http:// or https:// URL with a host"].each do |text|
       assert_includes skill, text
     end
   end

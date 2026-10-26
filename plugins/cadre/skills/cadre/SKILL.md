@@ -14,7 +14,7 @@ Cadre shows where every milestone of a feature stands, on every repo, in deploy 
 
 ## Install or update the CLI
 
-Run `cadre version`. When the command is missing or reports a version below `0.2.0`, run:
+Run `cadre version`. When the command is missing or reports a version below `0.3.0`, run:
 
 ```bash
 mkdir -p ~/.local/bin
@@ -27,8 +27,10 @@ Then run `cadre version` again. When the command is still missing, `~/.local/bin
 
 Run `cadre whoami --json`. It succeeds when the exit code is 0 and the JSON holds an `email`.
 
-- `Not signed in. Run cadre login.` or `Your key is no longer valid. Run cadre login.`: run `cadre login`. It waits up to 10 minutes for the person to click **Allow**, but the Bash tool stops a command after 2 minutes by default and shows no output until the command exits. So run it in the background (Bash `run_in_background`), or with a `timeout` of 600000 ms. Read its first two output lines, `Opening <uri> in your browser.` and `Check that the page shows this code: <code>`, and tell the person the URL and the code: they check that the page shows that code, then click **Allow**. Then wait for the command to exit and read `Signed in as <email>.`
-- `The code expired. Run cadre login again.`: run `cadre login` again.
+- `Not signed in. Run cadre login --url <url>.`: ask the person for their Cadre URL, the address they open Cadre at in their browser, such as `https://cadre.example.com`. Never guess it. Then run `cadre login --url <url>` with it. It waits up to 10 minutes for the person to click **Allow**, but the Bash tool stops a command after 2 minutes by default and shows no output until the command exits. So run it in the background (Bash `run_in_background`), or with a `timeout` of 600000 ms. Read its first two output lines, `Opening <uri> in your browser.` and `Check that the page shows this code: <code>`, and tell the person the URL and the code: they check that the page shows that code, then click **Allow**. Then wait for the command to exit and read `Signed in as <email>.`
+- `Your key for <url> is no longer valid. Run cadre login --url <url>.`: run `cadre login --url <url>` with the URL the message names, as above.
+- `The code expired. Run cadre login --url <url> again.`: run it again with the same URL.
+- `--url must be an http:// or https:// URL with a host, …`: the URL is not a full address; ask the person for it again.
 
 The person never types or copies a key.
 
@@ -46,7 +48,7 @@ The person never types or copies a key.
 5. Write one spec per milestone, as the next section describes.
 6. Add them to the project: `canvas_url` is the canvas link and, per milestone, `spec` is its markdown and `design_url` the link to its page in the canvas, or the canvas link when there is no page link.
 7. Write the JSON to a temporary file and run `cadre project create <file> --json`.
-   When it prints `Your key is no longer valid. Run cadre login.`, go back to Sign in, then run it again.
+   When it prints `Your key for <url> is no longer valid. Run cadre login --url <url>.`, go back to Sign in, then run it again.
 8. On a `422`, the CLI prints one `<path>: <message>` line per error, for example `milestones.1.repos.0: …`. Fix the fields those paths name, then run the command again. Error paths are 0-based positions in the JSON arrays: `milestones.1.repos.0` is the first repo of the second milestone, while milestone numbers shown elsewhere start at 1.
 9. Report the `url` field of the JSON body the command printed, and remind the person to share the canvas with the team: you can't change its sharing.
 
@@ -86,7 +88,7 @@ When the person asks to "update the spec of `<project>/<n>`", for example becaus
 3. Run `cadre spec push <project>/<n> <file> --json`. Cadre keeps the file exactly as written, as the milestone's newest spec; earlier versions stay.
 4. Report the `url` field of the JSON body.
 
-On `No milestone <project>/<n> on <server>.`, check the project's slug and the milestone's number with the person. On `spec: …`, the file broke a limit below: fix it and push again. On `Your key is no longer valid. Run cadre login.`, go back to Sign in, then push again.
+On `No milestone <project>/<n> on <server>.`, check the project's slug and the milestone's number with the person. On `spec: …`, the file broke a limit below: fix it and push again. On `Your key for <url> is no longer valid. Run cadre login --url <url>.`, go back to Sign in, then push again.
 
 ## Limits
 
