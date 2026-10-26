@@ -18,8 +18,9 @@ Or commit them to a repo's `.claude/settings.json` so the whole team gets them a
 
 - **cadre** — registers a feature with Cadre from a colette spec: one milestone per
   increment, each with its repos in deploy order, its own spec and a page in the
-  project's Claude Design canvas. Asked to "update the spec of <project>/<n>", it writes
-  the spec and pushes it with `cadre spec push`. It installs the `cadre` CLI from its
+  project's Claude Design canvas. Asked to "update the spec of <project>/<n>", it pulls
+  the spec with `cadre spec pull`, edits it with the person, and pushes it back with
+  `cadre spec push --base`, so an edit never replaces a newer one. It installs the `cadre` CLI from its
   GitHub release (needs `gh`), signs the person in through the browser to the Cadre URL they give, and reports the
   project's URL. It needs the `colette` plugin.
 
