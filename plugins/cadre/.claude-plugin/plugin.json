@@ -1,0 +1,21 @@
+{
+  "name": "cadre",
+  "version": "0.1.1",
+  "description": "Register a feature with Cadre from a colette spec, so its milestones are tracked across repos in deploy order.",
+  "author": {
+    "name": "Colette Club",
+    "url": "https://github.com/colette-club"
+  },
+  "homepage": "https://github.com/djeusette/cadre_marketplace",
+  "repository": "https://github.com/djeusette/cadre_marketplace",
+  "license": "MIT",
+  "keywords": [
+    "cadre",
+    "release",
+    "projects",
+    "milestones"
+  ],
+  "dependencies": [
+    "colette@colette-club"
+  ]
+}

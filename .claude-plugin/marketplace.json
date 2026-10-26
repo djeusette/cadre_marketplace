@@ -1,0 +1,28 @@
+{
+  "name": "cadre",
+  "description": "Claude Code plugins for Cadre, which shows where every milestone stands, on every repo, in deploy order.",
+  "owner": {
+    "name": "David Jeusette",
+    "url": "https://github.com/djeusette"
+  },
+  "allowCrossMarketplaceDependenciesOn": [
+    "colette-club"
+  ],
+  "plugins": [
+    {
+      "name": "cadre",
+      "source": "./plugins/cadre",
+      "description": "Register a feature with Cadre from a colette spec, so its milestones are tracked across repos in deploy order.",
+      "version": "0.1.1",
+      "author": {
+        "name": "Colette Club"
+      },
+      "keywords": [
+        "cadre",
+        "release",
+        "projects",
+        "milestones"
+      ]
+    }
+  ]
+}
