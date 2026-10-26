@@ -50,12 +50,12 @@ class SkillTest < Minitest::Test
     assert_match(/Use when/, description)
   end
 
-  def test_it_installs_the_cli_from_the_release_at_the_minimum_version
-    assert_includes skill, INSTALL
-    assert_includes skill, "below `0.4.0`"
-    refute_includes skill, "0.1.0"
-    refute_includes skill, "below `0.2.0`"
-    refute_includes skill, "below `0.3.0`"
+  def install_section = skill[/^## Install or update the CLI\n(.*?)(?=^## )/m, 1]
+  
+  def test_it_installs_a_missing_cli_and_upgrades_an_old_one
+    assert_includes install_section, INSTALL
+    ["When the command is missing,", "below `0.5.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
+    ["0.1.0", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`"].each { |text| refute_includes skill, text }
   end
 
   def test_it_writes_a_spec_and_designs_for_every_milestone
@@ -92,8 +92,8 @@ class SkillTest < Minitest::Test
     ["bare", "not `colette-club/colette-api`", "gh repo view --json name -q .name", "A file path is never a repo", "ask when unsure"].each { |text| assert_includes skill, text }
   end
 
-  def test_it_handles_a_shadowed_cli_and_a_key_that_stops_working
-    ["command -v cadre", "exit code is 0 and the JSON holds an `email`", "go back to Sign in", "the repo that must deploy first listed first"].each { |text| assert_includes skill, text }
+  def test_it_handles_a_key_that_stops_working
+    ["exit code is 0 and the JSON holds an `email`", "go back to Sign in", "the repo that must deploy first listed first"].each { |text| assert_includes skill, text }
   end
 
 def test_it_runs_the_login_in_the_background_and_relays_the_code
