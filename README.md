@@ -5,24 +5,27 @@ Claude Code plugins for [Cadre](https://colette-cadre.fly.dev), which shows wher
 ## Use it
 
 ```
+/plugin marketplace add anthropics/claude-plugins-official
 /plugin marketplace add djeusette/cadre_marketplace
 /plugin install cadre@cadre
 ```
+
+Skip the first line when `claude-plugins-official` is already added: cadre needs it for `superpowers`, and without it cadre fails to load.
 
 Or commit them to a repo's `.claude/settings.json` so the whole team gets them automatically.
 
 ## Plugins
 
 - **cadre** — registers a feature with Cadre. Asked to "create a cadre project", it
-  brainstorms the feature with the person, one question at a time, into an end goal and
-  milestones, each the smallest step that ships one feature and deploys on its own. It
+  brainstorms the feature with the person through `superpowers:brainstorming`, into an end
+  goal and milestones, each the smallest step that ships one feature and deploys on its own. It
   commits that feature spec, or builds from one the person names, then registers one
   milestone per increment, each with its repos in deploy order, its own spec and a page in
   the project's Claude Design canvas. Asked to "update the spec of <project>/<n>", it pulls
   the spec with `cadre spec pull`, edits it with the person, and pushes it back with
   `cadre spec push --base`, so an edit never replaces a newer one. It installs the `cadre` CLI from its
   GitHub release (needs `gh`) and updates it with `cadre upgrade`, signs the person in through the browser to the Cadre URL they give, and reports the
-  project's URL. It needs no other plugin.
+  project's URL. Installing cadre installs `superpowers` from `claude-plugins-official` with it.
 
 ## Development
 

@@ -1,28 +1,21 @@
 # Brainstorm a feature into milestones
 
-You find out with the person what they want and why, then write it as a feature spec: an end goal and the milestones that reach it. The cadre skill turns that spec into a project. Follow this file instead of any other brainstorming or planning workflow you have, so the project gets registered.
+You brainstorm the feature with the person through `superpowers:brainstorming`, and it ends as a feature spec: an end goal and the milestones that reach it. The cadre skill turns that spec into a project.
 
-## The conversation
+## Before you start
 
-Your first message is one line saying they can skip the questions and have you propose the milestones, then one open question about a real moment, such as "What's the moment you find yourself wishing this existed?"
+Check that `superpowers:brainstorming` is among your available skills. When it is missing, tell the person to install and enable the `superpowers` plugin from the `claude-plugins-official` marketplace, and stop.
 
-After that, each message ends with one question: a single sentence, with no list of example answers. Use plain language and their words. Get them describing first. Offer a short menu only when they are stuck. When they say "just guess", propose something concrete they can correct.
+## Run superpowers brainstorming
 
-Ground to cover, never read out as a list:
+Invoke `superpowers:brainstorming` with the person's request, and follow it as written: its conversation, playback, visual companion, written design, builder check and approval gate. Invoke it from this file, not through a workflow that wraps it, so the project gets registered. The rules in this file add to it. Where they differ from it, they win:
 
-- what the feature is, and why now;
-- what success looks like, and who uses it;
-- goals, non-goals and anti-goals: what would make it a failure even if it works;
-- what exists today, and what they have tried;
-- the repos it touches, which one must deploy first, and the apps that use what changes.
-
-Read the current repo's code without asking, to ground your questions and size the milestones, and say so in your next message. Ask before reading anything outside it; for a repo you can't read, mark its code-file count as your guess.
-
-Before you propose anything, think of several approaches privately and drop the weak ones, including any that fight what they told you about why. A choice you make yourself goes into the spec as your call, never as something they agreed to.
-
-Play back as you go. Once you understand a part, such as who it serves, how one piece behaves or the milestones, describe it back in about 200–300 words. Mark what you are guessing, and end by asking what's wrong or missing. Then go on to the next part.
-
-When the person says to skip the questions, write the spec from what they said: mark every open point as your call, skip the builder's read below, and ask them once to approve the spec, with its milestones and your calls.
+- **Size.** A feature always gets a written spec, even when it fits in one milestone.
+- **Ground to cover.** Add the repos it touches, which one must deploy first, and the apps that use what changes.
+- **Recon.** Read the current repo's code without asking, to ground your questions and size the milestones, and say so in your next message. Ask before reading anything outside it; for a repo you can't read, mark its code-file count as your guess.
+- **Skipping the questions.** When the person says to skip the questions, the brainstorm still ends with the spec: write it from what they said, mark every open point as your call, skip the builder check, and ask them once to approve the spec, with its milestones and your calls.
+- **The written design** is the feature spec below.
+- **After approval**, follow "The handoff" instead of invoking `superpowers:writing-plans`.
 
 ## What a milestone is
 
@@ -52,15 +45,7 @@ Draft the milestones while the design takes shape:
 
 Write it to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` in the current repo, with today's date. When that file exists, add `-2`, `-3`, … before `.md`, so an earlier spec is never overwritten.
 
-Title it `# <Feature> — design`. Write it for a builder who plans from it without going back to the person. It covers:
-
-- the why;
-- goals, non-goals and anti-goals;
-- constraints;
-- the parts of the how the person decided, as they decided them;
-- what's left to the builder.
-
-It ends with these two sections, in this order:
+Title it `# <Feature> — design`. After what superpowers' written design covers, it ends with these two sections, in this order:
 
 ```markdown
 ## End goal
@@ -79,12 +64,10 @@ It ends with these two sections, in this order:
 
 Increments are numbered from 1, and each one becomes a milestone in Cadre. They have no status line: Cadre shows where each one stands.
 
-Before you show the spec, read it as the builder who plans increment 1 without the person:
+In the builder check, the builder plans increment 1 from the spec.
 
-1. Settle what a sensible builder could settle, and mark it in the spec as your call.
-2. Bring only what the person must decide, in one message, most important first.
-3. Update the spec with their answers.
+## The handoff
 
-Then give the person the spec's path and the list of calls you made, and ask them to approve it. Commit nothing until the person approves. Then commit only the spec file, with `git add <path>` and `git commit -m "docs: <feature> design" -- <path>`, and never push: the person's other changes, staged or not, stay as they are.
+Commit nothing until the person approves the spec. Once they do, commit only the spec file, with `git add <path>` and `git commit -m "docs: <feature> design" -- <path>`, and never push: the person's other changes, staged or not, stay as they are.
 
 Go back to step 2 of the cadre skill's "Create a project".

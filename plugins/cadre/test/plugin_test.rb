@@ -10,10 +10,10 @@ class ManifestTest < Minitest::Test
   def marketplace = JSON.parse(File.read(File.join(ROOT, ".claude-plugin", "marketplace.json")))
   def entry = marketplace.fetch("plugins").find { |plugin| plugin["name"] == "cadre" }
 
-  def test_plugin_depends_on_no_other_plugin
+  def test_plugin_depends_on_superpowers_alone
     assert_equal "cadre", manifest["name"]
-    refute manifest.key?("dependencies")
-    refute marketplace.key?("allowCrossMarketplaceDependenciesOn")
+    assert_equal ["superpowers@claude-plugins-official"], manifest["dependencies"]
+    assert_equal ["claude-plugins-official"], marketplace["allowCrossMarketplaceDependenciesOn"]
   end
 
   def test_manifests_name_colette_only_as_the_author
@@ -21,9 +21,11 @@ class ManifestTest < Minitest::Test
     refute_match(/colette/i, JSON.generate(marketplace.merge("plugins" => marketplace["plugins"].map { |plugin| plugin.except("author") })))
   end
 
-  def test_readme_installs_cadre_alone
+  def test_readme_installs_cadre_with_superpowers
     readme = File.read(File.join(ROOT, "README.md"))
-    ["/plugin marketplace add djeusette/cadre_marketplace", "/plugin install cadre@cadre", "needs no other plugin"].each { |text| assert_includes readme, text }
+    install = "/plugin marketplace add anthropics/claude-plugins-official\n/plugin marketplace add djeusette/cadre_marketplace\n/plugin install cadre@cadre"
+    [install, "installs `superpowers` from `claude-plugins-official` with it"].each { |text| assert_includes readme, text }
+    refute_includes readme, "needs no other plugin"
     refute_match(/colette/i, readme.sub("(https://colette-cadre.fly.dev)", ""))
   end
 
@@ -98,11 +100,13 @@ class SkillTest < Minitest::Test
     skill_files.each { |path| refute_match(/colette/i, File.read(path), path) }
   end
 
-  def test_no_skill_file_calls_another_plugin
-    skill_files.each { |path| refute_match(/`[a-z][a-z0-9-]*:[a-z][a-z0-9-]*`|\bEP-[A-Z]\d/, File.read(path), path) }
+  def test_skill_files_call_only_superpowers_skills
+    calls = skill_files.flat_map { |path| File.read(path).scan(/`([a-z][a-z0-9-]*:[a-z][a-z0-9-]*)`/).flatten }
+    assert_equal %w[superpowers:brainstorming superpowers:writing-plans], calls.uniq.sort
+    skill_files.each { |path| refute_match(/\bEP-[A-Z]\d/, File.read(path), path) }
   end
 
-  def test_creating_a_project_brainstorms_with_the_plugins_own_workflow
+  def test_creating_a_project_brainstorms_through_brainstorm_md
     assert_includes create_section, "[brainstorm.md](brainstorm.md)"
     refute_match(/available skills|must be installed/, skill)
   end
@@ -170,8 +174,25 @@ end
 class BrainstormTest < Minitest::Test
   def brainstorm = File.read(File.join(PLUGIN, "skills", "cadre", "brainstorm.md"))
 
-  def test_it_asks_one_question_at_a_time_and_plays_back
-    ["skip the questions", "one question", "Play back", "what's wrong or missing"].each { |text| assert_includes brainstorm, text }
+  def before_you_start = brainstorm[/^## Before you start\n(.*?)(?=^## )/m, 1]
+
+  def test_it_stops_when_superpowers_brainstorming_is_missing
+    ["`superpowers:brainstorming`", "`superpowers` plugin", "`claude-plugins-official`", "and stop"].each { |text| assert_includes before_you_start, text }
+  end
+
+  def test_it_runs_superpowers_brainstorming_as_written_with_cadres_rules_on_top
+    ["Invoke `superpowers:brainstorming`", "follow it as written", "not through a workflow that wraps it", "Where they differ from it, they win"].each do |text|
+      assert_includes brainstorm, text
+    end
+  end
+
+  def test_it_leaves_the_conversation_to_superpowers
+    ["wishing this existed", "one open question", "several approaches", "200–300 words"].each { |text| refute_includes brainstorm, text }
+  end
+
+  def test_its_rules_cover_what_superpowers_does_not
+    ["even when it fits in one milestone", "the repos it touches", "must deploy first", "apps that use what changes",
+     "without asking", "Ask before reading anything outside it", "Play the milestones back"].each { |text| assert_includes brainstorm, text }
   end
 
   def test_a_milestone_is_the_smallest_step_that_ships_one_feature_and_deploys_alone
@@ -181,16 +202,16 @@ class BrainstormTest < Minitest::Test
   end
 
   def test_skipping_the_questions_leaves_one_approval_before_the_commit
-    skip_path = brainstorm[/^When the person says to skip the questions(.*?)$/, 1]
-    ["mark every open point as your call", "approve the spec"].each { |text| assert_includes skip_path, text }
+    skip_path = brainstorm[/When the person says to skip the questions(.*?)$/, 1]
+    ["still ends with the spec", "mark every open point as your call", "approve the spec"].each { |text| assert_includes skip_path, text }
   end
 
   def test_it_commits_only_the_spec_file
     assert_includes brainstorm, 'git commit -m "docs: <feature> design" -- <path>'
   end
 
-  def test_it_hands_back_to_the_cadre_skill_instead_of_another_workflow
-    ["instead of any other brainstorming or planning workflow", "Go back to step 2"].each { |text| assert_includes brainstorm, text }
+  def test_it_hands_back_to_the_cadre_skill_instead_of_writing_plans
+    ["instead of invoking `superpowers:writing-plans`", "Go back to step 2"].each { |text| assert_includes brainstorm, text }
   end
 
   def test_the_split_challenge_keeps_each_part_usable
@@ -200,7 +221,7 @@ class BrainstormTest < Minitest::Test
   def test_it_writes_and_commits_the_feature_spec
     ["docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md", "`-2`", "## End goal", "## Increments", "### Increment <i> — ",
      "**Delivers:**", "**Deployable alone:**", "**Consumers:**", "**Code files:**",
-     "until the person approves", "commit only the spec file", "never push"].each { |text| assert_includes brainstorm, text }
+     "plans increment 1", "until the person approves", "commit only the spec file", "never push"].each { |text| assert_includes brainstorm, text }
     refute_includes brainstorm, "Not shipped"
   end
 end
