@@ -66,6 +66,10 @@ class SkillTest < Minitest::Test
     ["update the spec of", "cadre spec push <project>/<n> <file> --json", "No milestone"].each { |text| assert_includes skill, text }
   end
 
+  def test_it_asks_before_replacing_a_spec
+    ["replaces it on the page", "ask the person before pushing"].each { |text| assert_includes skill, text }
+  end
+
   def test_limits_name_the_spec_and_link_rules
     ["100 000", "https://", "2 000"].each { |text| assert_includes skill, text }
   end

@@ -82,8 +82,9 @@ A milestone's spec is markdown that starts with `# <name> <n>: <title>`, for exa
 When the person asks to "update the spec of `<project>/<n>`", for example because a card in Cadre says "No spec or designs yet":
 
 1. Find the feature spec in `docs/superpowers/specs/`, and write the milestone's spec as above into a temporary `.md` file. A push changes only the spec: a design link is set when the project is created.
-2. Run `cadre spec push <project>/<n> <file> --json`. Cadre keeps the file exactly as written, as the milestone's newest spec; earlier versions stay.
-3. Report the `url` field of the JSON body.
+2. When the milestone already has a spec (its card in Cadre says `Spec · updated by …`, or its line says `spec ready`), say that the push replaces it on the page, and ask the person before pushing: Cadre keeps the earlier version, but nothing shows it yet.
+3. Run `cadre spec push <project>/<n> <file> --json`. Cadre keeps the file exactly as written, as the milestone's newest spec; earlier versions stay.
+4. Report the `url` field of the JSON body.
 
 On `No milestone <project>/<n> on <server>.`, check the project's slug and the milestone's number with the person. On `spec: …`, the file broke a limit below: fix it and push again. On `Your key is no longer valid. Run cadre login.`, go back to Sign in, then push again.
 
