@@ -10,10 +10,21 @@ class ManifestTest < Minitest::Test
   def marketplace = JSON.parse(File.read(File.join(ROOT, ".claude-plugin", "marketplace.json")))
   def entry = marketplace.fetch("plugins").find { |plugin| plugin["name"] == "cadre" }
 
-  def test_plugin_depends_on_colette_from_the_colette_marketplace
+  def test_plugin_depends_on_no_other_plugin
     assert_equal "cadre", manifest["name"]
-    assert_equal ["colette@colette-club"], manifest["dependencies"]
-    assert_equal ["colette-club"], marketplace["allowCrossMarketplaceDependenciesOn"]
+    refute manifest.key?("dependencies")
+    refute marketplace.key?("allowCrossMarketplaceDependenciesOn")
+  end
+
+  def test_manifests_name_colette_only_as_the_author
+    refute_match(/colette/i, JSON.generate(manifest.except("author")))
+    refute_match(/colette/i, JSON.generate(marketplace.merge("plugins" => marketplace["plugins"].map { |plugin| plugin.except("author") })))
+  end
+
+  def test_readme_installs_cadre_alone
+    readme = File.read(File.join(ROOT, "README.md"))
+    ["/plugin marketplace add djeusette/cadre_marketplace", "/plugin install cadre@cadre", "needs no other plugin"].each { |text| assert_includes readme, text }
+    refute_match(/colette/i, readme.sub("(https://colette-cadre.fly.dev)", ""))
   end
 
   def test_marketplace_is_cadre_and_links_its_repo
