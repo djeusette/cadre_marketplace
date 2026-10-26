@@ -14,14 +14,17 @@ Cadre shows where every milestone of a feature stands, on every repo, in deploy 
 
 ## Install or update the CLI
 
-Run `cadre version`. When the command is missing or reports a version below `0.4.0`, run:
+Run `cadre version`.
 
-```bash
-mkdir -p ~/.local/bin
-gh release download -R djeusette/cadre_cli --pattern "cadre_$(uname -s)_$(uname -m).tar.gz" -O - | tar -xz -C ~/.local/bin cadre
-```
+- When the command is missing, run:
 
-Then run `cadre version` again. When the command is still missing, `~/.local/bin` is not on the person's `PATH`: tell them to add it, and stop. When it still reports an older version, another `cadre` earlier on `PATH` shadows the new one: tell the person which (`command -v cadre`), and stop.
+  ```bash
+  mkdir -p ~/.local/bin
+  gh release download -R djeusette/cadre_cli --pattern "cadre_$(uname -s)_$(uname -m).tar.gz" -O - | tar -xz -C ~/.local/bin cadre
+  ```
+
+  Then run `cadre version` again. When the command is still missing, `~/.local/bin` is not on the person's `PATH`: tell them to add it, and stop.
+- When it reports a version below `0.5.0`, run `cadre upgrade`. It replaces that `cadre` with the latest release and prints `Upgraded cadre from <old> to <new>.` When it fails, tell the person what it printed, and stop.
 
 ## Sign in
 
