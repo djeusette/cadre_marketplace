@@ -37,7 +37,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.7.0", manifest["version"]
+    assert_equal "0.8.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -67,8 +67,8 @@ class SkillTest < Minitest::Test
   
   def test_it_installs_a_missing_cli_and_upgrades_an_old_one
     assert_includes install_section, INSTALL
-    ["When the command is missing,", "below `0.5.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
-    ["0.1.0", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`"].each { |text| refute_includes skill, text }
+    ["When the command is missing,", "below `0.6.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
+    ["0.1.0", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`"].each { |text| refute_includes skill, text }
   end
 
   def test_it_writes_a_spec_and_designs_for_every_milestone
@@ -92,6 +92,36 @@ class SkillTest < Minitest::Test
   def test_it_no_longer_asks_before_replacing_a_spec
     ["nothing shows it yet", "ask the person before pushing"].each { |text| refute_includes skill, text }
   end
+
+def change_section = skill[/^## Change a project\n(.*?)(?=^## )/m, 1]
+
+def test_it_changes_and_archives_a_project
+  assert_includes skill, "## Change a project"
+  ["cadre project pull <slug> -o <file> --json", "cadre project update <file> --json", "cadre project archive <slug>",
+   "cadre project unarchive <slug>", "changed since you pulled it", "is archived. Run cadre project unarchive"].each { |text| assert_includes change_section, text }
+end
+
+def test_changing_a_project_names_no_colette_skill
+  refute_match(/colette:/, change_section)
+end
+
+def test_a_new_milestone_gets_its_spec_once_cadre_has_numbered_it
+  assert_includes change_section, "cadre spec push <slug>/<n> <spec-file> --json"
+  assert_includes change_section, "Pull the project again"
+  assert_includes change_section, "no `number`, no `spec` and no `design_url`"
+  refute_match(/with its spec written as/, change_section)
+  assert_operator change_section.index("cadre project update <file> --json"), :<, change_section.index("cadre spec push <slug>/<n>")
+  refute_includes change_section, "spec push <slug>/<n> <spec-file> --base"
+end
+
+def test_a_new_milestone_gets_its_page_and_its_number_is_reported
+  ["Draw its page in the project's design canvas", "`design_url`", "Report the new number"].each { |text| assert_includes change_section, text }
+end
+
+def test_an_unarchived_project_keeps_its_file_and_a_stale_key_signs_in_again
+  assert_includes change_section, "continue with the same file: unarchiving doesn't change the version"
+  assert_includes change_section, "Your key for <url> is no longer valid. Run cadre login --url <url>."
+end
 
   def skill_files = Dir[File.join(PLUGIN, "skills", "**", "*")].select { |path| File.file?(path) }
   def create_section = skill[/^## Create a project\n(.*?)(?=^## )/m, 1]
