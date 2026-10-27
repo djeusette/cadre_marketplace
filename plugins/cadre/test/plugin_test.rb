@@ -67,8 +67,8 @@ class SkillTest < Minitest::Test
   
   def test_it_installs_a_missing_cli_and_upgrades_an_old_one
     assert_includes install_section, INSTALL
-    ["When the command is missing,", "below `0.5.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
-    ["0.1.0", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`"].each { |text| refute_includes skill, text }
+    ["When the command is missing,", "below `0.6.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
+    ["0.1.0", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`"].each { |text| refute_includes skill, text }
   end
 
   def test_it_writes_a_spec_and_designs_for_every_milestone
@@ -92,6 +92,17 @@ class SkillTest < Minitest::Test
   def test_it_no_longer_asks_before_replacing_a_spec
     ["nothing shows it yet", "ask the person before pushing"].each { |text| refute_includes skill, text }
   end
+
+def change_section = skill[/^## Change a project\n(.*?)(?=^## )/m, 1]
+
+def test_it_changes_and_archives_a_project
+  ["## Change a project", "cadre project pull <slug> -o <file> --json", "cadre project update <file> --json", "cadre project archive <slug>",
+   "cadre project unarchive <slug>", "changed since you pulled it", "is archived. Run cadre project unarchive"].each { |text| assert_includes skill, text }
+end
+
+def test_changing_a_project_names_no_colette_skill
+  refute_match(/colette:/, change_section)
+end
 
   def skill_files = Dir[File.join(PLUGIN, "skills", "**", "*")].select { |path| File.file?(path) }
   def create_section = skill[/^## Create a project\n(.*?)(?=^## )/m, 1]

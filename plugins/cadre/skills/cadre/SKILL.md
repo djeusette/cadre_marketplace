@@ -1,6 +1,6 @@
 ---
 name: cadre
-description: Use when the person asks to register, create or track a project, feature or milestones in Cadre, to read, write or update a milestone's spec in Cadre ("update the spec of <project>/<n>"), or to sign in to Cadre.
+description: Use when the person asks to register, create or track a project, feature or milestones in Cadre, to read, write or update a milestone's spec in Cadre ("update the spec of <project>/<n>"), to change, reorder, rename or drop a project or its milestones in Cadre, or to sign in to Cadre.
 ---
 
 # Cadre
@@ -23,7 +23,7 @@ Run `cadre version`.
   ```
 
   Then run `cadre version` again. When the command is still missing, `~/.local/bin` is not on the person's `PATH`: tell them to add it, and stop.
-- When it reports a version below `0.5.0`, run `cadre upgrade`. It replaces that `cadre` with the latest release and prints `Upgraded cadre from <old> to <new>.` When it fails, tell the person what it printed, and stop.
+- When it reports a version below `0.6.0`, run `cadre upgrade`. It replaces that `cadre` with the latest release and prints `Upgraded cadre from <old> to <new>.` When it fails, tell the person what it printed, and stop.
 
 ## Sign in
 
@@ -100,6 +100,25 @@ To show the person a spec, run `cadre spec pull <project>/<n>` and show what it 
 
 On `No milestone <project>/<n> on <server>.`, check the project's slug and the milestone's number with the person. On `spec: …`, the file broke a limit below: fix it and push again. On `Your key for <url> is no longer valid. Run cadre login --url <url>.`, go back to Sign in, then push again.
 
+## Change a project
+
+When the person asks to change a project in Cadre, for example to rename it, reorder or rename its milestones, change their repos, design links or deploy order, add a milestone, or drop the project:
+
+1. Pull the project into a temporary `.json` file: `cadre project pull <slug> -o <file> --json`. Keep the JSON's `version`. When `archived` is true, ask the person whether to bring the project back first with `cadre project unarchive <slug>`.
+2. Edit the file with the person:
+   - the name, end goal, home repo (one of the milestones' repos) and canvas link;
+   - reorder milestones by moving their entries;
+   - rename them, and change their design links, repos and deploy order;
+   - add one as an entry with no `number`, with its spec written as "Write a milestone's spec" says.
+
+   Keep every `number`, the `slug` and the `version` as pulled. Never put a `spec` on a milestone that has a `number`: use "Update a milestone's spec".
+3. Leaving a milestone out archives it, and its number is never used again: say so, and leave one out only once the person agrees.
+4. Play the change back in a few lines, and apply it once the person approves: `cadre project update <file> --json`. Report the new `version` and the `url`.
+5. On `<slug> changed since you pulled it (version <n>, now <m>). Pull it again.`, pull again, redo the edit on the new file, play it back, and update.
+6. On `<slug> is archived. Run cadre project unarchive <slug> first.`, ask the person.
+7. To drop a project ("drop gift-wrapping"): confirm with the person, run `cadre project archive <slug>`, and say it hides the project from the Overview, and that `cadre project unarchive <slug>` brings it back.
+8. On `No project <slug> on <server>.`, check the slug with the person. On `milestones.<i>.number: …` or another `path: message`, fix that entry and update again.
+
 ## Limits
 
 | Field | Rule |
@@ -109,5 +128,6 @@ On `No milestone <project>/<n> on <server>.`, check the project's slug and the m
 | `end_goal` | 1–10 000 characters |
 | `milestones` | 1–50, each `title` 1–200 characters |
 | `repos` | 1–10 per milestone, no repeats, each `^[a-z0-9][a-z0-9._-]{0,99}$` |
+| `number` | a milestone the project has and hasn't archived, or none for a new one |
 | `spec` | optional at creation; 1–100 000 characters, not blank, UTF-8, no NUL |
 | `canvas_url`, `design_url` | optional; `https://` followed by no spaces, up to 2 000 characters |
