@@ -151,6 +151,16 @@ end
     ["git add <path>", 'git commit -m "docs: spec of <slug>/<n>" -- <path>', "cadre never reads"].each { |text| assert_includes start_section, text }
   end
 
+  def test_it_commits_the_spec_copy_on_the_milestones_branch_never_on_the_default_branch
+    ["gh repo view --json defaultBranchRef -q .defaultBranchRef.name", "git switch -c <slug>-<n>", "git switch <slug>-<n>",
+     "never on the default branch"].each { |text| assert_includes start_section, text }
+    assert_operator start_section.index("git switch -c <slug>-<n>"), :<, start_section.index("git add <path>")
+  end
+
+  def test_it_skips_the_commit_when_the_spec_copy_is_unchanged
+    assert_includes start_section, "already holds this text, as when a milestone is started again, skip the commit"
+  end
+
   def test_it_links_a_pull_request_by_hand_and_relays_the_cli_errors
     ["cadre pr link <pr-url> <slug>/<n> --json", "cadre pr link <pr-url> --none --json", "wins at its next sync",
      "No milestone <slug>/<n> on <server>.", "GitHub has no pull request at <url>.", "GitHub isn't connected on <server> yet.",

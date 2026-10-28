@@ -130,12 +130,13 @@ When the person asks to "start milestone `<slug>/<n>`", or to start work on a mi
 
 1. Pull the project into a temporary `.json` file: `cadre project pull <slug> -o <tmp>.json --json`. The milestone's `repos` are its repos in deploy order. Then pull its spec into a temporary `.md` file: `cadre spec pull <slug>/<n> -o <tmp>.md --json`. On `<slug>/<n> has no spec yet.`, write its spec first, as "Update a milestone's spec" says, then pull it again.
 2. Run `gh repo view --json name -q .name`. When this repo is one of the milestone's repos, work on this repo's part. Otherwise, name the milestone's repos to the person, in deploy order, and stop: the milestone starts in the first of them with no pull request yet. Each other repo of the milestone is started the same way, in its own session in that repo.
-3. Copy the spec into this repo's `docs/superpowers/specs/<slug>-<n>.md` as a record, creating the folder when it is missing, and commit only that file: `git add <path>`, then `git commit -m "docs: spec of <slug>/<n>" -- <path>`. Cadre's copy stays the original, and cadre never reads this one.
-4. Plan this repo's part with `superpowers:writing-plans`, giving it the spec copy's path and these rules on top:
+3. When `git branch --show-current` prints the repo's default branch (`gh repo view --json defaultBranchRef -q .defaultBranchRef.name`), switch to the milestone's branch: `git switch -c <slug>-<n>`, or `git switch <slug>-<n>` when it already exists. The plan and its pull request start from that branch, so the record lands with them, never on the default branch.
+4. Copy the spec into this repo's `docs/superpowers/specs/<slug>-<n>.md` as a record, creating the folder when it is missing, and commit only that file: `git add <path>`, then `git commit -m "docs: spec of <slug>/<n>" -- <path>`. When `<path>` already holds this text, as when a milestone is started again, skip the commit: there is nothing to commit. Cadre's copy stays the original, and cadre never reads this one.
+5. Plan this repo's part with `superpowers:writing-plans`, giving it the spec copy's path and these rules on top:
    - plan only this repo's part of milestone `<slug>/<n>`;
    - one plan and one pull request;
    - the pull request's description has a line that reads exactly `Cadre: <slug>/<n>`, which links the pull request to the milestone in Cadre.
-5. Execute the plan as `superpowers:writing-plans` offers.
+6. Execute the plan as `superpowers:writing-plans` offers.
 
 On `No project <slug> on <server>.` or `No milestone <slug>/<n> on <server>.`, check the slug and number with the person. On `Your key for <url> is no longer valid. Run cadre login --url <url>.`, go back to Sign in, then retry.
 
