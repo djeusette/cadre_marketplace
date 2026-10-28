@@ -13,7 +13,7 @@
       "name": "cadre",
       "source": "./plugins/cadre",
       "description": "Brainstorm a feature into milestones, each with its spec and designs, and register it with Cadre, which tracks them across repos in deploy order.",
-      "version": "0.8.0",
+      "version": "0.9.0",
       "author": {
         "name": "Colette Club"
       },
