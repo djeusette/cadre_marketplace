@@ -1,6 +1,6 @@
 ---
 name: cadre
-description: Use when the person asks to register, create or track a project, feature or milestones in Cadre, to read, write or update a milestone's spec in Cadre ("update the spec of <project>/<n>"), to change, reorder, rename or drop a project or its milestones in Cadre, or to sign in to Cadre.
+description: Use when the person asks to register, create or track a project, feature or milestones in Cadre, to read, write or update a milestone's spec in Cadre ("update the spec of <project>/<n>"), to change, reorder, rename or drop a project or its milestones in Cadre, to start a milestone ("start milestone <project>/<n>"), to link a pull request to a milestone, or to sign in to Cadre.
 ---
 
 # Cadre
@@ -23,7 +23,7 @@ Run `cadre version`.
   ```
 
   Then run `cadre version` again. When the command is still missing, `~/.local/bin` is not on the person's `PATH`: tell them to add it, and stop.
-- When it reports a version below `0.6.0`, run `cadre upgrade`. It replaces that `cadre` with the latest release and prints `Upgraded cadre from <old> to <new>.` When it fails, tell the person what it printed, and stop.
+- When it reports a version below `0.7.0`, run `cadre upgrade`. It replaces that `cadre` with the latest release and prints `Upgraded cadre from <old> to <new>.` When it fails, tell the person what it printed, and stop.
 
 ## Sign in
 
@@ -123,6 +123,32 @@ When the person asks to change a project in Cadre, for example to rename it, reo
 7. On `<slug> is archived. Run cadre project unarchive <slug> first.`, ask the person whether to bring the project back. When they agree, run `cadre project unarchive <slug>` and update again with the same file.
 8. To drop a project ("drop gift-wrapping"): confirm with the person, run `cadre project archive <slug>`, and say it hides the project from the Overview, and that `cadre project unarchive <slug>` brings it back.
 9. On `No project <slug> on <server>.`, check the slug with the person. On `milestones.<i>.number: …` or another `path: message`, fix that entry and update again. On `Your key for <url> is no longer valid. Run cadre login --url <url>.`, go back to Sign in, then retry.
+
+## Start a milestone
+
+When the person asks to "start milestone `<slug>/<n>`", or to start work on a milestone in Cadre:
+
+1. Pull the project into a temporary `.json` file: `cadre project pull <slug> -o <tmp>.json --json`. The milestone's `repos` are its repos in deploy order. Then pull its spec into a temporary `.md` file: `cadre spec pull <slug>/<n> -o <tmp>.md --json`. On `<slug>/<n> has no spec yet.`, write its spec first, as "Update a milestone's spec" says, then pull it again.
+2. Run `gh repo view --json name -q .name`. When this repo is one of the milestone's repos, work on this repo's part. Otherwise, name the milestone's repos to the person, in deploy order, and stop: the milestone starts in the first of them with no pull request yet. Each other repo of the milestone is started the same way, in its own session in that repo.
+3. Copy the spec into this repo's `docs/superpowers/specs/<slug>-<n>.md` as a record, creating the folder when it is missing, and commit only that file: `git add <path>`, then `git commit -m "docs: spec of <slug>/<n>" -- <path>`. Cadre's copy stays the original, and cadre never reads this one.
+4. Plan this repo's part with `superpowers:writing-plans`, giving it the spec copy's path and these rules on top:
+   - plan only this repo's part of milestone `<slug>/<n>`;
+   - one plan and one pull request;
+   - the pull request's description has a line that reads exactly `Cadre: <slug>/<n>`, which links the pull request to the milestone in Cadre.
+5. Execute the plan as `superpowers:writing-plans` offers.
+
+On `No project <slug> on <server>.` or `No milestone <slug>/<n> on <server>.`, check the slug and number with the person. On `Your key for <url> is no longer valid. Run cadre login --url <url>.`, go back to Sign in, then retry.
+
+### Link a pull request by hand
+
+A pull request opened without the `Cadre:` line, or before the cadre GitHub App was installed, is linked with `cadre pr link <pr-url> <slug>/<n> --json`, and `cadre pr link <pr-url> --none --json` unlinks it. Cadre reads the pull request from GitHub then. Report the `project_url` field of the JSON body. A `Cadre:` line in its description wins at its next sync, so edit the line rather than fight it.
+
+- `No milestone <slug>/<n> on <server>.`: check the slug and number with the person.
+- `GitHub has no pull request at <url>.`: check the URL with the person.
+- `GitHub isn't connected on <server> yet. …`: tell the person, and stop.
+- `Cadre couldn't reach GitHub. …`: try again later.
+- `url: is in a repo no project names`: the repo needs to be in a project first, as "Change a project" adds it.
+- `Your key for <url> is no longer valid. Run cadre login --url <url>.`: go back to Sign in, then retry.
 
 ## Limits
 

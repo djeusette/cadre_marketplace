@@ -49,6 +49,11 @@ class ManifestTest < Minitest::Test
   def test_readme_lists_cadre
     assert_match(/^- \*\*cadre\*\* — /, File.read(File.join(ROOT, "README.md")))
   end
+
+  def test_readme_says_it_starts_a_milestone_and_links_a_pull_request
+    readme = File.read(File.join(ROOT, "README.md"))
+    ["start milestone <project>/<n>", "cadre pr link"].each { |text| assert_includes readme, text }
+  end
 end
 
 class SkillTest < Minitest::Test
@@ -63,12 +68,16 @@ class SkillTest < Minitest::Test
     assert_match(/Use when/, description)
   end
 
+  def test_description_covers_starting_a_milestone_and_linking_a_pull_request
+    ["to start a milestone (\"start milestone <project>/<n>\")", "to link a pull request to a milestone"].each { |text| assert_includes description, text }
+  end
+
   def install_section = skill[/^## Install or update the CLI\n(.*?)(?=^## )/m, 1]
   
   def test_it_installs_a_missing_cli_and_upgrades_an_old_one
     assert_includes install_section, INSTALL
-    ["When the command is missing,", "below `0.6.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
-    ["0.1.0", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`"].each { |text| refute_includes skill, text }
+    ["When the command is missing,", "below `0.7.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
+    ["0.1.0", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`"].each { |text| refute_includes skill, text }
   end
 
   def test_it_writes_a_spec_and_designs_for_every_milestone
@@ -122,6 +131,31 @@ def test_an_unarchived_project_keeps_its_file_and_a_stale_key_signs_in_again
   assert_includes change_section, "continue with the same file: unarchiving doesn't change the version"
   assert_includes change_section, "Your key for <url> is no longer valid. Run cadre login --url <url>."
 end
+
+  def start_section = skill[/^## Start a milestone\n(.*?)(?=^## )/m, 1]
+  def link_section = skill[/^### Link a pull request by hand\n(.*?)(?=^## )/m, 1]
+
+  def test_starting_a_milestone_comes_between_changing_a_project_and_the_limits
+    assert_operator skill.index("## Change a project"), :<, skill.index("## Start a milestone")
+    assert_operator skill.index("## Start a milestone"), :<, skill.index("## Limits")
+  end
+
+  def test_it_starts_a_milestone_with_one_plan_and_one_pull_request_per_repo
+    ["cadre project pull", "cadre spec pull <slug>/<n>", "docs/superpowers/specs/<slug>-<n>.md", "`superpowers:writing-plans`",
+     "Cadre: <slug>/<n>", "in its own session", "one plan and one pull request", "gh repo view --json name -q .name"].each do |text|
+      assert_includes start_section, text
+    end
+  end
+
+  def test_it_commits_only_the_spec_copy
+    ["git add <path>", 'git commit -m "docs: spec of <slug>/<n>" -- <path>', "cadre never reads"].each { |text| assert_includes start_section, text }
+  end
+
+  def test_it_links_a_pull_request_by_hand_and_relays_the_cli_errors
+    ["cadre pr link <pr-url> <slug>/<n> --json", "cadre pr link <pr-url> --none --json", "wins at its next sync",
+     "No milestone <slug>/<n> on <server>.", "GitHub has no pull request at <url>.", "GitHub isn't connected on <server> yet.",
+     "Cadre couldn't reach GitHub.", "url: is in a repo no project names"].each { |text| assert_includes link_section, text }
+  end
 
   def skill_files = Dir[File.join(PLUGIN, "skills", "**", "*")].select { |path| File.file?(path) }
   def create_section = skill[/^## Create a project\n(.*?)(?=^## )/m, 1]
