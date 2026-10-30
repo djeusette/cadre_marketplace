@@ -54,6 +54,11 @@ class ManifestTest < Minitest::Test
     readme = File.read(File.join(ROOT, "README.md"))
     ["start milestone <project>/<n>", "cadre pr link"].each { |text| assert_includes readme, text }
   end
+
+  def test_readme_says_it_connects_repos_and_fly_orgs
+    readme = File.read(File.join(ROOT, "README.md"))
+    ["cadre repo set", "cadre fly org add"].each { |text| assert_includes readme, text }
+  end
 end
 
 class SkillTest < Minitest::Test
@@ -69,15 +74,16 @@ class SkillTest < Minitest::Test
   end
 
   def test_description_covers_starting_a_milestone_and_linking_a_pull_request
-    ["to start a milestone (\"start milestone <project>/<n>\")", "to link a pull request to a milestone"].each { |text| assert_includes description, text }
+    ["to start a milestone (\"start milestone <project>/<n>\")", "to link a pull request to a milestone",
+     "to connect a repo to where it deploys, or a Fly org"].each { |text| assert_includes description, text }
   end
 
   def install_section = skill[/^## Install or update the CLI\n(.*?)(?=^## )/m, 1]
   
   def test_it_installs_a_missing_cli_and_upgrades_an_old_one
     assert_includes install_section, INSTALL
-    ["When the command is missing,", "below `0.7.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
-    ["0.1.0", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`"].each { |text| refute_includes skill, text }
+    ["When the command is missing,", "below `0.8.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
+    ["0.1.0", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`"].each { |text| refute_includes skill, text }
   end
 
   def test_it_writes_a_spec_and_designs_for_every_milestone
@@ -165,6 +171,33 @@ end
     ["cadre pr link <pr-url> <slug>/<n> --json", "cadre pr link <pr-url> --none --json", "wins at its next sync",
      "No milestone <slug>/<n> on <server>.", "GitHub has no pull request at <url>.", "GitHub isn't connected on <server> yet.",
      "Cadre couldn't reach GitHub.", "url: is in a repo no project names"].each { |text| assert_includes link_section, text }
+  end
+
+  def deploy_section = skill[/^## Connect a repo to where it deploys\n(.*?)(?=^## )/m, 1]
+
+  def test_connecting_a_repo_comes_between_starting_a_milestone_and_the_limits
+    assert_operator skill.index("## Start a milestone"), :<, skill.index("## Connect a repo to where it deploys")
+    assert_operator skill.index("## Connect a repo to where it deploys"), :<, skill.index("## Limits")
+  end
+
+  def test_it_shows_sets_and_unsets_a_repos_targets
+    ["cadre repo show <repo> --json", "`platform`", "`settings`", "`account`", "`tracked`",
+     "cadre repo set <repo> --fly-app <app> --json", "cadre repo set <repo> --platform <name> --json", "not tracked",
+     "cadre repo unset <repo> --platform <name> --json"].each { |text| assert_includes deploy_section, text }
+  end
+
+  def test_it_connects_a_fly_org_once_the_person_agrees_and_pipes_its_token
+    ["ask the person first", "fly tokens create readonly -o <org> -n cadre | cadre fly org add <org>", "never print it",
+     "cadre fly org remove <org>", "in their own terminal"].each { |text| assert_includes deploy_section, text }
+    assert_operator deploy_section.index("ask the person first"), :<, deploy_section.index("| cadre fly org add <org>")
+    ["<token>", "--token"].each { |text| refute_includes deploy_section, text }
+  end
+
+  def test_it_relays_the_deploy_target_errors
+    ["Fly isn't connected on <server> yet. Add an org with cadre fly org add <org>.",
+     "settings.app: isn't an app of a connected Fly org (", "Fly refused this token for <org>.",
+     "Fly has no org <org> that this token can read.", "<org> still reads <repos>. Unset or move those targets first.",
+     "Cadre couldn't reach Fly. Try again in a minute.", "No repo <repo> on <server>."].each { |text| assert_includes deploy_section, text }
   end
 
   def skill_files = Dir[File.join(PLUGIN, "skills", "**", "*")].select { |path| File.file?(path) }
