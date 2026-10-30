@@ -27,7 +27,9 @@ Or commit them to a repo's `.claude/settings.json` so the whole team gets them a
   in one of the milestone's repos, it commits a copy of the milestone's spec there as a record, plans that
   repo's part through `superpowers:writing-plans`, and opens one pull request with a `Cadre: <project>/<n>`
   line, which links it to the milestone; a pull request without the line is linked with `cadre pr link`.
-  It installs the `cadre` CLI from its
+  Asked to "connect <repo> to its Fly app", it sets the repo's deploy target with `cadre repo set`,
+  and, once the person agrees, connects the Fly org that runs it with `cadre fly org add`, piping a
+  read-only token from `fly tokens create` so the token is never shown. It installs the `cadre` CLI from its
   GitHub release (needs `gh`) and updates it with `cadre upgrade`, signs the person in through the browser to the Cadre URL they give, and reports the
   project's URL. Installing cadre installs `superpowers` from `claude-plugins-official` with it.
 
