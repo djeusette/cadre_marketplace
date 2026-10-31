@@ -1,6 +1,6 @@
 ---
 name: cadre
-description: Use when the person asks to register, create or track a project, feature or milestones in Cadre, to read, write or update a milestone's spec in Cadre ("update the spec of <project>/<n>"), to change, reorder, rename or drop a project or its milestones in Cadre, to start a milestone ("start milestone <project>/<n>"), to link a pull request to a milestone, or to sign in to Cadre.
+description: Use when the person asks to register, create or track a project, feature or milestones in Cadre, to read, write or update a milestone's spec in Cadre ("update the spec of <project>/<n>"), to change, reorder, rename or drop a project or its milestones in Cadre, to start a milestone ("start milestone <project>/<n>"), to link a pull request to a milestone, to connect a repo to where it deploys, or a Fly org, in Cadre ("connect <repo> to its Fly app", "where does <repo> deploy?"), or to sign in to Cadre.
 ---
 
 # Cadre
@@ -23,7 +23,7 @@ Run `cadre version`.
   ```
 
   Then run `cadre version` again. When the command is still missing, `~/.local/bin` is not on the person's `PATH`: tell them to add it, and stop.
-- When it reports a version below `0.7.0`, run `cadre upgrade`. It replaces that `cadre` with the latest release and prints `Upgraded cadre from <old> to <new>.` When it fails, tell the person what it printed, and stop.
+- When it reports a version below `0.8.0`, run `cadre upgrade`. It replaces that `cadre` with the latest release and prints `Upgraded cadre from <old> to <new>.` When it fails, tell the person what it printed, and stop.
 
 ## Sign in
 
@@ -149,6 +149,34 @@ A pull request opened without the `Cadre:` line, or before the cadre GitHub App 
 - `GitHub isn't connected on <server> yet. …`: tell the person, and stop.
 - `Cadre couldn't reach GitHub. …`: try again later.
 - `url: is in a repo no project names`: the repo needs to be in a project first, as "Change a project" adds it.
+- `Your key for <url> is no longer valid. Run cadre login --url <url>.`: go back to Sign in, then retry.
+
+## Connect a repo to where it deploys
+
+When the person asks to connect a repo to where it deploys ("connect `<repo>` to its Fly app"), or where a repo deploys ("where does `<repo>` deploy?"), with `<repo>` a bare repo name as in a project:
+
+1. Read the repo's targets: `cadre repo show <repo> --json`. Each of its `targets` has a `platform`, its `settings` (Fly's is `app`), an `account`, the Fly org cadre reads it through, and `tracked`, whether cadre reads its deploys. Answer "where does it deploy?" from them.
+2. Connect a Fly app: `cadre repo set <repo> --fly-app <app> --json`. Cadre finds the connected Fly org that lists the app, and keeps it as the target's `account`. Setting a platform again replaces its settings. Report the target the JSON body holds.
+3. For any other host, `cadre repo set <repo> --platform <name> --json` records it, and it shows as not tracked: cadre can't read its deploys yet. `cadre repo unset <repo> --platform <name> --json` removes a target, `fly` for a Fly app.
+4. Cadre reads Fly with one read-only token per Fly org, kept on its server for the whole team. To connect an org, ask the person first, naming the org. Once they agree, run:
+
+   ```bash
+   fly tokens create readonly -o <org> -n cadre | cadre fly org add <org> --json
+   ```
+
+   The token goes through the pipe: never print it, echo it, pass it as an argument or write it to a file. When the person already has a token, they add it themselves: `cadre fly org add <org>` in their own terminal asks for it without showing it. Report the org's `name` and the `apps` field, how many apps its token reads, then set the target that was waiting for it. When `fly` is missing or not signed in, it makes no token and cadre prints `No token given. Pipe it in, or type it when asked.`: tell the person to install `fly` or run `fly auth login`, then run the pipe again.
+5. `cadre fly org remove <org> --json` disconnects an org, once the person confirms.
+
+When a command fails, it prints one of these:
+
+- `Fly isn't connected on <server> yet. Add an org with cadre fly org add <org>.`: no Fly org is connected. Ask the person which org runs the app, and offer to connect it as in step 4.
+- `settings.app: isn't an app of a connected Fly org (…)`: no connected org lists the app; the parentheses name the connected orgs. Check the app's name with the person, or connect the org that runs it. When it goes on to say Fly refused the token of an org, or has no such org for its token, make a new token for that org and add it again, as in step 4.
+- `Fly refused this token for <org>.` or `Fly has no org <org> that this token can read.`: the token doesn't read that org. Check the org's name with the person, as `fly orgs list` shows it, and make the token for the right org.
+- `<org> still reads <repos>. Unset or move those targets first.`: those repos' Fly apps are read through that org. Name them to the person; unset or move their targets only once they agree.
+- `No Fly org <org> on <server>.` or `<repo> has no <Platform> target.`: there is nothing to remove; check the name with the person.
+- `platform: …`: cadre refuses that platform name, or takes it only in a later release. Tell the person what it says.
+- `Cadre couldn't reach Fly. Try again in a minute.`: try again in a minute.
+- `No repo <repo> on <server>.`: cadre knows a repo once a project names it. Check the name with the person, or add the repo to a project as "Change a project" does.
 - `Your key for <url> is no longer valid. Run cadre login --url <url>.`: go back to Sign in, then retry.
 
 ## Limits
