@@ -1,6 +1,6 @@
 ---
 name: cadre
-description: Use when the person asks to register, create or track a project, feature or milestones in Cadre, to read, write or update a milestone's spec in Cadre ("update the spec of <project>/<n>"), to change, reorder, rename or drop a project or its milestones in Cadre, to start a milestone ("start milestone <project>/<n>"), to link a pull request to a milestone, to connect a repo to where it deploys, or a Fly org, in Cadre ("connect <repo> to its Fly app", "where does <repo> deploy?"), or to sign in to Cadre.
+description: Use when the person asks to register, create or track a project, feature or milestones in Cadre, to read, write or update a milestone's spec in Cadre ("update the spec of <project>/<n>"), to change, reorder, rename or drop a project or its milestones in Cadre, to start a milestone ("start milestone <project>/<n>"), to link a pull request to a milestone, to connect a repo to where it deploys, or a Fly org, in Cadre ("connect <repo> to its Fly app", "where does <repo> deploy?"), to implement a spec or plan that says it is tracked in Cadre, or to sign in to Cadre.
 ---
 
 # Cadre
@@ -48,13 +48,20 @@ The person never types or copies a key.
    - `end_goal`: the text of the End goal section.
    - `milestones`: one per `### Increment`, in spec order, its `title` the increment's title. Its `repos` are the repositories the increment changes, in deploy order: the order the spec's Consumers and deploy-order lines give, the repo that must deploy first listed first.
    Repo names are bare, `shop-api` and not `acme/shop-api`, and match the limits below. The current repository (`gh repo view --json name -q .name`) is a repo of every increment whose Code files live in it. A file path is never a repo. Consumers can say "none".
+   The feature spec says it is tracked in Cadre, on the line under its title, so whoever implements it uses this skill:
+
+   ```markdown
+   > Tracked in Cadre as `<slug>`. Implement each increment with the `cadre:cadre` skill ("start milestone <slug>/<i>"), which plans it and links its pull request to its milestone.
+   ```
+
+   Add the line when the spec lacks it, and commit it as step 5 commits a correction.
 3. Design every milestone: create one Claude Design canvas for the project, with one page per milestone. A milestone without a screen gets a diagram as its page instead: its data flow or its API contract. Keep the canvas link and each page's link.
 4. Write one spec per milestone, as the next section describes.
 5. Play every milestone back one last time, as it will be registered: its title, its repos in deploy order, its consumers, what it delivers and its design link. Take a repo name only from the spec or from the person, and ask when unsure. Register nothing until the person approves them. Fix what they correct first. When a correction changes the feature spec, update the spec. If the brainstorm committed it, commit only that file again with `git commit -m "docs: <feature> design" -- <path>`, and never push. If the person named it, leave the commit to them.
 6. Add them to the project: `canvas_url` is the canvas link and, per milestone, `spec` is its markdown and `design_url` the link to its page in the canvas, or the canvas link when there is no page link.
 7. Write the JSON to a temporary file and run `cadre project create <file> --json`.
    When it prints `Your key for <url> is no longer valid. Run cadre login --url <url>.`, go back to Sign in, then run it again.
-8. On a `422`, the CLI prints one `<path>: <message>` line per error, for example `milestones.1.repos.0: …`. Fix the fields those paths name, then run the command again. Error paths are 0-based positions in the JSON arrays: `milestones.1.repos.0` is the first repo of the second milestone, while milestone numbers shown elsewhere start at 1.
+8. On a `422`, the CLI prints one `<path>: <message>` line per error, for example `milestones.1.repos.0: …`. Fix the fields those paths name, then run the command again. When you change the `slug`, change it on the spec's tracking line too. Error paths are 0-based positions in the JSON arrays: `milestones.1.repos.0` is the first repo of the second milestone, while milestone numbers shown elsewhere start at 1.
 9. Report the `url` field of the JSON body the command printed, and remind the person to share the canvas with the team: you can't change its sharing.
 
 ```json
@@ -82,7 +89,13 @@ The person never types or copies a key.
 
 ## Write a milestone's spec
 
-A milestone's spec is markdown that starts with `# <name> <n>: <title>`, for example `# Wish reminders 2: Members choose when they are reminded`. Then it gives that increment's Delivers, Deployable alone, Consumers and Code files from the feature spec, and whatever the feature spec's other sections say about this milestone: its screens, data, API, rules and errors. It has no `## Increments` section and no `- [ ] Not shipped` line.
+A milestone's spec is markdown that starts with `# <name> <n>: <title>`, for example `# Wish reminders 2: Members choose when they are reminded`, and the line under it says it is tracked in Cadre:
+
+```markdown
+> Tracked in Cadre as `<slug>/<n>`. Implement it with the `cadre:cadre` skill ("start milestone <slug>/<n>"), which plans it and links its pull request to the milestone.
+```
+
+Then it gives that increment's Delivers, Deployable alone, Consumers and Code files from the feature spec, and whatever the feature spec's other sections say about this milestone: its screens, data, API, rules and errors. It has no `## Increments` section and no `- [ ] Not shipped` line.
 
 ## Update a milestone's spec
 
@@ -135,10 +148,22 @@ When the person asks to "start milestone `<slug>/<n>`", or to start work on a mi
 5. Plan this repo's part with `superpowers:writing-plans`, giving it the spec copy's path and these rules on top:
    - plan only this repo's part of milestone `<slug>/<n>`;
    - one plan and one pull request;
-   - the pull request's description has a line that reads exactly `Cadre: <slug>/<n>`, which links the pull request to the milestone in Cadre.
+   - the pull request's description has a line that reads exactly `Cadre: <slug>/<n>`, which links the pull request to the milestone in Cadre;
+   - the plan's header says it is tracked in Cadre, on the line under its title, so whoever executes it uses this skill:
+
+     ```markdown
+     > **Tracked in Cadre as `<slug>/<n>`.** REQUIRED SKILL: use `cadre:cadre` while implementing this plan. Its pull request's description has the line `Cadre: <slug>/<n>`.
+     ```
 6. Execute the plan as `superpowers:writing-plans` offers.
 
 On `No project <slug> on <server>.` or `No milestone <slug>/<n> on <server>.`, check the slug and number with the person. On `Your key for <url> is no longer valid. Run cadre login --url <url>.`, go back to Sign in, then retry.
+
+### Track a milestone's implementation
+
+A spec or plan tracked in Cadre says so on the line under its title. When you implement one, for example while executing such a plan:
+
+- Its pull request's description has the line `Cadre: <slug>/<n>`, on a line of its own. When the pull request is already open without it, add it: write `gh pr view <pr-url> --json body -q .body` to a temporary file, add the line, then run `gh pr edit <pr-url> --body-file <file>`.
+- A feature spec names only its project, `<slug>`: its increment `<i>` is milestone `<slug>/<i>`. Start it as "Start a milestone" says, so its plan says it is tracked too.
 
 ### Link a pull request by hand
 

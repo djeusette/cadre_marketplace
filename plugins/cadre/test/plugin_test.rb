@@ -37,7 +37,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.10.0", manifest["version"]
+    assert_equal "0.11.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -59,9 +59,17 @@ class ManifestTest < Minitest::Test
     readme = File.read(File.join(ROOT, "README.md"))
     ["cadre repo set", "cadre fly org add"].each { |text| assert_includes readme, text }
   end
+
+  def test_readme_says_its_specs_and_plans_are_tracked_in_cadre
+    assert_includes File.read(File.join(ROOT, "README.md")), "say they are tracked in Cadre"
+  end
 end
 
 class SkillTest < Minitest::Test
+  FEATURE_LINE = %q{> Tracked in Cadre as `<slug>`. Implement each increment with the `cadre:cadre` skill ("start milestone <slug>/<i>"), which plans it and links its pull request to its milestone.}
+  MILESTONE_LINE = %q{> Tracked in Cadre as `<slug>/<n>`. Implement it with the `cadre:cadre` skill ("start milestone <slug>/<n>"), which plans it and links its pull request to the milestone.}
+  PLAN_LINE = %q{> **Tracked in Cadre as `<slug>/<n>`.** REQUIRED SKILL: use `cadre:cadre` while implementing this plan. Its pull request's description has the line `Cadre: <slug>/<n>`.}
+
   def skill = File.read(File.join(PLUGIN, "skills", "cadre", "SKILL.md"))
   def frontmatter = skill[/\A---\n(.*?)\n---\n/m, 1]
   def description = frontmatter[/^description: (.*)$/, 1]
@@ -76,6 +84,10 @@ class SkillTest < Minitest::Test
   def test_description_covers_starting_a_milestone_and_linking_a_pull_request
     ["to start a milestone (\"start milestone <project>/<n>\")", "to link a pull request to a milestone",
      "to connect a repo to where it deploys, or a Fly org"].each { |text| assert_includes description, text }
+  end
+
+  def test_description_covers_implementing_a_tracked_spec_or_plan
+    assert_includes description, "to implement a spec or plan that says it is tracked in Cadre"
   end
 
   def install_section = skill[/^## Install or update the CLI\n(.*?)(?=^## )/m, 1]
@@ -167,6 +179,18 @@ end
     assert_includes start_section, "already holds this text, as when a milestone is started again, skip the commit"
   end
 
+  def test_the_plan_says_it_is_tracked_in_cadre
+    assert_includes start_section, PLAN_LINE
+  end
+
+  def track_section = skill[/^### Track a milestone's implementation\n(.*?)(?=^##)/m, 1]
+
+  def test_it_tracks_the_implementation_of_a_spec_or_plan
+    ["`Cadre: <slug>/<n>`", "gh pr view <pr-url> --json body -q .body", "gh pr edit <pr-url> --body-file <file>",
+     "milestone `<slug>/<i>`", "as \"Start a milestone\" says"].each { |text| assert_includes track_section, text }
+    assert_operator skill.index("### Track a milestone's implementation"), :<, skill.index("### Link a pull request by hand")
+  end
+
   def test_it_links_a_pull_request_by_hand_and_relays_the_cli_errors
     ["cadre pr link <pr-url> <slug>/<n> --json", "cadre pr link <pr-url> --none --json", "wins at its next sync",
      "No milestone <slug>/<n> on <server>.", "GitHub has no pull request at <url>.", "GitHub isn't connected on <server> yet.",
@@ -207,9 +231,9 @@ end
     skill_files.each { |path| refute_match(/colette/i, File.read(path), path) }
   end
 
-  def test_skill_files_call_only_superpowers_skills
+  def test_skill_files_call_only_superpowers_skills_and_cadre_itself
     calls = skill_files.flat_map { |path| File.read(path).scan(/`([a-z][a-z0-9-]*:[a-z][a-z0-9-]*)`/).flatten }
-    assert_equal %w[superpowers:brainstorming superpowers:writing-plans], calls.uniq.sort
+    assert_equal %w[cadre:cadre superpowers:brainstorming superpowers:writing-plans], calls.uniq.sort
     skill_files.each { |path| refute_match(/\bEP-[A-Z]\d/, File.read(path), path) }
   end
 
@@ -230,6 +254,16 @@ end
     json = skill[/```json\n(.*?)```/m, 1]
     refute_includes json, "The API stores a reminder date"
     assert_includes json, "Members get a reminder before a wish expires"
+  end
+
+  def test_the_feature_spec_says_it_is_tracked_in_cadre
+    [FEATURE_LINE, "Add the line when the spec lacks it", "change it on the spec's tracking line too"].each { |text| assert_includes create_section, text }
+  end
+
+  def write_section = skill[/^## Write a milestone's spec\n(.*?)(?=^## )/m, 1]
+
+  def test_a_milestones_spec_says_it_is_tracked_in_cadre
+    assert_includes write_section, MILESTONE_LINE
   end
 
   def test_a_corrected_spec_is_committed_alone_or_left_to_the_person
@@ -311,6 +345,10 @@ class BrainstormTest < Minitest::Test
   def test_skipping_the_questions_leaves_one_approval_before_the_commit
     skip_path = brainstorm[/When the person says to skip the questions(.*?)$/, 1]
     ["still ends with the spec", "mark every open point as your call", "approve the spec"].each { |text| assert_includes skip_path, text }
+  end
+
+  def test_the_feature_spec_has_cadres_tracking_line_under_its_title
+    ["the line under it that says it is tracked in Cadre", "step 2 of the cadre skill's \"Create a project\"", "kebab case"].each { |text| assert_includes brainstorm, text }
   end
 
   def test_it_commits_only_the_spec_file

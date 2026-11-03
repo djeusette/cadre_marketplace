@@ -45,7 +45,7 @@ Draft the milestones while the design takes shape:
 
 Write it to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` in the current repo, with today's date. When that file exists, add `-2`, `-3`, … before `.md`, so an earlier spec is never overwritten.
 
-Title it `# <Feature> — design`. After what superpowers' written design covers, it ends with these two sections, in this order:
+Title it `# <Feature> — design`, with the line under it that says it is tracked in Cadre, as step 2 of the cadre skill's "Create a project" gives it; `<slug>` is the feature's name in kebab case. After what superpowers' written design covers, it ends with these two sections, in this order:
 
 ```markdown
 ## End goal
