@@ -240,7 +240,9 @@ end
   end
 
   def test_it_deploys_a_clean_up_to_date_main_with_the_commit_as_the_image_label
-    ["fly deploy --image-label $(git rev-parse HEAD)", "clean, up-to-date", "git fetch", "last_deploy", "commit unknown"].each do |text|
+    ["fly deploy --image-label $(git rev-parse HEAD)", "clean, up-to-date", "git fetch", "last_deploy", "commit unknown",
+     "git rev-parse --abbrev-ref HEAD", "prints `main`", "git status --porcelain", "prints nothing",
+     "git rev-parse HEAD", "git rev-parse origin/main", "Once the person confirms"].each do |text|
       assert_includes deploy_a_repo_section, text
     end
   end
