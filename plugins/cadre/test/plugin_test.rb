@@ -38,7 +38,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.13.0", manifest["version"]
+    assert_equal "0.14.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -206,6 +206,18 @@ end
     ["`Cadre: <slug>/<n>`", "gh pr view <pr-url> --json body -q .body", "gh pr edit <pr-url> --body-file <file>",
      "milestone `<slug>/<i>`", "as \"Start a milestone\" says"].each { |text| assert_includes track_section, text }
     assert_operator skill.index("### Track a milestone's implementation"), :<, skill.index("### Link a pull request by hand")
+  end
+
+  def test_the_pull_request_lists_what_a_deploy_needs_first
+    start_rules = start_section.split("### Track").first
+    ["a heading line `## Before deploying`", "- [ ]", "env var", "another repo", "manual step"].each do |text|
+      assert_includes start_rules, text
+      assert_includes track_section, text
+    end
+  end
+
+  def test_the_readme_mentions_the_before_deploying_section
+    assert_includes File.read(File.expand_path("../../../README.md", __dir__)), "## Before deploying"
   end
 
   def test_it_links_a_pull_request_by_hand_and_relays_the_cli_errors

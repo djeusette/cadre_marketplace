@@ -162,6 +162,7 @@ When the person asks to "start milestone `<slug>/<n>`", or to start work on a mi
    - plan only this repo's part of milestone `<slug>/<n>`;
    - one plan and one pull request;
    - the pull request's description has a line that reads exactly `Cadre: <slug>/<n>`, which links the pull request to the milestone in Cadre;
+   - when the change needs something before it ships, such as a new env var or secret, another repo deployed first, or a manual step, the pull request's description lists it under a heading line `## Before deploying`, as a task list with one `- [ ]` item for each. The person ticks an item in GitHub once it's done. A change that needs nothing has no section;
    - the plan's header says it is tracked in Cadre, on the line under its title, so whoever executes it uses this skill:
 
      ```markdown
@@ -176,6 +177,7 @@ On `No project <slug> on <server>.` or `No milestone <slug>/<n> on <server>.`, c
 A spec or plan tracked in Cadre says so on the line under its title. When you implement one, for example while executing such a plan:
 
 - Its pull request's description has the line `Cadre: <slug>/<n>`, on a line of its own. When the pull request is already open without it, add it: write `gh pr view <pr-url> --json body -q .body` to a temporary file, add the line, then run `gh pr edit <pr-url> --body-file <file>`.
+- When the change needs something before it ships, such as a new env var or secret, another repo deployed first, or a manual step, the pull request's description lists it under a heading line `## Before deploying`, as a task list with one `- [ ]` item for each. The person ticks an item in GitHub once it's done. A change that needs nothing has no section.
 - A feature spec names only its project, `<slug>`: its increment `<i>` is milestone `<slug>/<i>`. Start it as "Start a milestone" says, so its plan says it is tracked too.
 
 ### Link a pull request by hand
