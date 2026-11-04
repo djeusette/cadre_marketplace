@@ -210,7 +210,7 @@ When the person asks to deploy a repo that runs on Fly:
 
 1. Check it's a clean, up-to-date `main`: `git rev-parse --abbrev-ref HEAD` prints `main`, `git status --porcelain` prints nothing, and after `git fetch`, `git rev-parse HEAD` equals `git rev-parse origin/main`. Otherwise tell the person what differs, and stop.
 2. Once the person confirms, run `fly deploy --image-label $(git rev-parse HEAD)`, with the flags the repo always deploys with, such as `-c <config file>`. A deploy can't be taken back, so never run it without the confirmation.
-3. Cadre reads Fly every two minutes. Two minutes after the deploy, `cadre repo show <repo> --json` shows it in the target's `last_deploy`. A `commit` of `null` is "commit unknown": that deploy had no label, so tell the person to deploy with `--image-label` as in step 2.
+3. Cadre reads Fly every two minutes while it is awake, and as soon as it wakes. Two minutes after the deploy, `cadre repo show <repo> --json` shows it in the target's `last_deploy`. When it still shows the deploy before, cadre was asleep: ask again a minute later. A `commit` of `null` is "commit unknown": that deploy had no label, so tell the person to deploy with `--image-label` as in step 2.
 
 ## Limits
 
