@@ -55,10 +55,10 @@ The person never types or copies a key.
    ```
 
    Add the line when the spec lacks it, and commit it as step 5 commits a correction.
-3. Design every milestone: create one Claude Design canvas for the project, with one page per milestone. A milestone without a screen gets a diagram as its page instead: its data flow or its API contract. Keep the canvas link and each page's link.
+3. Design every milestone: create one Claude Design canvas for the project, with one page per milestone. A milestone without a screen gets a diagram as its page instead: its data flow or its API contract. Keep the canvas link and each milestone's design link, built as "Link a milestone to its design" says.
 4. Write one spec per milestone, as the next section describes.
 5. Play every milestone back one last time, as it will be registered: its title, its repos in deploy order, its consumers, what it delivers and its design link. Take a repo name only from the spec or from the person, and ask when unsure. Register nothing until the person approves them. Fix what they correct first. When a correction changes the feature spec, update the spec. If the brainstorm committed it, commit only that file again with `git commit -m "docs: <feature> design" -- <path>`, and never push. If the person named it, leave the commit to them.
-6. Add them to the project: `canvas_url` is the canvas link and, per milestone, `spec` is its markdown and `design_url` the link to its page in the canvas, or the canvas link when there is no page link.
+6. Add them to the project: `canvas_url` is the canvas link and, per milestone, `spec` is its markdown and `design_url` its design link.
 7. Write the JSON to a temporary file and run `cadre project create <file> --json`.
    When it prints `Your key for <url> is no longer valid. Run cadre login --url <url>.`, go back to Sign in, then run it again.
 8. On a `422`, the CLI prints one `<path>: <message>` line per error, for example `milestones.1.repos.0: …`. Fix the fields those paths name, then run the command again. When you change the `slug`, change it on the spec's tracking line too. Error paths are 0-based positions in the JSON arrays: `milestones.1.repos.0` is the first repo of the second milestone, while milestone numbers shown elsewhere start at 1.
@@ -74,16 +74,16 @@ The person never types or copies a key.
       "title": "Members get a reminder before a wish expires",
       "repos": ["shop-api"],
       "spec": "# Wish reminders 1: Members get a reminder before a wish expires\n\n...",
-      "design_url": "https://claude.ai/design/p/…?page=1"
+      "design_url": "https://claude.ai/artifact/…#page-…"
     },
     {
       "title": "Members choose when they are reminded",
       "repos": ["shop-api", "shop-mobile"],
       "spec": "# Wish reminders 2: Members choose when they are reminded\n\n...",
-      "design_url": "https://claude.ai/design/p/…?page=2"
+      "design_url": "https://claude.ai/artifact/…#page-…"
     }
   ],
-  "canvas_url": "https://claude.ai/design/p/…"
+  "canvas_url": "https://claude.ai/artifact/…"
 }
 ```
 
@@ -96,6 +96,19 @@ A milestone's spec is markdown that starts with `# <name> <n>: <title>`, for exa
 ```
 
 Then it gives that increment's Delivers, Deployable alone, Consumers and Code files from the feature spec, and whatever the feature spec's other sections say about this milestone: its screens, data, API, rules and errors. It has no `## Increments` section and no `- [ ] Not shipped` line.
+
+## Link a milestone to its design
+
+A milestone's design link opens the canvas on that milestone's page. Read the page's `id` from the `pages` list of the canvas's `project/canvas.json`, then build the link with [design_link.rb](design_link.rb), in this skill's folder:
+
+```bash
+ruby <this skill's folder>/design_link.rb <canvas_url> --page <id>
+```
+
+- A milestone whose designs are one board on a page it shares links that board: `--board <file>`, with the board's key in `boards`, such as `M3.dc.html`.
+- A milestone with no page or board of its own keeps the canvas link.
+- The link holds a hash of the page's `id` or the board's file name. When one of them changes, the link opens the canvas's default view, so build it again.
+- When `ruby` is missing, ask the person to open the page in the canvas and send you what their address bar shows: it is the same link.
 
 ## Update a milestone's spec
 
@@ -130,7 +143,7 @@ When the person asks to change a project in Cadre, for example to rename it, reo
 5. For each milestone you added, once the update has succeeded:
    - Pull the project again: `cadre project pull <slug> -o <file> --json`. The new milestone is the entry whose `number` was not in the file you sent. Its number follows the highest one the project ever used, archived milestones included, so you could not know it before.
    - Write its spec as "Write a milestone's spec" says, with that number, and push it without a base, as it has no spec yet: `cadre spec push <slug>/<n> <spec-file> --json`.
-   - Draw its page in the project's design canvas, as "Create a project" does for every milestone, then put the page's link in the pulled file as its `design_url`. Pull once more for the new `version`, edit that one entry, and run `cadre project update <file> --json`.
+   - Draw its page in the project's design canvas, as "Create a project" does for every milestone, then put its design link, built as "Link a milestone to its design" says, in the pulled file as its `design_url`. Pull once more for the new `version`, edit that one entry, and run `cadre project update <file> --json`.
    - Report the new number to the person, with the `url`.
 6. On `<slug> changed since you pulled it (version <n>, now <m>). Pull it again.`, pull again, redo the edit on the new file, play it back, and update.
 7. On `<slug> is archived. Run cadre project unarchive <slug> first.`, ask the person whether to bring the project back. When they agree, run `cadre project unarchive <slug>` and update again with the same file.

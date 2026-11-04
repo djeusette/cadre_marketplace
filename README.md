@@ -20,7 +20,7 @@ Or commit them to a repo's `.claude/settings.json` so the whole team gets them a
   brainstorms the feature with the person through `superpowers:brainstorming`, into an end
   goal and milestones, each the smallest step that ships one feature and deploys on its own. It
   commits that feature spec, or builds from one the person names, then registers one
-  milestone per increment, each with its repos in deploy order, its own spec and a page in
+  milestone per increment, each with its repos in deploy order, its own spec and a link straight to its page in
   the project's Claude Design canvas. Asked to "update the spec of <project>/<n>", it pulls
   the spec with `cadre spec pull`, edits it with the person, and pushes it back with
   `cadre spec push --base`, so an edit never replaces a newer one. Asked to "start milestone <project>/<n>"
