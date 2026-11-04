@@ -1,6 +1,6 @@
 ---
 name: cadre
-description: Use when the person asks to register, create or track a project, feature or milestones in Cadre, to read, write or update a milestone's spec in Cadre ("update the spec of <project>/<n>"), to change, reorder, rename or drop a project or its milestones in Cadre, to start a milestone ("start milestone <project>/<n>"), to link a pull request to a milestone, to connect a repo to where it deploys, or a Fly org, in Cadre ("connect <repo> to its Fly app", "where does <repo> deploy?"), to implement a spec or plan that says it is tracked in Cadre, or to sign in to Cadre.
+description: Use when the person asks to register, create or track a project, feature or milestones in Cadre, to read, write or update a milestone's spec in Cadre ("update the spec of <project>/<n>"), to change, reorder, rename or drop a project or its milestones in Cadre, to start a milestone ("start milestone <project>/<n>"), to link a pull request to a milestone, to connect a repo to where it deploys, or a Fly org, in Cadre ("connect <repo> to its Fly app", "where does <repo> deploy?"), to deploy a repo that runs on Fly, to implement a spec or plan that says it is tracked in Cadre, or to sign in to Cadre.
 ---
 
 # Cadre
@@ -180,7 +180,7 @@ A pull request opened without the `Cadre:` line, or before the cadre GitHub App 
 
 When the person asks to connect a repo to where it deploys ("connect `<repo>` to its Fly app"), or where a repo deploys ("where does `<repo>` deploy?"), with `<repo>` a bare repo name as in a project:
 
-1. Read the repo's targets: `cadre repo show <repo> --json`. Each of its `targets` has a `platform`, its `settings` (Fly's is `app`), an `account`, the Fly org cadre reads it through, and `tracked`, whether cadre reads its deploys. Answer "where does it deploy?" from them.
+1. Read the repo's targets: `cadre repo show <repo> --json`. Each of its `targets` has a `platform`, its `settings` (Fly's is `app`), an `account`, the Fly org cadre reads it through, `tracked`, whether cadre reads its deploys, and `last_deploy`, the `commit` and `deployed_at` of the latest deploy cadre saw, or `null`. Answer "where does it deploy?" from them.
 2. Connect a Fly app: `cadre repo set <repo> --fly-app <app> --json`. Cadre finds the connected Fly org that lists the app, and keeps it as the target's `account`. Setting a platform again replaces its settings. Report the target the JSON body holds.
 3. For any other host, `cadre repo set <repo> --platform <name> --json` records it, and it shows as not tracked: cadre can't read its deploys yet. `cadre repo unset <repo> --platform <name> --json` removes a target, `fly` for a Fly app.
 4. Cadre reads Fly with one read-only token per Fly org, kept on its server for the whole team. To connect an org, ask the person first, naming the org. Once they agree, run:
@@ -203,6 +203,14 @@ When a command fails, it prints one of these:
 - `Cadre couldn't reach Fly. Try again in a minute.`: try again in a minute.
 - `No repo <repo> on <server>.`: cadre knows a repo once a project names it. Check the name with the person, or add the repo to a project as "Change a project" does.
 - `Your key for <url> is no longer valid. Run cadre login --url <url>.`: go back to Sign in, then retry.
+
+## Deploy a repo
+
+When the person asks to deploy a repo that runs on Fly:
+
+1. Check it's a clean, up-to-date `main`: `git rev-parse --abbrev-ref HEAD` prints `main`, `git status --porcelain` prints nothing, and after `git fetch`, `git rev-parse HEAD` equals `git rev-parse origin/main`. Otherwise tell the person what differs, and stop.
+2. Once the person confirms, run `fly deploy --image-label $(git rev-parse HEAD)`, with the flags the repo always deploys with, such as `-c <config file>`. A deploy can't be taken back, so never run it without the confirmation.
+3. Cadre reads Fly every two minutes while it is awake, and as soon as it wakes. Two minutes after the deploy, `cadre repo show <repo> --json` shows it in the target's `last_deploy`. When it still shows the deploy before, cadre was asleep: ask again a minute later. A `commit` of `null` is "commit unknown": that deploy had no label, so tell the person to deploy with `--image-label` as in step 2.
 
 ## Limits
 
