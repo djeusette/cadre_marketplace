@@ -37,7 +37,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.11.0", manifest["version"]
+    assert_equal "0.12.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -58,6 +58,10 @@ class ManifestTest < Minitest::Test
   def test_readme_says_it_connects_repos_and_fly_orgs
     readme = File.read(File.join(ROOT, "README.md"))
     ["cadre repo set", "cadre fly org add"].each { |text| assert_includes readme, text }
+  end
+
+  def test_readme_says_it_deploys_with_the_commit
+    assert_includes File.read(File.join(ROOT, "README.md")), "--image-label"
   end
 
   def test_readme_says_its_specs_and_plans_are_tracked_in_cadre
@@ -222,6 +226,27 @@ end
      "settings.app: isn't an app of a connected Fly org (", "Fly refused this token for <org>.",
      "Fly has no org <org> that this token can read.", "<org> still reads <repos>. Unset or move those targets first.",
      "Cadre couldn't reach Fly. Try again in a minute.", "No repo <repo> on <server>."].each { |text| assert_includes deploy_section, text }
+  end
+
+  def deploy_a_repo_section = skill[/^## Deploy a repo\n(.*?)(?=^## )/m, 1]
+
+  def test_deploying_a_repo_comes_between_connecting_and_the_limits
+    assert_operator skill.index("## Connect a repo to where it deploys"), :<, skill.index("## Deploy a repo")
+    assert_operator skill.index("## Deploy a repo"), :<, skill.index("## Limits")
+  end
+
+  def test_the_description_offers_to_deploy_a_repo_that_runs_on_fly
+    assert_includes skill[/^description: (.*)$/, 1], "to deploy a repo that runs on Fly"
+  end
+
+  def test_it_deploys_a_clean_up_to_date_main_with_the_commit_as_the_image_label
+    ["fly deploy --image-label $(git rev-parse HEAD)", "clean, up-to-date", "git fetch", "last_deploy", "commit unknown"].each do |text|
+      assert_includes deploy_a_repo_section, text
+    end
+  end
+
+  def test_connecting_a_repo_reads_the_last_deploy
+    assert_includes deploy_section, "`last_deploy`"
   end
 
   def skill_files = Dir[File.join(PLUGIN, "skills", "**", "*")].select { |path| File.file?(path) }
