@@ -1,7 +1,8 @@
 require "minitest/autorun"
 require "json"
+require "open3"
 
-ROOT = File.expand_path("../../..", __dir__)
+ROOT =File.expand_path("../../..", __dir__)
 PLUGIN = File.join(ROOT, "plugins", "cadre")
 INSTALL = 'gh release download -R djeusette/cadre_cli --pattern "cadre_$(uname -s)_$(uname -m).tar.gz" -O - | tar -xz -C ~/.local/bin cadre'
 
@@ -37,7 +38,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.12.0", manifest["version"]
+    assert_equal "0.13.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -106,6 +107,18 @@ class SkillTest < Minitest::Test
     json = skill[/```json\n(.*?)```/m, 1]
     ["\"canvas_url\"", "\"design_url\"", "\"spec\""].each { |key| assert_includes json, key }
     ["one Claude Design canvas", "one page per milestone", "diagram", "share the canvas"].each { |text| assert_includes skill, text }
+  end
+
+  def design_section = skill[/^## Link a milestone to its design\n(.*?)(?=^## )/m, 1]
+
+  def test_it_links_each_milestone_to_its_own_page
+    ["[design_link.rb](design_link.rb)", "--page <id>", "--board <file>", "project/canvas.json", "keeps the canvas link", "address bar"].each do |text|
+      assert_includes design_section, text
+    end
+    [create_section, change_section].each { |section| assert_includes section, 'as "Link a milestone to its design" says' }
+    json = skill[/```json\n(.*?)```/m, 1]
+    assert_includes json, "https://claude.ai/artifact/…#page-…"
+    ["?page=", "claude.ai/design/p/"].each { |text| refute_includes skill, text }
   end
 
   def test_it_pushes_a_missing_spec_when_asked
@@ -335,6 +348,40 @@ end
   def test_it_uses_the_cli_copy
     ["Signed in as <email>.", "Not signed in. Run cadre login --url <url>.", "Your key for <url> is no longer valid. Run cadre login --url <url>.", "The code expired. Run cadre login --url <url> again.", "--url must be an http:// or https:// URL with a host"].each do |text|
       assert_includes skill, text
+    end
+  end
+end
+
+class DesignLinkTest < Minitest::Test
+  SCRIPT = File.join(PLUGIN, "skills", "cadre", "design_link.rb")
+  CANVAS = "https://claude.ai/artifact/2Ut2UwnSnjEp9muwtAwqBJ"
+
+  def link(*args) = Open3.capture2e("ruby", SCRIPT, *args)
+
+  # The canvas wrote this fragment to its own address bar on the page "by-milestone".
+  def test_it_links_a_page_by_its_id
+    output, status = link(CANVAS, "--page", "by-milestone")
+    assert status.success?, output
+    assert_equal "#{CANVAS}#page-ed068eefbbfd\n", output
+  end
+
+  # This fragment opened the canvas framed on board M3.
+  def test_it_links_a_board_by_its_file
+    output, status = link(CANVAS, "--board", "M3.dc.html")
+    assert status.success?, output
+    assert_equal "#{CANVAS}#artboard-b02440b1710a\n", output
+  end
+
+  def test_it_replaces_the_fragment_a_link_already_has
+    output, = link("#{CANVAS}#page-ed068eefbbfd", "--board", "M3.dc.html")
+    assert_equal "#{CANVAS}#artboard-b02440b1710a\n", output
+  end
+
+  def test_it_shows_its_usage_when_called_any_other_way
+    [[], [CANVAS], [CANVAS, "--page"], [CANVAS, "--page", ""], [CANVAS, "--frame", "M3"], ["http://claude.ai/artifact/a", "--page", "p"]].each do |args|
+      output, status = link(*args)
+      refute status.success?, args.inspect
+      assert_includes output, "Usage: ruby design_link.rb"
     end
   end
 end
