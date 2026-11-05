@@ -278,8 +278,11 @@ end
   end
 
   def test_it_checks_the_fly_config_name_before_setting_it_and_never_deploys_another_way
-    ["isn't in this checkout", "--fly-config <file>", "checks the file's name with the person",
-     "never deploys another way"].each { |text| assert_includes deploy_a_repo_section, text }
+    ["isn't in this checkout", "Neither fly.production.toml nor fly.toml is in this checkout.", "--fly-config <file>",
+     "check the file's name with the person", "never deploy another way",
+     "the person confirms again before `cadre deploy <repo>` runs again"].each do |text|
+      assert_includes deploy_a_repo_section, text
+    end
   end
 
   def test_connecting_a_repo_can_name_its_fly_config
