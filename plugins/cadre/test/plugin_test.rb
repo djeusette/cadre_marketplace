@@ -285,6 +285,12 @@ end
     end
   end
 
+  def test_it_carries_the_status_url_over_when_it_sets_the_config_file
+    ["with `--status-url <url>` when the target has one", "carry the status URL over"].each do |text|
+      assert_includes deploy_a_repo_section, text
+    end
+  end
+
   def test_connecting_a_repo_can_name_its_fly_config
     assert_includes deploy_section, "--fly-config <file>"
   end
@@ -308,6 +314,12 @@ end
 
   def test_connecting_a_repo_reads_the_last_deploy
     assert_includes deploy_section, "`last_deploy`"
+  end
+
+  def test_connecting_a_repo_reads_whether_the_app_is_live
+    ["`live`", '`"live"`', '`"not_live"`', '`"not_checked"`', "`not_live_since`"].each do |text|
+      assert_includes deploy_section, text
+    end
   end
 
   def skill_files = Dir[File.join(PLUGIN, "skills", "**", "*")].select { |path| File.file?(path) }
