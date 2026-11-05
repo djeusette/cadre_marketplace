@@ -38,7 +38,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.15.0", manifest["version"]
+    assert_equal "0.16.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -99,8 +99,8 @@ class SkillTest < Minitest::Test
   
   def test_it_installs_a_missing_cli_and_upgrades_an_old_one
     assert_includes install_section, INSTALL
-    ["When the command is missing,", "below `0.11.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
-    ["0.1.0", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes skill, text }
+    ["When the command is missing,", "below `0.12.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
+    ["0.1.0", "below `0.11.0`", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes skill, text }
   end
 
   def test_it_writes_a_spec_and_designs_for_every_milestone
@@ -285,16 +285,41 @@ end
     end
   end
 
+  def test_it_carries_the_status_url_over_when_it_sets_the_config_file
+    ["with `--status-url <url>` when the target has one", "carry the status URL over"].each do |text|
+      assert_includes deploy_a_repo_section, text
+    end
+  end
+
   def test_connecting_a_repo_can_name_its_fly_config
     assert_includes deploy_section, "--fly-config <file>"
   end
 
+  def test_it_asks_for_a_status_url_when_it_connects_a_repo
+    ["--status-url", "https", "2xx", "isn't monitored", "every 2 minutes", "health checks", "Deployed", "mobile"].each { |text| assert_includes deploy_section, text }
+  end
+
+  def test_it_passes_every_flag_again_when_it_sets_a_platform_again
+    assert_includes deploy_section, "replaces `--fly-config` and `--status-url`, so pass every one you want to keep"
+  end
+
+  def test_it_reads_the_target_before_it_sets_a_platform_again
+    assert_includes deploy_section, "Before setting a platform again, read what is there"
+    ["`settings` (its `app` and `config`)", "`status_url`", "next to `settings`, not inside it", "carry them over"].each { |text| assert_includes deploy_section, text }
+  end
+
   def test_it_needs_the_cli_that_deploys
-    assert_includes skill, "below `0.11.0`"
+    assert_includes skill, "below `0.12.0`"
   end
 
   def test_connecting_a_repo_reads_the_last_deploy
     assert_includes deploy_section, "`last_deploy`"
+  end
+
+  def test_connecting_a_repo_reads_whether_the_app_is_live
+    ["`live`", '`"live"`', '`"not_live"`', '`"not_checked"`', "`not_live_since`"].each do |text|
+      assert_includes deploy_section, text
+    end
   end
 
   def skill_files = Dir[File.join(PLUGIN, "skills", "**", "*")].select { |path| File.file?(path) }
