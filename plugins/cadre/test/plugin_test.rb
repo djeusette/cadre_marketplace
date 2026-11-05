@@ -271,7 +271,7 @@ end
   end
 
   def test_it_passes_yes_only_after_the_person_confirms_the_open_items
-    ["Not deployed.", "cadre deploy <repo> --yes", "fly auth login"].each do |text|
+    ["Not deployed.", "cadre deploy <repo> --yes", "fly auth login", "only once they confirm"].each do |text|
       assert_includes deploy_a_repo_section, text
     end
     assert_operator deploy_a_repo_section.index("Not deployed."), :<, deploy_a_repo_section.index("--yes")
