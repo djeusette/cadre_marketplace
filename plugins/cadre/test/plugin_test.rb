@@ -38,7 +38,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.15.0", manifest["version"]
+    assert_equal "0.16.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -99,8 +99,8 @@ class SkillTest < Minitest::Test
   
   def test_it_installs_a_missing_cli_and_upgrades_an_old_one
     assert_includes install_section, INSTALL
-    ["When the command is missing,", "below `0.11.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
-    ["0.1.0", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes skill, text }
+    ["When the command is missing,", "below `0.12.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
+    ["0.1.0", "below `0.11.0`", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes skill, text }
   end
 
   def test_it_writes_a_spec_and_designs_for_every_milestone
@@ -289,8 +289,18 @@ end
     assert_includes deploy_section, "--fly-config <file>"
   end
 
+  def test_it_asks_for_a_status_url_when_it_connects_a_repo
+    ["--status-url", "https", "2xx", "isn't monitored", "every 2 minutes", "health checks"].each { |text| assert_includes deploy_section, text }
+  end
+
+  def test_it_passes_every_flag_again_when_it_sets_a_platform_again
+    assert_includes deploy_section, "Setting a platform again replaces its settings"
+    assert_match(/every flag[^.]*again/, deploy_section)
+    assert_match(/--fly-config.*--status-url/m, deploy_section)
+  end
+
   def test_it_needs_the_cli_that_deploys
-    assert_includes skill, "below `0.11.0`"
+    assert_includes skill, "below `0.12.0`"
   end
 
   def test_connecting_a_repo_reads_the_last_deploy
