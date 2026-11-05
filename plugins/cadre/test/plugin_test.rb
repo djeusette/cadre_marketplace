@@ -38,7 +38,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.14.0", manifest["version"]
+    assert_equal "0.15.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -62,7 +62,7 @@ class ManifestTest < Minitest::Test
   end
 
   def test_readme_says_it_deploys_with_the_commit
-    assert_includes File.read(File.join(ROOT, "README.md")), "--image-label"
+    assert_includes File.read(File.join(ROOT, "README.md")), "cadre deploy"
   end
 
   def test_readme_says_its_specs_and_plans_are_tracked_in_cadre
@@ -99,8 +99,8 @@ class SkillTest < Minitest::Test
   
   def test_it_installs_a_missing_cli_and_upgrades_an_old_one
     assert_includes install_section, INSTALL
-    ["When the command is missing,", "below `0.8.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
-    ["0.1.0", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`"].each { |text| refute_includes skill, text }
+    ["When the command is missing,", "below `0.11.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
+    ["0.1.0", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes skill, text }
   end
 
   def test_it_writes_a_spec_and_designs_for_every_milestone
@@ -264,12 +264,30 @@ end
     assert_includes skill[/^description: (.*)$/, 1], "to deploy a repo that runs on Fly"
   end
 
-  def test_it_deploys_a_clean_up_to_date_main_with_the_commit_as_the_image_label
-    ["fly deploy --image-label $(git rev-parse HEAD)", "clean, up-to-date", "git fetch", "last_deploy", "commit unknown",
-     "git rev-parse --abbrev-ref HEAD", "prints `main`", "git status --porcelain", "prints nothing",
-     "git rev-parse HEAD", "git rev-parse origin/main", "Once the person confirms"].each do |text|
+  def test_it_deploys_with_cadre_deploy_once_the_person_confirms
+    ["cadre deploy <repo>", "Once the person confirms", "600000", "run_in_background", "last_deploy",
+     "commit unknown"].each { |text| assert_includes deploy_a_repo_section, text }
+    ["fly deploy", "git status --porcelain"].each { |text| refute_includes deploy_a_repo_section, text }
+  end
+
+  def test_it_passes_yes_only_after_the_person_confirms_the_open_items
+    ["Not deployed.", "cadre deploy <repo> --yes", "fly auth login"].each do |text|
       assert_includes deploy_a_repo_section, text
     end
+    assert_operator deploy_a_repo_section.index("Not deployed."), :<, deploy_a_repo_section.index("--yes")
+  end
+
+  def test_it_checks_the_fly_config_name_before_setting_it_and_never_deploys_another_way
+    ["isn't in this checkout", "--fly-config <file>", "checks the file's name with the person",
+     "never deploys another way"].each { |text| assert_includes deploy_a_repo_section, text }
+  end
+
+  def test_connecting_a_repo_can_name_its_fly_config
+    assert_includes deploy_section, "--fly-config <file>"
+  end
+
+  def test_it_needs_the_cli_that_deploys
+    assert_includes skill, "below `0.11.0`"
   end
 
   def test_connecting_a_repo_reads_the_last_deploy

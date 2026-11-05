@@ -32,8 +32,8 @@ Or commit them to a repo's `.claude/settings.json` so the whole team gets them a
   The specs and plans it writes say they are tracked in Cadre, so whoever implements them uses the skill.
   Asked to "connect <repo> to its Fly app", it sets the repo's deploy target with `cadre repo set`,
   and, once the person agrees, connects the Fly org that runs it with `cadre fly org add`, piping a
-  read-only token from `fly tokens create` so the token is never shown. Asked to deploy a repo that runs on Fly, it checks that `main` is clean and up to date,
-  then, once the person confirms, runs `fly deploy --image-label $(git rev-parse HEAD)`, so Cadre knows which commit each deploy runs. It installs the `cadre` CLI from its
+  read-only token from `fly tokens create` so the token is never shown. Asked to deploy a repo that runs on Fly, then, once the person confirms, it runs `cadre deploy`,
+  which checks that `main` is clean and up to date and deploys its commit, so Cadre knows which commit each deploy runs. It installs the `cadre` CLI from its
   GitHub release (needs `gh`) and updates it with `cadre upgrade`, signs the person in through the browser to the Cadre URL they give, and reports the
   project's URL. Installing cadre installs `superpowers` from `claude-plugins-official` with it.
 
