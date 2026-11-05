@@ -290,13 +290,16 @@ end
   end
 
   def test_it_asks_for_a_status_url_when_it_connects_a_repo
-    ["--status-url", "https", "2xx", "isn't monitored", "every 2 minutes", "health checks"].each { |text| assert_includes deploy_section, text }
+    ["--status-url", "https", "2xx", "isn't monitored", "every 2 minutes", "health checks", "Deployed", "mobile"].each { |text| assert_includes deploy_section, text }
   end
 
   def test_it_passes_every_flag_again_when_it_sets_a_platform_again
-    assert_includes deploy_section, "Setting a platform again replaces its settings"
-    assert_match(/every flag[^.]*again/, deploy_section)
-    assert_match(/--fly-config.*--status-url/m, deploy_section)
+    assert_includes deploy_section, "replaces `--fly-config` and `--status-url`, so pass every one you want to keep"
+  end
+
+  def test_it_reads_the_target_before_it_sets_a_platform_again
+    assert_includes deploy_section, "Before setting a platform again, read what is there"
+    ["`settings` (its `app` and `config`)", "`status_url`", "next to `settings`, not inside it", "carry them over"].each { |text| assert_includes deploy_section, text }
   end
 
   def test_it_needs_the_cli_that_deploys

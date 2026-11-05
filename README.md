@@ -31,7 +31,8 @@ Or commit them to a repo's `.claude/settings.json` so the whole team gets them a
   the pull request lists it under `## Before deploying`, one `- [ ]` item each, for the person to tick in GitHub.
   The specs and plans it writes say they are tracked in Cadre, so whoever implements them uses the skill.
   Asked to "connect <repo> to its Fly app", it sets the repo's deploy target with `cadre repo set`,
-  asking for a status URL so Cadre can tell when the app is live, and, once the person agrees, connects the Fly org that runs it with `cadre fly org add`, piping a
+  asking for a status URL so Cadre can tell when the app is live, and, once the person agrees,
+  connects the Fly org that runs it with `cadre fly org add`, piping a
   read-only token from `fly tokens create` so the token is never shown. Asked to deploy a repo that runs on Fly, it runs `cadre deploy` once the person confirms,
   which checks that `main` is clean and up to date and deploys its commit, so Cadre knows which commit each deploy runs. It installs the `cadre` CLI from its
   GitHub release (needs `gh`) and updates it with `cadre upgrade`, signs the person in through the browser to the Cadre URL they give, and reports the
