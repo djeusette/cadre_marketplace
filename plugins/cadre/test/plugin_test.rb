@@ -38,7 +38,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.16.0", manifest["version"]
+    assert_equal "0.17.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -99,8 +99,8 @@ class SkillTest < Minitest::Test
   
   def test_it_installs_a_missing_cli_and_upgrades_an_old_one
     assert_includes install_section, INSTALL
-    ["When the command is missing,", "below `0.12.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
-    ["0.1.0", "below `0.11.0`", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes skill, text }
+    ["When the command is missing,", "below `0.13.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
+    ["0.1.0", "below `0.12.0`", "below `0.11.0`", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes skill, text }
   end
 
   def test_it_writes_a_spec_and_designs_for_every_milestone
@@ -309,7 +309,16 @@ end
   end
 
   def test_it_needs_the_cli_that_deploys
-    assert_includes skill, "below `0.12.0`"
+    assert_includes skill, "below `0.13.0`"
+  end
+
+  def test_it_connects_vercel_apps_and_teams
+    ["--vercel-project", "--name", "--vercel-dir", "cadre vercel team add", "cadre vercel team remove", "--platform vercel --name <app>",
+     "Vercel isn't connected on <server> yet.", "vercel deploy --prod"].each { |text| assert_includes deploy_section, text }
+  end
+
+  def test_the_person_adds_the_vercel_token_themselves
+    ["never handled by Claude Code", "in their own terminal", "team-scoped", "dashboard"].each { |text| assert_includes deploy_section, text }
   end
 
   def test_connecting_a_repo_reads_the_last_deploy
