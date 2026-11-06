@@ -28,7 +28,7 @@ Or commit them to a repo's `.claude/settings.json` so the whole team gets them a
   repo's part through `superpowers:writing-plans`, and opens one pull request with a `Cadre: <project>/<n>`
   line, which links it to the milestone; a pull request without the line is linked with `cadre pr link`.
   When a change needs something before it ships, such as a new env var, another repo deployed first or a manual step,
-  the pull request lists it under `## Before deploying`, one `- [ ]` item each, for the person to tick in GitHub.
+  the pull request lists it under `## Before deploying`, one `- [ ]` item each, for the person to tick in GitHub, or for the skill to tick once told the item is done.
   The specs and plans it writes say they are tracked in Cadre, so whoever implements them uses the skill.
   Asked to "connect <repo> to its Fly app", it sets the repo's deploy target with `cadre repo set`,
   asking for a status URL so Cadre can tell when the app is live, and, once the person agrees,
