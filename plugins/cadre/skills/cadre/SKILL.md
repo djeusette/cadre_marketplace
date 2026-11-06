@@ -1,6 +1,6 @@
 ---
 name: cadre
-description: Use when the person asks to register, create or track a project, feature or milestones in Cadre, to read, write or update a milestone's spec in Cadre ("update the spec of <project>/<n>"), to change, reorder, rename or drop a project or its milestones in Cadre, to start a milestone ("start milestone <project>/<n>"), to link a pull request to a milestone, to connect a repo to where it deploys, or a Fly org or a Vercel team, in Cadre ("connect <repo> to its Fly app", "connect <repo> to its Vercel project", "where does <repo> deploy?"), to deploy a repo that runs on Fly, to implement a spec or plan that says it is tracked in Cadre, or to sign in to Cadre.
+description: Use when the person asks to register, create or track a project, feature or milestones in Cadre, to read, write or update a milestone's spec in Cadre ("update the spec of <project>/<n>"), to change, reorder, rename or drop a project or its milestones in Cadre, to start a milestone ("start milestone <project>/<n>"), to link a pull request to a milestone, to connect a repo to where it deploys, or a Fly org or a Vercel team, in Cadre ("connect <repo> to its Fly app", "connect <repo> to its Vercel project", "where does <repo> deploy?"), to deploy a repo that runs on Fly, to tick a Before deploying item, to implement a spec or plan that says it is tracked in Cadre, or to sign in to Cadre.
 ---
 
 # Cadre
@@ -236,9 +236,19 @@ When the person asks to deploy a repo that runs on Fly:
 
 1. Confirm first. Once the person confirms, run `cadre deploy <repo>` in a checkout of that repo. A deploy can't be taken back, so never run it without the confirmation. It takes minutes: run it in the background (Bash `run_in_background`), or with a `timeout` of 600000 ms.
 2. It checks that the checkout is a clean, up-to-date `main` of that repo, and stops with the reason and what to do. Tell the person what it printed, and stop. When it says `<file> isn't in this checkout.` or `Neither fly.production.toml nor fly.toml is in this checkout.`, it also says to set the right file with `cadre repo set <repo> --fly-app <app> --fly-config <file>`, with `--status-url <url>` when the target has one: check the file's name with the person before setting it, carry the status URL over, since setting a platform again removes a URL left out, and never deploy another way. Once the file is set, the person confirms again before `cadre deploy <repo>` runs again.
-3. When a PR it would ship has open "Before deploying" items, it lists them and, with nobody to answer, prints `Not deployed.` Show the person the items. Run `cadre deploy <repo> --yes` only once they confirm.
+3. When a PR it would ship has open "Before deploying" items, it lists them and, with nobody to answer, prints `Not deployed.` Show the person the items. Run `cadre deploy <repo> --yes` only once they confirm. When they say an item is done, tick it as "Tick a Before deploying item" says.
 4. On `fly isn't installed. …` or `fly isn't signed in. Run fly auth login.`, tell the person. Otherwise it exits with fly's status: when that isn't 0, tell the person what fly printed.
 5. Cadre reads Fly every two minutes while it is awake, and as soon as it wakes. Two minutes after the deploy, `cadre repo show <repo> --json` shows it in the target's `last_deploy`. When it still shows the deploy before, cadre was asleep: ask again a minute later. A `commit` of `null` is "commit unknown": that deploy didn't go through `cadre deploy`.
+
+### Tick a Before deploying item
+
+An open item keeps its pull request Held in Cadre: it reads Held until the item is ticked or a deploy ships it. Items are ticked in GitHub, never in Cadre. `cadre deploy` names each item's pull request by its number. When the person says an item is done, or you have just done it at their request:
+
+1. Write `gh pr view <pr-url> --json body -q .body` to a temporary file.
+2. Under `## Before deploying`, change that item's `- [ ]` to `- [x]`, and nothing else.
+3. Run `gh pr edit <pr-url> --body-file <file>`. A merged pull request can be edited like any other.
+
+Tick only what the person said is done, or what you just did at their request. To undo a tick, change `- [x]` back to `- [ ]` the same way.
 
 ## Limits
 

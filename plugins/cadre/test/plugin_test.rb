@@ -38,7 +38,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.17.1", manifest["version"]
+    assert_equal "0.18.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -268,6 +268,15 @@ end
     ["cadre deploy <repo>", "Once the person confirms", "600000", "run_in_background", "last_deploy",
      "commit unknown"].each { |text| assert_includes deploy_a_repo_section, text }
     ["fly deploy", "git status --porcelain"].each { |text| refute_includes deploy_a_repo_section, text }
+  end
+
+  def tick_section = skill[/^### Tick a Before deploying item\n(.*?)(?=^## )/m, 1]
+
+  def test_it_ticks_a_before_deploying_item_only_once_told_it_is_done
+    ["gh pr view <pr-url> --json body -q .body", "`- [ ]` to `- [x]`", "gh pr edit <pr-url> --body-file <file>",
+     "reads Held", "Tick only what the person said is done"].each { |text| assert_includes tick_section, text }
+    assert_operator skill.index("## Deploy a repo"), :<, skill.index("### Tick a Before deploying item")
+    assert_operator skill.index("### Tick a Before deploying item"), :<, skill.index("## Limits")
   end
 
   def test_it_passes_yes_only_after_the_person_confirms_the_open_items
