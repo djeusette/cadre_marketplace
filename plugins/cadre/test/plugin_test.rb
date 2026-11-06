@@ -38,7 +38,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.17.0", manifest["version"]
+    assert_equal "0.17.1", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -331,7 +331,7 @@ end
   end
 
   def test_the_person_adds_the_vercel_token_themselves
-    ["never handled by Claude Code", "in their own terminal", "team-scoped", "dashboard"].each { |text| assert_includes deploy_section, text }
+    ["never handled by Claude Code", "`vercel tokens add` can only make a token for the whole account", "in their own terminal", "team-scoped", "dashboard"].each { |text| assert_includes deploy_section, text }
   end
 
   def test_connecting_a_repo_reads_the_last_deploy
