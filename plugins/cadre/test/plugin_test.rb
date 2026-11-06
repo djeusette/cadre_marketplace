@@ -274,7 +274,9 @@ end
 
   def test_it_ticks_a_before_deploying_item_only_once_told_it_is_done
     ["gh pr view <pr-url> --json body -q .body", "`- [ ]` to `- [x]`", "gh pr edit <pr-url> --body-file <file>",
-     "reads Held", "Tick only what the person said is done"].each { |text| assert_includes tick_section, text }
+     "reads Held", "Tick only what the person said is done",
+     "In that repo's checkout, `gh pr view <number>` works with the number alone; from anywhere, pass its URL or `--repo <owner>/<repo>`.",
+     "When the person's words match more than one item, ask which."].each { |text| assert_includes tick_section, text }
     assert_operator skill.index("## Deploy a repo"), :<, skill.index("### Tick a Before deploying item")
     assert_operator skill.index("### Tick a Before deploying item"), :<, skill.index("## Limits")
   end

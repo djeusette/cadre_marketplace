@@ -242,13 +242,13 @@ When the person asks to deploy a repo that runs on Fly:
 
 ### Tick a Before deploying item
 
-An open item keeps its pull request Held in Cadre: it reads Held until the item is ticked or a deploy ships it. Items are ticked in GitHub, never in Cadre. `cadre deploy` names each item's pull request by its number. When the person says an item is done, or you have just done it at their request:
+An open item keeps its pull request Held in Cadre: it reads Held until the item is ticked or a deploy ships it. Items are ticked in GitHub, never in Cadre. `cadre deploy` names each item's pull request by its number. In that repo's checkout, `gh pr view <number>` works with the number alone; from anywhere, pass its URL or `--repo <owner>/<repo>`. When the person says an item is done, or you have just done it at their request:
 
 1. Write `gh pr view <pr-url> --json body -q .body` to a temporary file.
 2. Under `## Before deploying`, change that item's `- [ ]` to `- [x]`, and nothing else.
 3. Run `gh pr edit <pr-url> --body-file <file>`. A merged pull request can be edited like any other.
 
-Tick only what the person said is done, or what you just did at their request. To undo a tick, change `- [x]` back to `- [ ]` the same way.
+Tick only what the person said is done, or what you just did at their request. When the person's words match more than one item, ask which. To undo a tick, change `- [x]` back to `- [ ]` the same way.
 
 ## Limits
 
