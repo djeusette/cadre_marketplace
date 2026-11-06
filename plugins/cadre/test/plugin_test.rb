@@ -305,7 +305,7 @@ end
 
   def test_it_reads_the_target_before_it_sets_a_platform_again
     assert_includes deploy_section, "Before setting a platform again, read what is there"
-    ["`settings` (its `app` and `config`)", "`status_url`", "next to `settings`, not inside it", "carry them over"].each { |text| assert_includes deploy_section, text }
+    ["`settings` (its `app` and `config` for Fly, its `project` and `dir` for Vercel)", "`status_url`", "next to `settings`, not inside it", "carry them over"].each { |text| assert_includes deploy_section, text }
   end
 
   def test_it_needs_the_cli_that_deploys
@@ -313,8 +313,21 @@ end
   end
 
   def test_it_connects_vercel_apps_and_teams
-    ["--vercel-project", "--name", "--vercel-dir", "cadre vercel team add", "cadre vercel team remove", "--platform vercel --name <app>",
-     "Vercel isn't connected on <server> yet.", "vercel deploy --prod"].each { |text| assert_includes deploy_section, text }
+    ["--vercel-project", "--name <app>", "--vercel-dir", "cadre vercel team add", "cadre vercel team remove", "--platform vercel --name <app>",
+     "vercel deploy --prod", "Don't ask for a status URL", "a Vercel target takes none yet",
+     "`project` and `dir`", "`name` (the app's short name for Vercel, `null` for Fly)",
+     "any host other than Fly or Vercel", "(its `app` and `config` for Fly, its `project` and `dir` for Vercel)",
+     "Account Settings, then Tokens", "a token scoped to the team"].each { |text| assert_includes deploy_section, text }
+    assert_includes skill[/^description: (.*)$/, 1], "or a Fly org or a Vercel team, in Cadre (\"connect <repo> to its Fly app\", \"connect <repo> to its Vercel project\""
+  end
+
+  def test_it_explains_all_eight_vercel_error_lines
+    ["Vercel isn't connected on <server> yet. Add a team with cadre vercel team add <team>.",
+     "settings.project: isn't a project of a connected Vercel team (…)",
+     "Vercel refused this token for <team>.", "Vercel has no team <team> that this token can read.",
+     "<team> still reads <repos>. Unset or move those targets first.",
+     "No Vercel team <team> on <server>.", "<repo> has no Vercel target <app>.",
+     "Cadre couldn't reach Vercel. Try again in a minute."].each { |text| assert_includes deploy_section, text }
   end
 
   def test_the_person_adds_the_vercel_token_themselves
