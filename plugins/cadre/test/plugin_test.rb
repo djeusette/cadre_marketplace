@@ -277,7 +277,9 @@ end
   def test_the_vercel_deploy_keeps_its_safety_rules
     refute_includes deploy_a_repo_section, "vercel deploy"
     ["You write no file named `.vercelignore`, anywhere", "Deploy anyway?", "built but didn't go live",
-     "exits 1 and builds nothing", "only once they confirm after seeing both"].each { |t| assert_includes deploy_a_repo_section, t }
+     "exits 1 and builds nothing", "only once they confirm after seeing both",
+     "relay the line saying which apps went live and which weren't promoted", "cadre stopped while promoting <app>",
+     "tell the person to check Vercel for that app", "Running `cadre deploy <repo>` again builds and promotes them all"].each { |t| assert_includes deploy_a_repo_section, t }
   end
 
   def tick_section = skill[/^### Tick a Before deploying item\n(.*?)(?=^## )/m, 1]
