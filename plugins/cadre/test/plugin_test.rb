@@ -38,7 +38,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.18.0", manifest["version"]
+    assert_equal "0.19.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -270,6 +270,10 @@ end
     ["fly deploy", "git status --porcelain"].each { |text| refute_includes deploy_a_repo_section, text }
   end
 
+  def test_it_deploys_vercel_repos_too
+    ["runs on Fly or Vercel", "vercel isn't installed", "vercel isn't signed in", "has no .vercelignore", "lacks what"].each { |t| assert_includes deploy_a_repo_section, t }
+  end
+
   def tick_section = skill[/^### Tick a Before deploying item\n(.*?)(?=^## )/m, 1]
 
   def test_it_ticks_a_before_deploying_item_only_once_told_it_is_done
@@ -325,7 +329,7 @@ end
 
   def test_it_connects_vercel_apps_and_teams
     ["--vercel-project", "--name <app>", "--vercel-dir", "cadre vercel team add", "cadre vercel team remove", "--platform vercel --name <app>",
-     "vercel deploy --prod", "Don't ask for a status URL", "a Vercel target takes none yet",
+     "`cadre deploy <repo>` deploys it", "Don't ask for a status URL", "a Vercel target takes none yet",
      "`project` and `dir`", "`name` (the app's short name for Vercel, `null` for Fly)",
      "any host other than Fly or Vercel", "(its `app` and `config` for Fly, its `project` and `dir` for Vercel)",
      "Account Settings, then Tokens", "a token scoped to the team"].each { |text| assert_includes deploy_section, text }
