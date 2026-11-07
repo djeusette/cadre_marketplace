@@ -274,6 +274,12 @@ end
     ["runs on Fly or Vercel", "vercel isn't installed", "vercel isn't signed in", "has no .vercelignore", "lacks what"].each { |t| assert_includes deploy_a_repo_section, t }
   end
 
+  def test_the_vercel_deploy_keeps_its_safety_rules
+    refute_includes deploy_a_repo_section, "vercel deploy"
+    ["You write no file named `.vercelignore`, anywhere", "Deploy anyway?", "built but didn't go live",
+     "exits 1 and builds nothing", "only once they confirm after seeing both"].each { |t| assert_includes deploy_a_repo_section, t }
+  end
+
   def tick_section = skill[/^### Tick a Before deploying item\n(.*?)(?=^## )/m, 1]
 
   def test_it_ticks_a_before_deploying_item_only_once_told_it_is_done
