@@ -320,7 +320,8 @@ end
   end
 
   def test_it_asks_whether_an_app_is_a_further_one_or_a_move
-    ["a further app or a move", "--name <existing>", "To move an app instead, pass --name <app>."].each { |text| assert_includes deploy_section, text }
+    ["a further app or a move", "--name <existing>", "read `cadre repo show <repo> --json` again"].each { |text| assert_includes deploy_section, text }
+    refute_includes skill, "To move an app instead"
   end
 
   def test_it_removes_an_app_by_name
@@ -345,6 +346,16 @@ end
      "<repo> has no app <app>. Its apps: <apps>.",
      "<repo> has apps on more than one platform. Deploy each with --app <name>, in deploy order."].each { |text| assert_includes deploy_a_repo_section, text }
     refute_includes deploy_a_repo_section, "cadre deploy can't deploy it yet"
+  end
+
+  def test_it_relays_the_name_format_refusals
+    ["`name: is required`", "`name: must be lowercase letters, digits, - or _`", "`name: isn't used on this platform`"].each { |text| assert_includes deploy_section, text }
+  end
+
+  def test_it_relays_a_deploy_of_an_app_with_no_fly_app
+    ["<name> has no Fly app. Connect it with cadre repo set <repo> --fly-app <app> --name <name>.",
+     "<repo> has no Fly app. Connect it with cadre repo set <repo> --fly-app <app>.",
+     "<repo> has no app cadre can deploy."].each { |text| assert_includes deploy_a_repo_section, text }
   end
 
   def test_the_config_hint_names_the_app_when_its_name_is_another
