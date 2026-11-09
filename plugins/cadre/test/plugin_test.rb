@@ -38,7 +38,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.19.0", manifest["version"]
+    assert_equal "0.20.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -63,6 +63,11 @@ class ManifestTest < Minitest::Test
 
   def test_readme_says_it_deploys_with_the_commit
     assert_includes File.read(File.join(ROOT, "README.md")), "cadre deploy"
+  end
+
+  def test_readme_says_a_repo_can_have_several_apps
+    readme = File.read(File.join(ROOT, "README.md"))
+    ["several apps", "`--app`", "`--all`", "`cadre repo unset --name`"].each { |text| assert_includes readme, text }
   end
 
   def test_readme_says_its_specs_and_plans_are_tracked_in_cadre
@@ -99,8 +104,8 @@ class SkillTest < Minitest::Test
   
   def test_it_installs_a_missing_cli_and_upgrades_an_old_one
     assert_includes install_section, INSTALL
-    ["When the command is missing,", "below `0.14.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
-    ["0.1.0", "below `0.13.0`", "below `0.12.0`", "below `0.11.0`", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes skill, text }
+    ["When the command is missing,", "below `0.15.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
+    ["0.1.0", "below `0.14.0`", "below `0.13.0`", "below `0.12.0`", "below `0.11.0`", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes skill, text }
   end
 
   def test_it_writes_a_spec_and_designs_for_every_milestone
@@ -314,6 +319,49 @@ end
     end
   end
 
+  def test_it_asks_whether_an_app_is_a_further_one_or_a_move
+    ["a further app or a move", "--name <existing>", "read `cadre repo show <repo> --json` again"].each { |text| assert_includes deploy_section, text }
+    refute_includes skill, "To move an app instead"
+  end
+
+  def test_it_removes_an_app_by_name
+    assert_includes deploy_section, "cadre repo unset <repo> --name <app> --json"
+    refute_includes deploy_section, "--platform vercel --name <app>"
+  end
+
+  def test_it_says_every_target_has_a_name
+    refute_includes deploy_section, "`null` for Fly"
+  end
+
+  def test_it_relays_the_refusals_of_an_app_by_name
+    ["<name> is already a <Platform> app of <repo>. Unset it first.",
+     "<app> is already the <Platform> app of <other>, an app of <repo>. Set <other> instead, or unset it first.",
+     "<repo> has <n> <Platform> apps: <apps>. Pass --name <app>.",
+     "<repo> has no app <app>."].each { |text| assert_includes deploy_section, text }
+  end
+
+  def test_it_asks_which_app_to_deploy
+    ["cadre repo show <repo> --json", "--app <name>", "--all", "only when the person asks for every app",
+     "the deploy order puts first", "<repo> has <n> apps: <apps>. Pass --app <name> or --all.",
+     "<repo> has no app <app>. Its apps: <apps>.",
+     "<repo> has apps on more than one platform. Deploy each with --app <name>, in deploy order."].each { |text| assert_includes deploy_a_repo_section, text }
+    refute_includes deploy_a_repo_section, "cadre deploy can't deploy it yet"
+  end
+
+  def test_it_relays_the_name_format_refusals
+    ["`name: is required`", "`name: must be lowercase letters, digits, - or _`", "`name: isn't used on this platform`"].each { |text| assert_includes deploy_section, text }
+  end
+
+  def test_it_relays_a_deploy_of_an_app_with_no_fly_app
+    ["<name> has no Fly app. Connect it with cadre repo set <repo> --fly-app <app> --name <name>.",
+     "<repo> has no Fly app. Connect it with cadre repo set <repo> --fly-app <app>.",
+     "<repo> has no app cadre can deploy."].each { |text| assert_includes deploy_a_repo_section, text }
+  end
+
+  def test_the_config_hint_names_the_app_when_its_name_is_another
+    assert_includes deploy_a_repo_section, "with `--name <app>` when the app's name isn't its Fly app's"
+  end
+
   def test_connecting_a_repo_can_name_its_fly_config
     assert_includes deploy_section, "--fly-config <file>"
   end
@@ -322,23 +370,24 @@ end
     ["--status-url", "https", "2xx", "isn't monitored", "every 2 minutes", "health checks", "Deployed", "mobile"].each { |text| assert_includes deploy_section, text }
   end
 
-  def test_it_passes_every_flag_again_when_it_sets_a_platform_again
-    assert_includes deploy_section, "replaces `--fly-config` and `--status-url`, so pass every one you want to keep"
+  def test_it_passes_every_flag_again_when_it_sets_an_app_again
+    assert_includes deploy_section, "Setting an app again (the same name) replaces its settings, so pass `--fly-app`, `--fly-config` and `--status-url` each time, and `--name` when the app's name isn't its Fly app's"
+    refute_match(/setting a platform again/i, skill)
   end
 
-  def test_it_reads_the_target_before_it_sets_a_platform_again
-    assert_includes deploy_section, "Before setting a platform again, read what is there"
+  def test_it_reads_the_target_before_it_sets_an_app_again
+    assert_includes deploy_section, "Before setting an app again, read what is there"
     ["`settings` (its `app` and `config` for Fly, its `project` and `dir` for Vercel)", "`status_url`", "next to `settings`, not inside it", "carry them over"].each { |text| assert_includes deploy_section, text }
   end
 
-  def test_it_needs_the_cli_that_deploys
-    assert_includes skill, "below `0.14.0`"
+  def test_it_needs_the_cli_that_deploys_one_app_of_several
+    assert_includes skill, "below `0.15.0`"
   end
 
   def test_it_connects_vercel_apps_and_teams
-    ["--vercel-project", "--name <app>", "--vercel-dir", "cadre vercel team add", "cadre vercel team remove", "--platform vercel --name <app>",
+    ["--vercel-project", "--name <app>", "--vercel-dir", "cadre vercel team add", "cadre vercel team remove",
      "`cadre deploy <repo>` deploys it", "Don't ask for a status URL", "a Vercel target takes none yet",
-     "`project` and `dir`", "`name` (the app's short name for Vercel, `null` for Fly)",
+     "`project` and `dir`", "`name`, the app's name in the repo,",
      "any host other than Fly or Vercel", "(its `app` and `config` for Fly, its `project` and `dir` for Vercel)",
      "Account Settings, then Tokens", "a token scoped to the team"].each { |text| assert_includes deploy_section, text }
     assert_includes skill[/^description: (.*)$/, 1], "or a Fly org or a Vercel team, in Cadre (\"connect <repo> to its Fly app\", \"connect <repo> to its Vercel project\""
