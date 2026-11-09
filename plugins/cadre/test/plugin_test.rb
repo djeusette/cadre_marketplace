@@ -203,21 +203,27 @@ end
 
   def test_it_names_a_milestones_apps
     ["cadre repo show <repo> --json", '"repos": ["kinfield/kinfield", "kinfield/kinfield-family"]', "the API before the frontend",
-     "A repo with one app stays a bare repo", "ask the person", "An app that isn't connected yet can be named"].each do |text|
+     "A repo with one app stays a bare repo", "When the spec doesn't say which apps, ask the person",
+     "An app that isn't connected yet can be named", "No repo <repo> on <server>.", "stays a bare `repo` unless the spec names its apps"].each do |text|
       assert_includes create_section, text
-      assert_includes change_section, text
     end
+    assert_includes change_section, 'name their apps, as "Create a project" says under "Apps in `repos`"'
     assert_includes skill[/^## Limits\n(.*)/m, 1], "| `repos` | 1–10 per milestone, no repeats, each `repo` or `repo/app`"
   end
 
   def test_it_starts_a_milestone_from_its_app_steps
-    ["a repo/app entry is its repo", "one pull request with no app", "one pull request per app", "Cadre: <slug>/<n> <app>",
-     "the first step with no pull request"].each { |text| assert_includes start_section, text }
+    ["a repo/app entry is its repo", "one plan and one pull request per repo, or per app", "`Cadre: <slug>/<n> <app>` for a pull request for one app",
+     "the first step with no pull request", "the branch is `<slug>-<n>-<app>` instead", "gh pr list --repo <owner>/<repo> --state all --search",
+     "A closed, unmerged pull request holds nothing", "A line whose app isn't such a name links nothing"].each { |text| assert_includes start_section, text }
+    assert_includes start_section.split("### Track").first, "the header's last line names it"
+    assert_includes start_section.split("### Track").first, "Its pull request's description has the line `Cadre: <slug>/<n> <app>`.\n     ```"
+    assert_includes track_section, "with the app after it when the pull request is for one app"
   end
 
   def test_it_links_a_pull_request_to_an_app
-    ["cadre pr link <pr-url> <slug>/<n> --app <app> --json", "app: needs a milestone",
+    ["cadre pr link <pr-url> <slug>/<n> --app <app> --json",
      "app: must be lowercase letters, digits, - or _"].each { |text| assert_includes link_section, text }
+    refute_includes link_section, "app: needs a milestone"
   end
 
   def test_the_readme_and_brainstorm_name_apps
