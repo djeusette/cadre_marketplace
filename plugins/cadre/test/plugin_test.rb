@@ -214,7 +214,7 @@ end
   def test_it_starts_a_milestone_from_its_app_steps
     ["a repo/app entry is its repo", "one plan and one pull request per repo, or per app", "`Cadre: <slug>/<n> <app>` for a pull request for one app",
      "the first step with no pull request", "the branch is `<slug>-<n>-<app>` instead", "gh pr list --repo <owner>/<repo> --state all --search",
-     "A closed, unmerged pull request holds nothing", "A line whose app isn't such a name links nothing"].each { |text| assert_includes start_section, text }
+     "A closed, unmerged pull request holds nothing", "`gh repo view --json owner -q .owner.login`", "also matches `<slug>/20`", "names exactly `<slug>/<n>`, optionally followed by an app", "A line whose app isn't such a name links nothing"].each { |text| assert_includes start_section, text }
     assert_includes start_section.split("### Track").first, "the header's last line names it"
     assert_includes start_section.split("### Track").first, "Its pull request's description has the line `Cadre: <slug>/<n> <app>`.\n     ```"
     assert_includes track_section, "with the app after it when the pull request is for one app"
