@@ -422,7 +422,13 @@ end
      "Run `cadre deploy <repo> --yes` only once they confirm after seeing them all, with the same `--app` or `--all`."].each do |text|
       assert_includes deploy_a_repo_section, text
     end
-    assert_operator deploy_a_repo_section.index("is Blocked:"), :<, deploy_a_repo_section.index("--yes")
+    step = deploy_a_repo_section.lines.find { |line| line.start_with?("5. ") }
+    assert_operator step.index("is Blocked:"), :<, step.index("--yes")
+  end
+
+  def test_under_all_a_blocked_pr_the_run_clears_is_said_to_be_cleared
+    assert_includes deploy_a_repo_section,
+                    "Under `--all`, when what should go first is an app the same run deploys first, say so: the run already deploys it first."
   end
 
   def test_all_on_fly_deploys_in_the_release_queues_order
