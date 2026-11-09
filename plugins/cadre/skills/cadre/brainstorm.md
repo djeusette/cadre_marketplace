@@ -11,7 +11,7 @@ Check that `superpowers:brainstorming` is among your available skills. When it i
 Invoke `superpowers:brainstorming` with the person's request, and follow it as written: its conversation, playback, visual companion, written design, builder check and approval gate. Invoke it from this file, not through a workflow that wraps it, so the project gets registered. The rules in this file add to it. Where they differ from it, they win:
 
 - **Size.** A feature always gets a written spec, even when it fits in one milestone.
-- **Ground to cover.** Add the repos it touches, which one must deploy first, and the apps that use what changes.
+- **Ground to cover.** Add the repos it touches, which one must deploy first, and the apps that use what changes. Name the apps of a repo that has several, such as an API on Fly and a frontend on Vercel, with the API first, so a milestone's `repos` can hold `repo/app` steps.
 - **Recon.** Read the current repo's code without asking, to ground your questions and size the milestones, and say so in your next message. Ask before reading anything outside it; for a repo you can't read, mark its code-file count as your guess.
 - **Skipping the questions.** When the person says to skip the questions, the brainstorm still ends with the spec: write it from what they said, mark every open point as your call, skip the builder check, and ask them once to approve the spec, with its milestones and your calls.
 - **The written design** is the feature spec below.

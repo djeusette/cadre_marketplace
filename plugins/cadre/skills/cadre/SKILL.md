@@ -23,7 +23,7 @@ Run `cadre version`.
   ```
 
   Then run `cadre version` again. When the command is still missing, `~/.local/bin` is not on the person's `PATH`: tell them to add it, and stop.
-- When it reports a version below `0.15.0`, run `cadre upgrade`. It replaces that `cadre` with the latest release and prints `Upgraded cadre from <old> to <new>.` When it fails, tell the person what it printed, and stop.
+- When it reports a version below `0.16.0`, run `cadre upgrade`. It replaces that `cadre` with the latest release and prints `Upgraded cadre from <old> to <new>.` When it fails, tell the person what it printed, and stop.
 
 ## Sign in
 
@@ -48,6 +48,7 @@ The person never types or copies a key.
    - `end_goal`: the text of the End goal section.
    - `milestones`: one per `### Increment`, in spec order, its `title` the increment's title. Its `repos` are the repositories the increment changes, in deploy order: the order the spec's Consumers and deploy-order lines give, the repo that must deploy first listed first.
    Repo names are bare, `shop-api` and not `acme/shop-api`, and match the limits below. The current repository (`gh repo view --json name -q .name`) is a repo of every increment whose Code files live in it. A file path is never a repo. Consumers can say "none".
+   A step can name an app, as `repo/app`. Read `cadre repo show <repo> --json` for each repo. A repo with one app stays a bare repo. A repo with several gets one `repo/app` entry per app the milestone expects, in deploy order, the API before the frontend, for example `"repos": ["kinfield/kinfield", "kinfield/kinfield-family"]`. When the spec doesn't say which apps, ask the person. An app that isn't connected yet can be named. A milestone never lists a repo bare and with one of its apps.
    The feature spec says it is tracked in Cadre, on the line under its title, so whoever implements it uses this skill:
 
    ```markdown
@@ -135,6 +136,7 @@ When the person asks to change a project in Cadre, for example to rename it, reo
    - the name, end goal, home repo (one of the milestones' repos) and canvas link;
    - reorder milestones by moving their entries;
    - rename them, and change their design links, repos and deploy order;
+   - name their apps. A step can name an app, as `repo/app`. Read `cadre repo show <repo> --json` for each repo. A repo with one app stays a bare repo. A repo with several gets one `repo/app` entry per app the milestone expects, in deploy order, the API before the frontend, for example `"repos": ["kinfield/kinfield", "kinfield/kinfield-family"]`. When the spec doesn't say which apps, ask the person. An app that isn't connected yet can be named. A milestone never lists a repo bare and with one of its apps.
    - add one as an entry with no `number`, no `spec` and no `design_url`: Cadre numbers it, and its spec and page come after the update (step 5).
 
    Keep every `number`, the `slug` and the `version` as pulled. Never put a `spec` on a milestone that has a `number`: use "Update a milestone's spec".
@@ -154,19 +156,26 @@ When the person asks to change a project in Cadre, for example to rename it, reo
 
 When the person asks to "start milestone `<slug>/<n>`", or to start work on a milestone in Cadre:
 
-1. Pull the project into a temporary `.json` file: `cadre project pull <slug> -o <tmp>.json --json`. The milestone's `repos` are its repos in deploy order. Then pull its spec into a temporary `.md` file: `cadre spec pull <slug>/<n> -o <tmp>.md --json`. On `<slug>/<n> has no spec yet.`, write its spec first, as "Update a milestone's spec" says, then pull it again.
-2. Run `gh repo view --json name -q .name`. When this repo is one of the milestone's repos, work on this repo's part. Otherwise, name the milestone's repos to the person, in deploy order, and stop: the milestone starts in the first of them with no pull request yet. Each other repo of the milestone is started the same way, in its own session in that repo.
+1. Pull the project into a temporary `.json` file: `cadre project pull <slug> -o <tmp>.json --json`. The milestone's `repos` are its steps in deploy order: a repo/app entry is its repo, one step of it per app. Then pull its spec into a temporary `.md` file: `cadre spec pull <slug>/<n> -o <tmp>.md --json`. On `<slug>/<n> has no spec yet.`, write its spec first, as "Update a milestone's spec" says, then pull it again.
+2. Run `gh repo view --json name -q .name`. When this repo is one of the milestone's repos, work on this repo's part. Otherwise, name the milestone's repos to the person, in deploy order, and stop: the milestone starts in the first step with no pull request yet. Each other repo of the milestone is started the same way, in its own session in that repo.
 3. When `git branch --show-current` prints the repo's default branch (`gh repo view --json defaultBranchRef -q .defaultBranchRef.name`), switch to the milestone's branch: `git switch -c <slug>-<n>`, or `git switch <slug>-<n>` when it already exists. The plan and its pull request start from that branch, so the record lands with them, never on the default branch.
 4. Copy the spec into this repo's `docs/superpowers/specs/<slug>-<n>.md` as a record, creating the folder when it is missing, and commit only that file: `git add <path>`, then `git commit -m "docs: spec of <slug>/<n>" -- <path>`. When `<path>` already holds this text, as when a milestone is started again, skip the commit: there is nothing to commit. Cadre's copy stays the original, and cadre never reads this one.
 5. Plan this repo's part with `superpowers:writing-plans`, giving it the spec copy's path and these rules on top:
    - plan only this repo's part of milestone `<slug>/<n>`;
    - one plan and one pull request;
+   - when the milestone has several steps in this repo, the change gets one pull request with no app when it goes out as one, or one pull request per app when the work splits that way, each naming its app on its `Cadre:` line, `Cadre: <slug>/<n> <app>`. Start at the first step with no pull request: work on the app it names, and on a step with no app, on the whole repo;
    - the pull request's description has a line that reads exactly `Cadre: <slug>/<n>`, which links the pull request to the milestone in Cadre;
    - when the change needs something before it ships, such as a new env var or secret, another repo deployed first, or a manual step, the pull request's description lists it under a heading line `## Before deploying`, as a task list with one `- [ ]` item for each. The person ticks an item in GitHub once it's done. A change that needs nothing has no section;
    - the plan's header says it is tracked in Cadre, on the line under its title, so whoever executes it uses this skill:
 
      ```markdown
      > **Tracked in Cadre as `<slug>/<n>`.** REQUIRED SKILL: use `cadre:cadre` while implementing this plan. Its pull request's description has the line `Cadre: <slug>/<n>`.
+     ```
+
+     When the plan is for one app, the header's last line names it:
+
+     ```markdown
+     > **Tracked in Cadre as `<slug>/<n>`.** REQUIRED SKILL: use `cadre:cadre` while implementing this plan. Its pull request's description has the line `Cadre: <slug>/<n> <app>`.
      ```
 6. Execute the plan as `superpowers:writing-plans` offers.
 
@@ -176,18 +185,20 @@ On `No project <slug> on <server>.` or `No milestone <slug>/<n> on <server>.`, c
 
 A spec or plan tracked in Cadre says so on the line under its title. When you implement one, for example while executing such a plan:
 
-- Its pull request's description has the line `Cadre: <slug>/<n>`, on a line of its own. When the pull request is already open without it, add it: write `gh pr view <pr-url> --json body -q .body` to a temporary file, add the line, then run `gh pr edit <pr-url> --body-file <file>`.
+- Its pull request's description has the line `Cadre: <slug>/<n>`, on a line of its own, with the app after it when the pull request is for one app: `Cadre: <slug>/<n> <app>`. When the pull request is already open without it, add it: write `gh pr view <pr-url> --json body -q .body` to a temporary file, add the line, then run `gh pr edit <pr-url> --body-file <file>`.
 - When the change needs something before it ships, such as a new env var or secret, another repo deployed first, or a manual step, the pull request's description lists it under a heading line `## Before deploying`, as a task list with one `- [ ]` item for each. The person ticks an item in GitHub once it's done. A change that needs nothing has no section.
 - A feature spec names only its project, `<slug>`: its increment `<i>` is milestone `<slug>/<i>`. Start it as "Start a milestone" says, so its plan says it is tracked too.
 
 ### Link a pull request by hand
 
-A pull request opened without the `Cadre:` line, or before the cadre GitHub App was installed, is linked with `cadre pr link <pr-url> <slug>/<n> --json`, and `cadre pr link <pr-url> --none --json` unlinks it. Cadre reads the pull request from GitHub then. Report the `project_url` field of the JSON body. A `Cadre:` line in its description wins at its next sync, so edit the line rather than fight it.
+A pull request opened without the `Cadre:` line, or before the cadre GitHub App was installed, is linked with `cadre pr link <pr-url> <slug>/<n> --json`, and `cadre pr link <pr-url> --none --json` unlinks it. Cadre reads the pull request from GitHub then. To name the app the pull request is for, add `--app <app>`: `cadre pr link <pr-url> <slug>/<n> --app <app> --json`. The JSON body then has an `app` field, null when none. Report the `project_url` field of the JSON body. A `Cadre:` line in its description wins at its next sync, so edit the line rather than fight it.
 
 - `No milestone <slug>/<n> on <server>.`: check the slug and number with the person.
 - `GitHub has no pull request at <url>.`: check the URL with the person.
 - `GitHub isn't connected on <server> yet. …`: tell the person, and stop.
 - `Cadre couldn't reach GitHub. …`: try again later.
+- `app: needs a milestone`: `--app` goes with a milestone, not with `--none`.
+- `app: must be lowercase letters, digits, - or _`: check the app's name with the person.
 - `url: is in a repo no project names`: the repo needs to be in a project first, as "Change a project" adds it.
 - `Your key for <url> is no longer valid. Run cadre login --url <url>.`: go back to Sign in, then retry.
 
@@ -278,7 +289,7 @@ Tick only what the person said is done, or what you just did at their request. W
 | `slug` | `^[a-z0-9]+(-[a-z0-9]+)*$`, up to 60 characters, unique |
 | `end_goal` | 1–10 000 characters |
 | `milestones` | 1–50, each `title` 1–200 characters |
-| `repos` | 1–10 per milestone, no repeats, each `^[a-z0-9][a-z0-9._-]{0,99}$` |
+| `repos` | 1–10 per milestone, no repeats, each `repo` or `repo/app`: the repo `^[a-z0-9][a-z0-9._-]{0,99}$`, the app `^[a-z0-9][a-z0-9_-]{0,62}$` |
 | `number` | a milestone the project has and hasn't archived, or none for a new one |
 | `spec` | optional at creation; 1–100 000 characters, not blank, UTF-8, no NUL |
 | `canvas_url`, `design_url` | optional; `https://` followed by no spaces, up to 2 000 characters |

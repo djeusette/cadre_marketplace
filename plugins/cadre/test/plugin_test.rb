@@ -38,7 +38,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.20.0", manifest["version"]
+    assert_equal "0.21.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -104,8 +104,8 @@ class SkillTest < Minitest::Test
   
   def test_it_installs_a_missing_cli_and_upgrades_an_old_one
     assert_includes install_section, INSTALL
-    ["When the command is missing,", "below `0.15.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
-    ["0.1.0", "below `0.14.0`", "below `0.13.0`", "below `0.12.0`", "below `0.11.0`", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes skill, text }
+    ["When the command is missing,", "below `0.16.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
+    ["0.1.0", "below `0.15.0`", "below `0.14.0`", "below `0.13.0`", "below `0.12.0`", "below `0.11.0`", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes skill, text }
   end
 
   def test_it_writes_a_spec_and_designs_for_every_milestone
@@ -199,6 +199,30 @@ end
 
   def test_it_skips_the_commit_when_the_spec_copy_is_unchanged
     assert_includes start_section, "already holds this text, as when a milestone is started again, skip the commit"
+  end
+
+  def test_it_names_a_milestones_apps
+    ["cadre repo show <repo> --json", '"repos": ["kinfield/kinfield", "kinfield/kinfield-family"]', "the API before the frontend",
+     "A repo with one app stays a bare repo", "ask the person", "An app that isn't connected yet can be named"].each do |text|
+      assert_includes create_section, text
+      assert_includes change_section, text
+    end
+    assert_includes skill[/^## Limits\n(.*)/m, 1], "| `repos` | 1–10 per milestone, no repeats, each `repo` or `repo/app`"
+  end
+
+  def test_it_starts_a_milestone_from_its_app_steps
+    ["a repo/app entry is its repo", "one pull request with no app", "one pull request per app", "Cadre: <slug>/<n> <app>",
+     "the first step with no pull request"].each { |text| assert_includes start_section, text }
+  end
+
+  def test_it_links_a_pull_request_to_an_app
+    ["cadre pr link <pr-url> <slug>/<n> --app <app> --json", "app: needs a milestone",
+     "app: must be lowercase letters, digits, - or _"].each { |text| assert_includes link_section, text }
+  end
+
+  def test_the_readme_and_brainstorm_name_apps
+    assert_includes File.read(File.join(ROOT, "README.md")), "Cadre: <project>/<n> <app>"
+    assert_includes File.read(File.join(PLUGIN, "skills", "cadre", "brainstorm.md")), "apps of a repo that has several"
   end
 
   def test_the_plan_says_it_is_tracked_in_cadre
@@ -381,7 +405,7 @@ end
   end
 
   def test_it_needs_the_cli_that_deploys_one_app_of_several
-    assert_includes skill, "below `0.15.0`"
+    assert_includes skill, "below `0.16.0`"
   end
 
   def test_it_connects_vercel_apps_and_teams

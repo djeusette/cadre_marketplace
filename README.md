@@ -20,13 +20,13 @@ Or commit them to a repo's `.claude/settings.json` so the whole team gets them a
   brainstorms the feature with the person through `superpowers:brainstorming`, into an end
   goal and milestones, each the smallest step that ships one feature and deploys on its own. It
   commits that feature spec, or builds from one the person names, then registers one
-  milestone per increment, each with its repos in deploy order, its own spec and a link straight to its page in
+  milestone per increment, each with its repos in deploy order (`repo/app` for a repo with several apps), its own spec and a link straight to its page in
   the project's Claude Design canvas. Asked to "update the spec of <project>/<n>", it pulls
   the spec with `cadre spec pull`, edits it with the person, and pushes it back with
   `cadre spec push --base`, so an edit never replaces a newer one. Asked to "start milestone <project>/<n>"
   in one of the milestone's repos, it commits a copy of the milestone's spec there as a record, plans that
   repo's part through `superpowers:writing-plans`, and opens one pull request with a `Cadre: <project>/<n>`
-  line, which links it to the milestone; a pull request without the line is linked with `cadre pr link`.
+  line, which links it to the milestone, and names the app after it (`Cadre: <project>/<n> <app>`) when it is for one app of several; a pull request without the line is linked with `cadre pr link`, with `--app` for an app.
   When a change needs something before it ships, such as a new env var, another repo deployed first or a manual step,
   the pull request lists it under `## Before deploying`, one `- [ ]` item each, for the person to tick in GitHub, or for the skill to tick once told the item is done.
   The specs and plans it writes say they are tracked in Cadre, so whoever implements them uses the skill.
