@@ -38,7 +38,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.21.0", manifest["version"]
+    assert_equal "0.22.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -104,8 +104,8 @@ class SkillTest < Minitest::Test
   
   def test_it_installs_a_missing_cli_and_upgrades_an_old_one
     assert_includes install_section, INSTALL
-    ["When the command is missing,", "below `0.16.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
-    ["0.1.0", "below `0.15.0`", "below `0.14.0`", "below `0.13.0`", "below `0.12.0`", "below `0.11.0`", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes skill, text }
+    ["When the command is missing,", "below `0.17.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
+    ["0.1.0", "below `0.16.0`", "below `0.15.0`", "below `0.14.0`", "below `0.13.0`", "below `0.12.0`", "below `0.11.0`", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes skill, text }
   end
 
   def test_it_writes_a_spec_and_designs_for_every_milestone
@@ -312,7 +312,7 @@ end
   def test_the_vercel_deploy_keeps_its_safety_rules
     refute_includes deploy_a_repo_section, "vercel deploy"
     ["You write no file named `.vercelignore`, anywhere", "Deploy anyway?", "built but didn't go live",
-     "exits 1 and builds nothing", "only once they confirm after seeing both",
+     "exits 1 and builds nothing", "only once they confirm after seeing them all",
      "relay the line saying which apps went live and which weren't promoted", "cadre stopped while promoting <app>",
      "tell the person to check Vercel for that app", "Running `cadre deploy <repo>` again builds and promotes them all"].each { |t| assert_includes deploy_a_repo_section, t }
   end
@@ -410,8 +410,30 @@ end
     ["`settings` (its `app` and `config` for Fly, its `project` and `dir` for Vercel)", "`status_url`", "next to `settings`, not inside it", "carry them over"].each { |text| assert_includes deploy_section, text }
   end
 
-  def test_it_needs_the_cli_that_deploys_one_app_of_several
-    assert_includes skill, "below `0.16.0`"
+  def test_it_needs_the_cli_that_asks_about_blocked_prs
+    assert_includes skill, "below `0.17.0`"
+    refute_includes skill, "below `0.16.0`"
+  end
+
+  def test_it_confirms_a_blocked_deploy_before_passing_yes
+    ["`#<n> is Blocked: <app> should run #<m> first.`", "`#<n> is Blocked: <app> should deploy first.`",
+     "the release queue shows Blocked", "With `--app`, it lists only that app's items and Blocked PRs.",
+     "say which PR is Blocked and what should go first, and propose deploying that first",
+     "Run `cadre deploy <repo> --yes` only once they confirm after seeing them all, with the same `--app` or `--all`."].each do |text|
+      assert_includes deploy_a_repo_section, text
+    end
+    step = deploy_a_repo_section.lines.find { |line| line.start_with?("5. ") }
+    assert_operator step.index("is Blocked:"), :<, step.index("--yes")
+  end
+
+  def test_under_all_a_blocked_pr_the_run_clears_is_said_to_be_cleared
+    assert_includes deploy_a_repo_section,
+                    "Under `--all`, when what should go first is an app the same run deploys first, say so: the run already deploys it first."
+  end
+
+  def test_all_on_fly_deploys_in_the_release_queues_order
+    assert_includes deploy_a_repo_section, "`--all` on Fly apps deploys them one at a time, in the order Cadre's release queue lists them,"
+    refute_includes deploy_a_repo_section, "one at a time, by name"
   end
 
   def test_it_connects_vercel_apps_and_teams
