@@ -38,7 +38,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.23.0", manifest["version"]
+    assert_equal "0.24.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -104,7 +104,7 @@ class SkillTest < Minitest::Test
   
   def test_it_installs_a_missing_cli_and_upgrades_an_old_one
     assert_includes install_section, INSTALL
-    ["When the command is missing,", "below `0.18.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
+    ["When the command is missing,", "below `0.19.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
     ["0.1.0", "below `0.16.0`", "below `0.15.0`", "below `0.14.0`", "below `0.13.0`", "below `0.12.0`", "below `0.11.0`", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes skill, text }
   end
 
@@ -411,8 +411,32 @@ end
   end
 
   def test_it_needs_the_cli_that_sets_no_status_url
-    assert_includes skill, "below `0.18.0`"
+    assert_includes skill, "below `0.19.0`"
     refute_includes skill, "below `0.17.0`"
+  end
+
+  def step(number) = deploy_section[/^#{number}\. .*$/]
+
+  def test_it_connects_a_mobile_app
+    ["--app-store-app <id>", "--play-package <name>", "Apple ID", "pass both each time", "takes no status URL"].each { |text| assert_includes step(9), text }
+    assert_includes skill[/^description: (.*)$/, 1], "or a mobile app to its stores"
+    assert_includes deploy_section, "`--status-url` is refused"
+    assert_includes deploy_section, "no connected key reads"
+  end
+
+  def test_a_store_key_is_never_handled_by_claude_code
+    ["cadre app-store key add <key-id> --issuer <issuer-id>", "cadre google-play account add", "their own terminal", "Setup page"].each { |text| assert_includes step(10), text }
+    ["cadre app-store key remove <key-id>", "cadre google-play account remove <email>"].each { |text| assert_includes step(11), text }
+  end
+
+  def test_it_says_a_mobile_app_releases_through_the_stores
+    assert_includes deploy_a_repo_section, "`<repo>'s releases go through the stores.`"
+    assert_includes deploy_a_repo_section, "Apps page"
+  end
+
+  def test_it_needs_the_cli_that_connects_a_mobile_app
+    assert_includes skill, "below `0.19.0`"
+    refute_includes skill, "below `0.18.0`"
   end
 
   def test_it_confirms_a_blocked_deploy_before_passing_yes
