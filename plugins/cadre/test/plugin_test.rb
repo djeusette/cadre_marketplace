@@ -38,7 +38,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.22.0", manifest["version"]
+    assert_equal "0.23.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -104,7 +104,7 @@ class SkillTest < Minitest::Test
   
   def test_it_installs_a_missing_cli_and_upgrades_an_old_one
     assert_includes install_section, INSTALL
-    ["When the command is missing,", "below `0.17.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
+    ["When the command is missing,", "below `0.18.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
     ["0.1.0", "below `0.16.0`", "below `0.15.0`", "below `0.14.0`", "below `0.13.0`", "below `0.12.0`", "below `0.11.0`", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes skill, text }
   end
 
@@ -410,9 +410,9 @@ end
     ["`settings` (its `app` and `config` for Fly, its `project` and `dir` for Vercel)", "`status_url`", "next to `settings`, not inside it", "carry them over"].each { |text| assert_includes deploy_section, text }
   end
 
-  def test_it_needs_the_cli_that_asks_about_blocked_prs
-    assert_includes skill, "below `0.17.0`"
-    refute_includes skill, "below `0.16.0`"
+  def test_it_needs_the_cli_that_sets_no_status_url
+    assert_includes skill, "below `0.18.0`"
+    refute_includes skill, "below `0.17.0`"
   end
 
   def test_it_confirms_a_blocked_deploy_before_passing_yes
@@ -438,11 +438,23 @@ end
 
   def test_it_connects_vercel_apps_and_teams
     ["--vercel-project", "--name <app>", "--vercel-dir", "cadre vercel team add", "cadre vercel team remove",
-     "`cadre deploy <repo>` deploys it", "Don't ask for a status URL", "a Vercel target takes none yet",
+     "`cadre deploy <repo>` deploys it",
      "`project` and `dir`", "`name`, the app's name in the repo,",
      "any host other than Fly or Vercel", "(its `app` and `config` for Fly, its `project` and `dir` for Vercel)",
      "Account Settings, then Tokens", "a token scoped to the team"].each { |text| assert_includes deploy_section, text }
     assert_includes skill[/^description: (.*)$/, 1], "or a Fly org or a Vercel team, in Cadre (\"connect <repo> to its Fly app\", \"connect <repo> to its Vercel project\""
+  end
+
+  def test_it_asks_for_a_vercel_apps_status_url
+    vercel_step = deploy_section.lines.find { |line| line.start_with?("6. ") }
+    ["--status-url", "production domain", "--no-status-url", "status_url_note"].each { |text| assert_includes vercel_step, text }
+    refute_includes skill, "Don't ask for a status URL"
+    refute_includes skill, "takes none yet"
+  end
+
+  def test_it_carries_a_vercel_apps_status_url_over
+    command = deploy_a_repo_section.lines.find { |line| line.include?("--vercel-project <id> --name <app> --vercel-dir <folder>") }
+    assert_includes command, "--status-url"
   end
 
   def test_it_explains_all_eight_vercel_error_lines
