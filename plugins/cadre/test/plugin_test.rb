@@ -447,9 +447,19 @@ end
 
   def test_it_asks_for_a_vercel_apps_status_url
     vercel_step = deploy_section.lines.find { |line| line.start_with?("6. ") }
-    ["--status-url", "production domain", "--no-status-url", "status_url_note"].each { |text| assert_includes vercel_step, text }
+    ["--status-url", "production domain", "--no-status-url", "status_url_note", "without redirecting", "login page"].each { |text| assert_includes vercel_step, text }
     refute_includes skill, "Don't ask for a status URL"
     refute_includes skill, "takes none yet"
+  end
+
+  def test_it_says_what_setting_an_app_again_does_to_its_status_url
+    vercel_step = deploy_section.lines.find { |line| line.start_with?("6. ") }
+    assert_includes vercel_step, "a status URL left out is replaced by the production domain when it answers, and removed otherwise"
+    fly_step = deploy_section.lines.find { |line| line.start_with?("2. ") }
+    assert_includes fly_step, "a `--status-url` left out removes the URL"
+    read_step = deploy_section.lines.find { |line| line.start_with?("1. ") }
+    assert_includes read_step, "a Vercel target whose `status_url` is `null` keeps none only with `--no-status-url`, so ask the person whether it should stay unmonitored or take the default"
+    assert_includes deploy_a_repo_section, "with `--no-status-url` when it has none and should stay unmonitored"
   end
 
   def test_it_carries_a_vercel_apps_status_url_over
