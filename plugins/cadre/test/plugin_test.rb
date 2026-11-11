@@ -38,7 +38,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.23.0", manifest["version"]
+    assert_equal "0.24.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -104,7 +104,7 @@ class SkillTest < Minitest::Test
   
   def test_it_installs_a_missing_cli_and_upgrades_an_old_one
     assert_includes install_section, INSTALL
-    ["When the command is missing,", "below `0.18.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
+    ["When the command is missing,", "below `0.19.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
     ["0.1.0", "below `0.16.0`", "below `0.15.0`", "below `0.14.0`", "below `0.13.0`", "below `0.12.0`", "below `0.11.0`", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes skill, text }
   end
 
@@ -411,8 +411,84 @@ end
   end
 
   def test_it_needs_the_cli_that_sets_no_status_url
-    assert_includes skill, "below `0.18.0`"
+    assert_includes skill, "below `0.19.0`"
     refute_includes skill, "below `0.17.0`"
+  end
+
+  def step(number) = deploy_section[/^#{number}\. .*$/]
+
+  def test_it_connects_a_mobile_app
+    ["--app-store-app <id>", "--play-package <name>", "Apple ID", "pass both each time", "takes no status URL"].each { |text| assert_includes step(9), text }
+    assert_includes skill[/^description: (.*)$/, 1], "to connect a mobile app to its stores"
+    assert_includes step(9), "cadre refuses `--status-url`"
+    assert_includes deploy_section, "- `App Store: no connected key reads <id> (asked: <key-id>)`"
+    assert_includes step(9), "pass both each time for an app on both stores, and the one it has for an app on one. A store left out is taken off"
+  end
+
+  def test_a_new_app_store_key_means_setting_its_apps_again
+    ["set again each app the old key read", "a new JSON key"].each { |text| assert_includes step(10), text }
+    ["still reads", "then remove", "in that order"].each { |text| assert_includes step(11), text }
+    assert_includes step(10), "The old key stays connected until then."
+  end
+
+  def test_a_store_key_is_never_handled_by_claude_code
+    ["cadre app-store key add <key-id> --issuer <issuer-id>", "cadre google-play account add", "their own terminal", "Setup page"].each { |text| assert_includes step(10), text }
+    ["cadre app-store key remove <key-id>", "cadre google-play account remove <email>"].each { |text| assert_includes step(11), text }
+  end
+
+  def test_it_says_a_mobile_app_releases_through_the_stores
+    assert_match(/^   - `<repo>'s releases go through the stores\.`: /, deploy_a_repo_section)
+    assert_includes deploy_a_repo_section, "Apps page"
+    assert_match(/^2\. Fly needs a clean, up-to-date `main` of that repo\./, deploy_a_repo_section)
+  end
+
+  def test_it_describes_a_mobile_app_s_stores
+    ["`stores`", "`public_build`", "That is expected"].each { |text| assert_includes step(1), text }
+    assert_includes step(9), "Report the stores"
+  end
+
+  def test_a_mobile_app_takes_no_status_url_is_said_in_one_place
+    paragraph = deploy_section[/^   Every app with a server takes a status URL.*$/]
+    assert_includes paragraph, "A mobile app takes none: see step 9."
+    refute_includes paragraph, "is refused for it, as step 9 says"
+  end
+
+  def error_line(prefix) = deploy_section[/^- `#{Regexp.escape(prefix)}.*$/]
+
+  def test_it_reads_a_mobile_app_s_stores_field_by_field
+    ["each has a `label` (`App Store`, `Google Play`)", "the `app` it is there (the Apple ID or the package name)", "the `account` cadre reads it with", "`public_build`, the build that is public there", "its `version` (or `null` when the store gave none)", "its `build_number` and `since`", "`public_build` is `null` until cadre saw one"].each { |text| assert_includes step(1), text }
+    ["A mobile app's own `account` is `null` and its `tracked` is `false`", "It is not a sign that the app isn't connected", "\"where does it release?\" or \"which build is public?\" from `stores`", "from these fields"].each { |text| assert_includes step(1), text }
+  end
+
+  def test_it_asks_for_the_ids_a_mobile_app_needs
+    ["the number in its App Store Connect address (`6443635924`)", "the Google Play package name (`com.example.app`)", "with `--name <app>` when the repo has more than one app", "Setting the app again replaces its stores:"].each { |text| assert_includes step(9), text }
+  end
+
+  def test_it_says_once_when_cadre_shows_a_store_s_public_build
+    ["Cadre asks each store which build is public", "shows it on its Apps page", "each with the key or account that reads it", "within 15 minutes"].each { |text| assert_includes step(9), text }
+    assert_equal 1, step(9).scan("15 minutes").size
+  end
+
+  def test_a_store_key_file_is_asked_for_in_the_persons_terminal_and_never_read
+    ["which asks for the key's `.p8` file", "which asks for the service account's JSON key file", "Never ask them to send you a key file, and never read one", "Once they say it is added, set the app that was waiting for it"].each { |text| assert_includes step(10), text }
+  end
+
+  def test_it_explains_the_no_connected_key_error
+    ["no connected key or account reads that app", "The parentheses say what cadre asked", "Check the Apple ID or the package name with the person", "as in step 10"].each { |text| assert_includes error_line("App Store: no connected key reads"), text }
+  end
+
+  def test_it_explains_the_https_only_refusal
+    line = error_line("Cadre sends a key or a token over https only. Sign in to an https address first: cadre login --url https://<your cadre>.")
+    ["isn't https, and nothing was sent", "Tell the person what it printed and stop", "they sign in again with an https address"].each { |text| assert_includes line, text }
+  end
+
+  def test_the_readme_says_how_a_mobile_app_is_connected
+    bullet = File.read(File.join(ROOT, "README.md"))[/^- \*\*cadre\*\* — .*?(?=^- |\z)/m]
+    ["Asked to connect a mobile app, it sets its App Store app and Google Play package with `cadre repo set`", "`cadre app-store key add` or `cadre google-play account add` in their own terminal", "Claude Code never handles a store's key"].each { |text| assert_includes bullet, text }
+  end
+
+  def test_it_says_nothing_is_deployed_for_a_mobile_app
+    assert_includes deploy_a_repo_section[/^   - `<repo>'s releases go through the stores\.`.*$/], "the app is a mobile app, and nothing is deployed"
   end
 
   def test_it_confirms_a_blocked_deploy_before_passing_yes
