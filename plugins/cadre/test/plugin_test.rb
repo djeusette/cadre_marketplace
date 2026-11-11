@@ -422,7 +422,7 @@ end
     assert_includes skill[/^description: (.*)$/, 1], "to connect a mobile app to its stores"
     assert_includes step(9), "cadre refuses `--status-url`"
     assert_includes deploy_section, "- `App Store: no connected key reads <id> (asked: <key-id>)`"
-    assert_includes step(9), "pass both each time, or the one store it has: a store left out is taken off"
+    assert_includes step(9), "pass both each time for an app on both stores, and the one it has for an app on one. A store left out is taken off"
   end
 
   def test_a_new_app_store_key_means_setting_its_apps_again
