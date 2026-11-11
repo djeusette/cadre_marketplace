@@ -419,7 +419,7 @@ end
 
   def test_it_connects_a_mobile_app
     ["--app-store-app <id>", "--play-package <name>", "Apple ID", "pass both each time", "takes no status URL"].each { |text| assert_includes step(9), text }
-    assert_includes skill[/^description: (.*)$/, 1], "or a mobile app to its stores"
+    assert_includes skill[/^description: (.*)$/, 1], "to connect a mobile app to its stores"
     assert_includes step(9), "cadre refuses `--status-url`"
     assert_includes deploy_section, "- `App Store: no connected key reads <id> (asked: <key-id>)`"
     assert_includes step(9), "pass both each time, or the one store it has: a store left out is taken off"
@@ -427,7 +427,8 @@ end
 
   def test_a_new_app_store_key_means_setting_its_apps_again
     ["set again each app the old key read", "a new JSON key"].each { |text| assert_includes step(10), text }
-    ["still reads", "then remove"].each { |text| assert_includes step(11), text }
+    ["still reads", "then remove", "in that order"].each { |text| assert_includes step(11), text }
+    assert_includes step(10), "The old key stays connected until then."
   end
 
   def test_a_store_key_is_never_handled_by_claude_code
@@ -436,8 +437,20 @@ end
   end
 
   def test_it_says_a_mobile_app_releases_through_the_stores
-    assert_includes deploy_a_repo_section, "`<repo>'s releases go through the stores.`"
+    assert_match(/^   - `<repo>'s releases go through the stores\.`: /, deploy_a_repo_section)
     assert_includes deploy_a_repo_section, "Apps page"
+    assert_match(/^2\. Fly needs a clean, up-to-date `main` of that repo\./, deploy_a_repo_section)
+  end
+
+  def test_it_describes_a_mobile_app_s_stores
+    ["`stores`", "`public_build`", "That is expected"].each { |text| assert_includes step(1), text }
+    assert_includes step(9), "Report the stores"
+  end
+
+  def test_a_mobile_app_takes_no_status_url_is_said_in_one_place
+    paragraph = deploy_section[/^   Every app with a server takes a status URL.*$/]
+    assert_includes paragraph, "A mobile app takes none: see step 9."
+    refute_includes paragraph, "is refused for it, as step 9 says"
   end
 
   def test_it_needs_the_cli_that_connects_a_mobile_app
