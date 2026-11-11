@@ -469,9 +469,13 @@ class SkillTest < Minitest::Test
      "run \"Tag each build\"", "### Tag each build", "`cadre repo show <repo> --json`", "`public_build.tag`",
      "When `public_build` is `null`, the store has no public build yet: there is nothing to tag.",
      "When it is `null`, a public build is a production build", "(its `version` and `build_number`)",
-     "When `version` is `null` (Google Play gives none), the version comes from `pubspec.yaml` at that build, or from the person.",
-     "`public_build.commit` when it is not `null`, and otherwise the person's to name",
+     "Ask the person for the commit the build was made from, since cadre has no commit for an untagged build.",
+     "When `version` is `null` (Google Play gives none), read the version from `pubspec.yaml` at that commit.",
      "for them to run in a checkout of that repo: `git tag <tag> <commit> && git push origin <tag>`", "The person runs it, never you."].each { |text| assert_includes connect, text }
+    refute_includes connect, "`public_build.commit`"
+    tag_each_build = connect[/### Tag each build\n.*?(?=\n### )/m]
+    assert_equal 5, tag_each_build.scan(/^\d+\. /).size
+    assert_operator tag_each_build.index("Ask the person for the commit"), :<, tag_each_build.index("`pubspec.yaml`")
   end
 
   def test_it_connects_a_mobile_app

@@ -70,8 +70,8 @@ Cadre asks each store which build is public and shows it on its Apps page.
 1. Read `cadre repo show <repo> --json`, and for each of the app's stores its `public_build`.
 2. When `public_build` is `null`, the store has no public build yet: there is nothing to tag.
 3. Otherwise read `public_build.tag`. When it names a tag, the build is tagged.
-4. When it is `null`, a public build is a production build, so the tag is `prod-v<version>-<build>`, with the version and build taken from that store's `public_build` (its `version` and `build_number`). When `version` is `null` (Google Play gives none), the version comes from `pubspec.yaml` at that build, or from the person.
-5. The commit is the one the build was made from: `public_build.commit` when it is not `null`, and otherwise the person's to name, since cadre has no commit for an untagged build. Give the person the tag and this command, for them to run in a checkout of that repo: `git tag <tag> <commit> && git push origin <tag>`. The person runs it, never you.
+4. When it is `null`, a public build is a production build. Ask the person for the commit the build was made from, since cadre has no commit for an untagged build.
+5. The tag is `prod-v<version>-<build>`, with the version and build taken from that store's `public_build` (its `version` and `build_number`). When `version` is `null` (Google Play gives none), read the version from `pubspec.yaml` at that commit. Give the person the tag and this command, for them to run in a checkout of that repo: `git tag <tag> <commit> && git push origin <tag>`. The person runs it, never you.
 
 ### Connect a store's key
 
