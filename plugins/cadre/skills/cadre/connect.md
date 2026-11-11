@@ -64,6 +64,8 @@ A mobile app is connected to one store or both.
 
 Cadre asks each store which build is public and shows it on its Apps page.
 
+Cadre also reads the git tag of each build, so once the app is connected, tell the person that each production build needs the tag `prod-v<version>-<build>` on the commit it was built from, and each staging build `stg-v<version>-<build>`, with the version and build as in the app's `pubspec.yaml` (`prod-v1.8.15-6188`). Read each store's `public_build.tag` from `cadre repo show <repo> --json`. When it is `null`, give the person the tag to push and this command, for them to run in a checkout of that repo, where `<commit>` is the store's `public_build.commit`, the commit the build was made from: `git tag <tag> <commit> && git push origin <tag>`.
+
 ### Connect a store's key
 
 1. Tell the person to run, in their own terminal and following cadre's Setup page (`/setup`), `cadre app-store key add <key-id> --issuer <issuer-id>`, which asks for the key's `.p8` file, or `cadre google-play account add`, which asks for the service account's JSON key file. The key file stays with them, as "Tokens and keys" says.

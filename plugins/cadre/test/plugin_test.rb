@@ -38,7 +38,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.25.0", manifest["version"]
+    assert_equal "0.26.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -464,6 +464,11 @@ class SkillTest < Minitest::Test
      %q{as "Tokens and keys" says}].each { |text| assert_includes vercel_team, text }
   end
 
+  def test_it_names_the_tag_a_mobile_build_needs
+    ["`prod-v<version>-<build>`", "`stg-v<version>-<build>`", "`prod-v1.8.15-6188`", "`pubspec.yaml`", "`public_build.tag`", "`cadre repo show <repo> --json`",
+     "When it is `null`", "`git tag <tag> <commit> && git push origin <tag>`"].each { |text| assert_includes mobile_app, text }
+  end
+
   def test_it_connects_a_mobile_app
     ["--app-store-app <id>", "--play-package <name>", "Apple ID", "one store or both", "Apps page", "Report the stores"].each { |text| assert_includes mobile_app, text }
     assert_includes set_again, "setting the app again replaces its stores. Pass both each time for an app on both stores, and the one it has for an app on one. A store left out is taken off."
@@ -699,7 +704,7 @@ class SkillTest < Minitest::Test
   end
 
   def test_no_skill_file_pushes_or_commits_everything
-    skill_files.each { |path| refute_match(/git (push|commit -a|add (\.|-A))/, File.read(path), path) }
+    skill_files.each { |path| refute_match(/git (push(?! origin <tag>`)|commit -a|add (\.|-A))/, File.read(path), path) }
   end
 end
 
