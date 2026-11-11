@@ -131,7 +131,7 @@ Each of the `targets` in `cadre repo show <repo> --json` has:
 - `last_deploy`: the `commit` and `deployed_at` of the latest deploy cadre saw, or `null`;
 - `stores`: a mobile app's stores, empty for any other app. Each has a `label` (`App Store`, `Google Play`), the `app` it is there (the Apple ID or the package name), the `account` cadre reads it with (the key's ID or the service account's email), and `public_build`, the build that is public there: its `version` (or `null` when the store gave none), its `build_number` and `since`, when cadre first saw it. `public_build` is `null` until cadre saw one.
 
-A mobile app's own `account` is `null` and its `tracked` is `false`. That is expected: cadre can't tell yet which commit a build was made from, so the app's merged PRs stay Merged. It is not a sign that the app isn't connected.
+A mobile app's own `account` is `null` and its `tracked` is `false`. That is expected: cadre reads the build's tag, so it knows the build's commit once the tag is pushed, but the PRs a build holds come with a later release of cadre, so the app's merged PRs stay Merged until then. It is not a sign that the app isn't connected.
 
 ## When `cadre` refuses
 

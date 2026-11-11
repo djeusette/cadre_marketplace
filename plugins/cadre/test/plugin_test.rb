@@ -497,7 +497,9 @@ class SkillTest < Minitest::Test
     ["has a `label` (`App Store`, `Google Play`)", "the `app` it is there (the Apple ID or the package name)", "the `account` cadre reads it with",
      "`public_build`, the build that is public there", "its `version` (or `null` when the store gave none)", "its `build_number` and `since`",
      "`public_build` is `null` until cadre saw one", "A mobile app's own `account` is `null` and its `tracked` is `false`",
-     "It is not a sign that the app isn't connected"].each { |text| assert_includes target_fields, text }
+     "It is not a sign that the app isn't connected",
+     "cadre reads the build's tag, so it knows the build's commit once the tag is pushed",
+     "the PRs a build holds come with a later release of cadre"].each { |text| assert_includes target_fields, text }
     assert_includes connect, %q{Answer "where does it deploy?" from these fields, and "where does it release?" or "which build is public?" from `stores`}
   end
 
