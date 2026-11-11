@@ -53,6 +53,9 @@ Which app:
 - `<repo> has <n> apps: <apps>. Pass --app <name>, in deploy order.`: its apps are on more than one platform. Ask which goes first, then run it again with `--app <name>`.
 - `<repo> has apps on more than one platform. Deploy each with --app <name>, in deploy order.`: `--all` can't mix platforms. Deploy each app with `--app <name>`, in deploy order, each once the person confirms.
 - `<repo> has no app <app>. Its apps: <apps>.`: check the name with the person.
+
+Nothing to deploy:
+
 - `<repo>'s releases go through the stores.`: the app is a mobile app, and nothing is deployed. Tell the person, and point them to cadre's Apps page for each store's public build.
 - `<repo> has no app cadre can deploy. …`: the repo has no app on Fly or Vercel that cadre tracks. Connect one as [connect.md](connect.md) says.
 

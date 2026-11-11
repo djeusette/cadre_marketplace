@@ -466,7 +466,7 @@ class SkillTest < Minitest::Test
 
   def test_it_connects_a_mobile_app
     ["--app-store-app <id>", "--play-package <name>", "Apple ID", "one store or both", "Apps page", "Report the stores"].each { |text| assert_includes mobile_app, text }
-    assert_includes set_again, "both stores each time, or the one store it has. A store left out is taken off."
+    assert_includes set_again, "setting the app again replaces its stores. Pass both each time for an app on both stores, and the one it has for an app on one. A store left out is taken off."
     assert_includes status_urls, "takes no status URL: cadre refuses `--status-url` for it"
     assert_equal 1, connect.scan("refuses `--status-url`").size
     assert_includes connect_refusals, "- `App Store: no connected key reads <id> (asked: <key-id>)`"
@@ -475,6 +475,49 @@ class SkillTest < Minitest::Test
   def test_a_store_key_is_added_by_the_person
     ["cadre app-store key add <key-id> --issuer <issuer-id>", "cadre google-play account add", "their own terminal", "Setup page",
      %q{as "Tokens and keys" says}, "cadre app-store key remove <key-id>", "cadre google-play account remove <email>"].each { |text| assert_includes store_key, text }
+  end
+
+  def refusal(text, prefix) = text[/^- `#{Regexp.escape(prefix)}.*$/] or flunk("no refusal #{prefix}")
+
+  def test_it_reads_a_mobile_app_s_stores_field_by_field
+    ["has a `label` (`App Store`, `Google Play`)", "the `app` it is there (the Apple ID or the package name)", "the `account` cadre reads it with",
+     "`public_build`, the build that is public there", "its `version` (or `null` when the store gave none)", "its `build_number` and `since`",
+     "`public_build` is `null` until cadre saw one", "A mobile app's own `account` is `null` and its `tracked` is `false`",
+     "It is not a sign that the app isn't connected"].each { |text| assert_includes target_fields, text }
+    assert_includes connect, %q{Answer "where does it deploy?" from these fields, and "where does it release?" or "which build is public?" from `stores`}
+  end
+
+  def test_it_asks_for_the_ids_a_mobile_app_needs
+    ["the number in its App Store Connect address (`6443635924`)", "the Google Play package name (`com.example.app`)",
+     "with `--name <app>` when the repo has more than one app"].each { |text| assert_includes mobile_app, text }
+  end
+
+  def test_it_says_once_when_cadre_shows_a_store_s_public_build
+    ["Cadre asks each store which build is public and shows it on its Apps page", "each with the key or account that reads it",
+     "within 15 minutes"].each { |text| assert_includes mobile_app, text }
+    assert_equal 1, connect.scan("15 minutes").size
+  end
+
+  def test_a_store_key_file_is_asked_for_in_the_persons_terminal_and_never_read
+    ["which asks for the key's `.p8` file", "which asks for the service account's JSON key file",
+     "Once they say it is added, set the app that was waiting for it"].each { |text| assert_includes store_key, text }
+    assert_includes tokens_and_keys, "Never ask the person to send you a token, a key or a key file, and never read one"
+  end
+
+  def test_it_explains_the_no_connected_key_error
+    ["no connected key or account reads that app", "The parentheses say what cadre asked", "Check the Apple ID or the package name with the person",
+     %q{as "Connect a store's key" says}].each { |text| assert_includes refusal(connect_refusals, "App Store: no connected key reads"), text }
+  end
+
+  def test_it_explains_the_https_only_refusal
+    line = refusal(connect_refusals, "Cadre sends a key or a token over https only. Sign in to an https address first: cadre login --url https://<your cadre>.")
+    ["isn't https, and nothing was sent", "Tell the person what it printed and stop", "they sign in again with an https address"].each { |text| assert_includes line, text }
+  end
+
+  def test_the_readme_says_how_a_mobile_app_is_connected
+    bullet = File.read(File.join(ROOT, "README.md"))[/^- \*\*cadre\*\* — .*?(?=^- |\z)/m]
+    ["Asked to connect a mobile app, it sets its App Store app and Google Play package with `cadre repo set`",
+     "`cadre app-store key add` or `cadre google-play account add` in their own terminal", "Claude Code never handles a store's key"].each { |text| assert_includes bullet, text }
   end
 
   def test_a_new_app_store_key_means_setting_its_apps_again
@@ -571,7 +614,7 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_says_a_mobile_app_releases_through_the_stores
-    assert_match(/^- `<repo>'s releases go through the stores\.`: /, deploy_stops)
+    assert_includes refusal(deploy_stops, "<repo>'s releases go through the stores."), "the app is a mobile app, and nothing is deployed"
     assert_includes deploy_stops, "Apps page"
     refute_includes deploy_steps, "mobile"
   end
