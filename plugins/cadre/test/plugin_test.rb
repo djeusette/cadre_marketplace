@@ -420,8 +420,14 @@ end
   def test_it_connects_a_mobile_app
     ["--app-store-app <id>", "--play-package <name>", "Apple ID", "pass both each time", "takes no status URL"].each { |text| assert_includes step(9), text }
     assert_includes skill[/^description: (.*)$/, 1], "or a mobile app to its stores"
-    assert_includes deploy_section, "`--status-url` is refused"
-    assert_includes deploy_section, "no connected key reads"
+    assert_includes step(9), "cadre refuses `--status-url`"
+    assert_includes deploy_section, "- `App Store: no connected key reads <id> (asked: <key-id>)`"
+    assert_includes step(9), "pass both each time, or the one store it has: a store left out is taken off"
+  end
+
+  def test_a_new_app_store_key_means_setting_its_apps_again
+    ["set again each app the old key read", "a new JSON key"].each { |text| assert_includes step(10), text }
+    ["still reads", "then remove"].each { |text| assert_includes step(11), text }
   end
 
   def test_a_store_key_is_never_handled_by_claude_code
