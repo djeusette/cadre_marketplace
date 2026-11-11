@@ -61,10 +61,17 @@ A mobile app is connected to one store or both.
 1. Ask the person for the App Store app's Apple ID, the number in its App Store Connect address (`6443635924`), and for the Google Play package name (`com.example.app`).
 2. Run `cadre repo set <repo> --app-store-app <id> --play-package <name> --json`, with one store's flag alone when the app has only that store, and with `--name <app>` when the repo has more than one app.
 3. Report the stores the JSON body holds, each with the key or account that reads it, and that cadre shows each store's public build within 15 minutes.
+4. Once the app is connected, tell the person that cadre reads the git tag of each build: each production build needs `prod-v<version>-<build>` on the commit it was built from, and each staging build `stg-v<version>-<build>`, with the version and build as in the app's `pubspec.yaml` (`prod-v1.8.15-6188`). Then run "Tag each build".
 
 Cadre asks each store which build is public and shows it on its Apps page.
 
-Cadre also reads the git tag of each build, so once the app is connected, tell the person that each production build needs the tag `prod-v<version>-<build>` on the commit it was built from, and each staging build `stg-v<version>-<build>`, with the version and build as in the app's `pubspec.yaml` (`prod-v1.8.15-6188`). Read each store's `public_build.tag` from `cadre repo show <repo> --json`. When it is `null`, give the person the tag to push and this command, for them to run in a checkout of that repo, where `<commit>` is the store's `public_build.commit`, the commit the build was made from: `git tag <tag> <commit> && git push origin <tag>`.
+### Tag each build
+
+1. Read `cadre repo show <repo> --json`, and for each of the app's stores its `public_build`.
+2. When `public_build` is `null`, the store has no public build yet: there is nothing to tag.
+3. Otherwise read `public_build.tag`. When it names a tag, the build is tagged.
+4. When it is `null`, a public build is a production build, so the tag is `prod-v<version>-<build>`, with the version and build taken from that store's `public_build` (its `version` and `build_number`). When `version` is `null` (Google Play gives none), the version comes from `pubspec.yaml` at that build, or from the person.
+5. The commit is the one the build was made from: `public_build.commit` when it is not `null`, and otherwise the person's to name, since cadre has no commit for an untagged build. Give the person the tag and this command, for them to run in a checkout of that repo: `git tag <tag> <commit> && git push origin <tag>`. The person runs it, never you.
 
 ### Connect a store's key
 

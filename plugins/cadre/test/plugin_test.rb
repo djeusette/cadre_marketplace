@@ -465,8 +465,13 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_names_the_tag_a_mobile_build_needs
-    ["`prod-v<version>-<build>`", "`stg-v<version>-<build>`", "`prod-v1.8.15-6188`", "`pubspec.yaml`", "`public_build.tag`", "`cadre repo show <repo> --json`",
-     "When it is `null`", "`git tag <tag> <commit> && git push origin <tag>`"].each { |text| assert_includes mobile_app, text }
+    ["4. Once the app is connected, tell the person", "`prod-v<version>-<build>` on the commit it was built from", "`stg-v<version>-<build>`", "`prod-v1.8.15-6188`", "`pubspec.yaml`",
+     "run \"Tag each build\"", "### Tag each build", "`cadre repo show <repo> --json`", "`public_build.tag`",
+     "When `public_build` is `null`, the store has no public build yet: there is nothing to tag.",
+     "When it is `null`, a public build is a production build", "(its `version` and `build_number`)",
+     "When `version` is `null` (Google Play gives none), the version comes from `pubspec.yaml` at that build, or from the person.",
+     "`public_build.commit` when it is not `null`, and otherwise the person's to name",
+     "for them to run in a checkout of that repo: `git tag <tag> <commit> && git push origin <tag>`", "The person runs it, never you."].each { |text| assert_includes connect, text }
   end
 
   def test_it_connects_a_mobile_app
@@ -704,6 +709,7 @@ class SkillTest < Minitest::Test
   end
 
   def test_no_skill_file_pushes_or_commits_everything
+    # the person runs the tag push, never the agent (EP-I3)
     skill_files.each { |path| refute_match(/git (push(?! origin <tag>`)|commit -a|add (\.|-A))/, File.read(path), path) }
   end
 end
