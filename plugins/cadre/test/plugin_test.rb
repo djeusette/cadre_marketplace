@@ -477,6 +477,11 @@ end
     ["no connected key or account reads that app", "The parentheses say what cadre asked", "Check the Apple ID or the package name with the person", "as in step 10"].each { |text| assert_includes error_line("App Store: no connected key reads"), text }
   end
 
+  def test_it_explains_the_https_only_refusal
+    line = error_line("Cadre sends a key or a token over https only. Sign in to an https address first: cadre login --url https://<your cadre>.")
+    ["isn't https, and nothing was sent", "Tell the person what it printed and stop", "they sign in again with an https address"].each { |text| assert_includes line, text }
+  end
+
   def test_the_readme_says_how_a_mobile_app_is_connected
     bullet = File.read(File.join(ROOT, "README.md"))[/^- \*\*cadre\*\* — .*?(?=^- |\z)/m]
     ["Asked to connect a mobile app, it sets its App Store app and Google Play package with `cadre repo set`", "`cadre app-store key add` or `cadre google-play account add` in their own terminal", "Claude Code never handles a store's key"].each { |text| assert_includes bullet, text }

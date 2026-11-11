@@ -248,6 +248,7 @@ When a command fails, it prints one of these:
 - `Cadre couldn't reach Fly. Try again in a minute.`: try again in a minute.
 - `No repo <repo> on <server>.`, when connecting a repo (while writing a project, see "Apps in `repos`"): cadre knows a repo once a project names it. Check the name with the person, or add the repo to a project as "Change a project" does.
 - `App Store: no connected key reads <id> (asked: <key-id>)` or `Google Play: …`: no connected key or account reads that app. The parentheses say what cadre asked. Check the Apple ID or the package name with the person, or have them connect the key or account that owns it, as in step 10.
+- `Cadre sends a key or a token over https only. Sign in to an https address first: cadre login --url https://<your cadre>.`: cadre is signed in to an address that isn't https, and nothing was sent. Tell the person what it printed and stop: they sign in again with an https address, then the add runs again.
 - `Your key for <url> is no longer valid. Run cadre login --url <url>.`: go back to Sign in, then retry.
 
 ## Deploy a repo
