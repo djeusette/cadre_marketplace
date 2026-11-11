@@ -453,9 +453,37 @@ end
     refute_includes paragraph, "is refused for it, as step 9 says"
   end
 
-  def test_it_needs_the_cli_that_connects_a_mobile_app
-    assert_includes skill, "below `0.19.0`"
-    refute_includes skill, "below `0.18.0`"
+  def error_line(prefix) = deploy_section[/^- `#{Regexp.escape(prefix)}.*$/]
+
+  def test_it_reads_a_mobile_app_s_stores_field_by_field
+    ["each has a `label` (`App Store`, `Google Play`)", "the `app` it is there (the Apple ID or the package name)", "the `account` cadre reads it with", "`public_build`, the build that is public there", "its `version` (or `null` when the store gave none)", "its `build_number` and `since`", "`public_build` is `null` until cadre saw one"].each { |text| assert_includes step(1), text }
+    ["A mobile app's own `account` is `null` and its `tracked` is `false`", "It is not a sign that the app isn't connected", "\"where does it release?\" or \"which build is public?\" from `stores`", "from these fields"].each { |text| assert_includes step(1), text }
+  end
+
+  def test_it_asks_for_the_ids_a_mobile_app_needs
+    ["the number in its App Store Connect address (`6443635924`)", "the Google Play package name (`com.example.app`)", "with `--name <app>` when the repo has more than one app", "Setting the app again replaces its stores:"].each { |text| assert_includes step(9), text }
+  end
+
+  def test_it_says_once_when_cadre_shows_a_store_s_public_build
+    ["Cadre asks each store which build is public", "shows it on its Apps page", "each with the key or account that reads it", "within 15 minutes"].each { |text| assert_includes step(9), text }
+    assert_equal 1, step(9).scan("15 minutes").size
+  end
+
+  def test_a_store_key_file_is_asked_for_in_the_persons_terminal_and_never_read
+    ["which asks for the key's `.p8` file", "which asks for the service account's JSON key file", "Never ask them to send you a key file, and never read one", "Once they say it is added, set the app that was waiting for it"].each { |text| assert_includes step(10), text }
+  end
+
+  def test_it_explains_the_no_connected_key_error
+    ["no connected key or account reads that app", "The parentheses say what cadre asked", "Check the Apple ID or the package name with the person", "as in step 10"].each { |text| assert_includes error_line("App Store: no connected key reads"), text }
+  end
+
+  def test_the_readme_says_how_a_mobile_app_is_connected
+    bullet = File.read(File.join(ROOT, "README.md"))[/^- \*\*cadre\*\* — .*?(?=^- |\z)/m]
+    ["Asked to connect a mobile app, it sets its App Store app and Google Play package with `cadre repo set`", "`cadre app-store key add` or `cadre google-play account add` in their own terminal", "Claude Code never handles a store's key"].each { |text| assert_includes bullet, text }
+  end
+
+  def test_it_says_nothing_is_deployed_for_a_mobile_app
+    assert_includes deploy_a_repo_section[/^   - `<repo>'s releases go through the stores\.`.*$/], "the app is a mobile app, and nothing is deployed"
   end
 
   def test_it_confirms_a_blocked_deploy_before_passing_yes
