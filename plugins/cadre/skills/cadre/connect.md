@@ -61,8 +61,17 @@ A mobile app is connected to one store or both.
 1. Ask the person for the App Store app's Apple ID, the number in its App Store Connect address (`6443635924`), and for the Google Play package name (`com.example.app`).
 2. Run `cadre repo set <repo> --app-store-app <id> --play-package <name> --json`, with one store's flag alone when the app has only that store, and with `--name <app>` when the repo has more than one app.
 3. Report the stores the JSON body holds, each with the key or account that reads it, and that cadre shows each store's public build within 15 minutes.
+4. Once the app is connected, tell the person that cadre reads the git tag of each build: each production build needs `prod-v<version>-<build>` on the commit it was built from, and each staging build `stg-v<version>-<build>`, with the version and build as in the app's `pubspec.yaml` (`prod-v1.8.15-6188`). Then run "Tag each build".
 
 Cadre asks each store which build is public and shows it on its Apps page.
+
+### Tag each build
+
+1. Read `cadre repo show <repo> --json`, and for each of the app's stores its `public_build`.
+2. When `public_build` is `null`, the store has no public build yet: there is nothing to tag.
+3. Otherwise read `public_build.tag`. When it names a tag, the build is tagged.
+4. When it is `null`, a public build is a production build. Ask the person for the commit the build was made from, since cadre has no commit for an untagged build.
+5. The tag is `prod-v<version>-<build>`, with the version and build taken from that store's `public_build` (its `version` and `build_number`). When `version` is `null` (Google Play gives none), read the version from `pubspec.yaml` at that commit. Give the person the tag and this command, for them to run in a checkout of that repo: `git tag <tag> <commit> && git push origin <tag>`. The person runs it, never you.
 
 ### Connect a store's key
 
@@ -122,7 +131,7 @@ Each of the `targets` in `cadre repo show <repo> --json` has:
 - `last_deploy`: the `commit` and `deployed_at` of the latest deploy cadre saw, or `null`;
 - `stores`: a mobile app's stores, empty for any other app. Each has a `label` (`App Store`, `Google Play`), the `app` it is there (the Apple ID or the package name), the `account` cadre reads it with (the key's ID or the service account's email), and `public_build`, the build that is public there: its `version` (or `null` when the store gave none), its `build_number` and `since`, when cadre first saw it. `public_build` is `null` until cadre saw one.
 
-A mobile app's own `account` is `null` and its `tracked` is `false`. That is expected: cadre can't tell yet which commit a build was made from, so the app's merged PRs stay Merged. It is not a sign that the app isn't connected.
+A mobile app's own `account` is `null` and its `tracked` is `false`. That is expected: cadre reads the build's tag, so it knows the build's commit once the tag is pushed, but the PRs a build holds come with a later release of cadre, so the app's merged PRs stay Merged until then. It is not a sign that the app isn't connected.
 
 ## When `cadre` refuses
 

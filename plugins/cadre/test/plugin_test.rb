@@ -38,7 +38,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.25.0", manifest["version"]
+    assert_equal "0.26.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -464,6 +464,20 @@ class SkillTest < Minitest::Test
      %q{as "Tokens and keys" says}].each { |text| assert_includes vercel_team, text }
   end
 
+  def test_it_names_the_tag_a_mobile_build_needs
+    ["4. Once the app is connected, tell the person", "`prod-v<version>-<build>` on the commit it was built from", "`stg-v<version>-<build>`", "`prod-v1.8.15-6188`", "`pubspec.yaml`",
+     "run \"Tag each build\"", "### Tag each build", "`cadre repo show <repo> --json`", "`public_build.tag`",
+     "When `public_build` is `null`, the store has no public build yet: there is nothing to tag.",
+     "When it is `null`, a public build is a production build", "(its `version` and `build_number`)",
+     "Ask the person for the commit the build was made from, since cadre has no commit for an untagged build.",
+     "When `version` is `null` (Google Play gives none), read the version from `pubspec.yaml` at that commit.",
+     "for them to run in a checkout of that repo: `git tag <tag> <commit> && git push origin <tag>`", "The person runs it, never you."].each { |text| assert_includes connect, text }
+    refute_includes connect, "`public_build.commit`"
+    tag_each_build = connect[/### Tag each build\n.*?(?=\n### )/m]
+    assert_equal 5, tag_each_build.scan(/^\d+\. /).size
+    assert_operator tag_each_build.index("Ask the person for the commit"), :<, tag_each_build.index("`pubspec.yaml`")
+  end
+
   def test_it_connects_a_mobile_app
     ["--app-store-app <id>", "--play-package <name>", "Apple ID", "one store or both", "Apps page", "Report the stores"].each { |text| assert_includes mobile_app, text }
     assert_includes set_again, "setting the app again replaces its stores. Pass both each time for an app on both stores, and the one it has for an app on one. A store left out is taken off."
@@ -483,7 +497,9 @@ class SkillTest < Minitest::Test
     ["has a `label` (`App Store`, `Google Play`)", "the `app` it is there (the Apple ID or the package name)", "the `account` cadre reads it with",
      "`public_build`, the build that is public there", "its `version` (or `null` when the store gave none)", "its `build_number` and `since`",
      "`public_build` is `null` until cadre saw one", "A mobile app's own `account` is `null` and its `tracked` is `false`",
-     "It is not a sign that the app isn't connected"].each { |text| assert_includes target_fields, text }
+     "It is not a sign that the app isn't connected",
+     "cadre reads the build's tag, so it knows the build's commit once the tag is pushed",
+     "the PRs a build holds come with a later release of cadre"].each { |text| assert_includes target_fields, text }
     assert_includes connect, %q{Answer "where does it deploy?" from these fields, and "where does it release?" or "which build is public?" from `stores`}
   end
 
@@ -699,7 +715,8 @@ class SkillTest < Minitest::Test
   end
 
   def test_no_skill_file_pushes_or_commits_everything
-    skill_files.each { |path| refute_match(/git (push|commit -a|add (\.|-A))/, File.read(path), path) }
+    # the person runs the tag push, never the agent (EP-I3)
+    skill_files.each { |path| refute_match(/git (push(?! origin <tag>`)|commit -a|add (\.|-A))/, File.read(path), path) }
   end
 end
 
