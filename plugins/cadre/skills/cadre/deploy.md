@@ -45,7 +45,21 @@ Tick only what the person said is done, or what you just did at their request. W
 - **Fly** needs a clean, up-to-date `main` of that repo. `--all` on Fly apps deploys them one at a time, in the order Cadre's release queue lists them, and stops at the first that fails, naming each app left with the command that deploys it: relay those lines.
 - **Vercel** deploys from any pushed commit on any branch. `--all` on Vercel apps builds them all, then promotes them together, and `--app` builds and promotes that app alone.
 
+## Open Deploy in the right folder
+
+cadre's Deploy button opens Claude Desktop in the folder the person linked with `cadre link`. Without one, Desktop opens the folder it used last, and the prompt's last line names the repo.
+
+`cadre link`, run in a checkout of a repo cadre knows, remembers its main checkout for that person, even from a linked worktree or a subfolder; running it again replaces it. Run it only when the person asks. Its answers:
+
+- `Linked <repo> to <path>. Its Deploy button in cadre opens there.`: tell the person.
+- `cadre doesn't know <owner/name>. A project names a repo before cadre knows it.`: no project names this checkout's repo, and a project must name the repo first. Tell the person; `cadre link` works there once a milestone of a project lists that repo.
+- `This folder isn't a checkout with an origin. Run cadre link in one.`: ask the person where their checkout of the repo is, and run it there.
+
 ## When a deploy stops
+
+Wrong folder:
+
+- `This folder isn't a checkout of <owner/repo>. Run cadre deploy in one.`: the session runs outside that repo's checkout. Tell the person to start a new session and pick their checkout of it as its folder; there they run `cadre link` once, or ask you to, and the Deploy button opens in it from then on.
 
 Which app:
 

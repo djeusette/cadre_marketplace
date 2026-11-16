@@ -1,6 +1,6 @@
 ---
 name: cadre
-description: Cadre CLI workflows. Use when the person asks to create, change or drop a project or its milestones in Cadre, read or update a milestone's spec, start a milestone ("start milestone <project>/<n>"), link a pull request to a milestone, connect a repo to where it deploys or ask where it does, connect a mobile app to its stores, deploy a repo that runs on Fly or Vercel, tick a Before deploying item, implement a spec or plan that says it is tracked in Cadre, or sign in to Cadre.
+description: Cadre CLI workflows. Use when the person asks to create, change or drop a project or its milestones in Cadre, read or update a milestone's spec, start a milestone ("start milestone <project>/<n>"), link a pull request to a milestone, connect a repo to where it deploys or ask where it does, connect a mobile app to its stores, deploy a repo that runs on Fly or Vercel or remember where its checkout is (`cadre link`), tick a Before deploying item, implement a spec or plan that says it is tracked in Cadre, or sign in to Cadre.
 ---
 
 # Cadre
@@ -23,7 +23,7 @@ Run `cadre version`.
   ```
 
   Then run `cadre version` again. When the command is still missing, `~/.local/bin` is not on the person's `PATH`: tell them to add it, and stop.
-- When it reports a version below `0.19.0`, run `cadre upgrade`. It replaces that `cadre` with the latest release and prints `Upgraded cadre from <old> to <new>.` When it fails, tell the person what it printed, and stop.
+- When it reports a version below `0.21.0`, run `cadre upgrade`. It replaces that `cadre` with the latest release and prints `Upgraded cadre from <old> to <new>.` When it fails, tell the person what it printed, and stop.
 
 ## Sign in
 
@@ -46,7 +46,7 @@ Read the file that holds what the person asked for, and follow it:
 - [project.md](project.md): create a project; change, reorder or drop a project or its milestones; show, write or update a milestone's spec; link a milestone to its design. It holds the limits of every field.
 - [milestone.md](milestone.md): start a milestone; implement a spec or plan that says it is tracked in Cadre; link a pull request to a milestone.
 - [connect.md](connect.md): connect a repo to its Fly app, its Vercel project or its mobile app's stores; connect or disconnect a Fly org, a Vercel team or a store's key; say where a repo deploys, or which build of a mobile app is public.
-- [deploy.md](deploy.md): deploy a repo that runs on Fly or Vercel; tick a Before deploying item.
+- [deploy.md](deploy.md): deploy a repo that runs on Fly or Vercel; remember where a repo's checkout is for cadre's Deploy button (`cadre link`); tick a Before deploying item.
 
 `brainstorm.md` and `design_link.rb` belong to project.md, which says when it needs each.
 
