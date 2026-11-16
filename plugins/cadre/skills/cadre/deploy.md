@@ -59,7 +59,7 @@ cadre's Deploy button opens Claude Desktop in the folder the person linked with 
 
 Wrong folder:
 
-- `This folder isn't a checkout of <owner/repo>. Run cadre deploy in one.`: the session runs outside that repo's checkout. Tell the person to start a new session and pick their checkout of it as its folder, and to run `cadre link` there once, so the Deploy button opens in it from then on.
+- `This folder isn't a checkout of <owner/repo>. Run cadre deploy in one.`: the session runs outside that repo's checkout. Tell the person to start a new session and pick their checkout of it as its folder; there they run `cadre link` once, or ask you to, and the Deploy button opens in it from then on.
 
 Which app:
 

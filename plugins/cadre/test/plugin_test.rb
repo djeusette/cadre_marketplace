@@ -66,7 +66,8 @@ class ManifestTest < Minitest::Test
   end
 
   def test_readme_says_it_links_a_checkout_for_the_deploy_button
-    assert_includes File.read(File.join(ROOT, "README.md")), "cadre link"
+    assert_includes File.read(File.join(ROOT, "README.md")),
+                    "Asked to remember where a repo's checkout is, it runs `cadre link` there, so cadre's Deploy button opens Claude Desktop in it."
   end
 
   def test_readme_says_a_repo_can_have_several_apps
@@ -708,15 +709,18 @@ class SkillTest < Minitest::Test
 
   def test_it_explains_where_the_deploy_button_opens_and_links_only_when_asked
     ["`cadre link`", "opens Claude Desktop in the folder the person linked", "the folder it used last", "the prompt's last line names the repo",
-     "remembers its main checkout for that person", "running it again replaces it", "Run it only when the person asks"].each { |text| assert_includes open_deploy_section, text }
+     "remembers its main checkout for that person", "even from a linked worktree or a subfolder", "running it again replaces it",
+     "Run it only when the person asks"].each { |text| assert_includes open_deploy_section, text }
     assert_operator deploy.index("## What a deploy does"), :<, deploy.index("## Open Deploy in the right folder")
     assert_operator deploy.index("## Open Deploy in the right folder"), :<, deploy.index("## When a deploy stops")
   end
 
   def test_it_relays_cadre_links_own_answers
-    ["Linked <repo> to <path>. Its Deploy button in cadre opens there.",
-     "This folder isn't a checkout with an origin. Run cadre link in one."].each { |text| assert_includes open_deploy_section, text }
-    assert_includes refusal(open_deploy_section, "cadre doesn't know <owner/name>. A project names a repo before cadre knows it.`"), "a project must name the repo first"
+    assert_includes refusal(open_deploy_section, "Linked <repo> to <path>. Its Deploy button in cadre opens there.`"), "tell the person"
+    unknown_repo = refusal(open_deploy_section, "cadre doesn't know <owner/name>. A project names a repo before cadre knows it.`")
+    ["a project must name the repo first", "Tell the person", "`cadre link` works there once a milestone of a project lists that repo"].each { |text| assert_includes unknown_repo, text }
+    assert_includes refusal(open_deploy_section, "This folder isn't a checkout with an origin. Run cadre link in one.`"),
+                    "ask the person where their checkout of the repo is, and run it there"
     refute_includes deploy, "cadre doesn't know <owner/name>. …"
   end
 
@@ -729,12 +733,12 @@ class SkillTest < Minitest::Test
     wrong_folder = section(deploy, "## When a deploy stops")[/^Wrong folder:\n\n(.*?)(?=\n\n\S)/m, 1] or flunk("no Wrong folder: lead-in")
     line = refusal(wrong_folder, "This folder isn't a checkout of <owner/repo>. Run cadre deploy in one.")
     ["the session runs outside that repo's checkout", "start a new session and pick their checkout of it as its folder",
-     "run `cadre link` there once", "the Deploy button opens in it from then on"].each { |text| assert_includes line, text }
-    refute_includes line, "Claude Desktop asks for the folder"
+     "there they run `cadre link` once, or ask you to", "the Deploy button opens in it from then on"].each { |text| assert_includes line, text }
   end
 
   def test_the_router_sends_cadre_link_to_deploy_md
-    assert_includes router.lines.find { |line| line.include?("[deploy.md]") }, "`cadre link`"
+    assert_includes router.lines.find { |line| line.include?("[deploy.md]") },
+                    "remember where a repo's checkout is for cadre's Deploy button (`cadre link`)"
   end
 
   def test_it_ticks_a_before_deploying_item_only_once_told_it_is_done
