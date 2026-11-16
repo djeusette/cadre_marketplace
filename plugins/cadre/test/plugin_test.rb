@@ -711,14 +711,21 @@ class SkillTest < Minitest::Test
   def test_it_relays_cadre_links_own_answers
     ["Linked <repo> to <path>. Its Deploy button in cadre opens there.",
      "This folder isn't a checkout with an origin. Run cadre link in one."].each { |text| assert_includes open_deploy_section, text }
-    assert_includes refusal(open_deploy_section, "cadre doesn't know <owner/name>. …"), "the checkout is of a repo no project names"
+    assert_includes refusal(open_deploy_section, "cadre doesn't know <owner/name>. A project names a repo before cadre knows it.`"), "a project must name the repo first"
+    refute_includes deploy, "cadre doesn't know <owner/name>. …"
+  end
+
+  def test_it_links_only_when_the_person_asks
+    assert_includes open_deploy_section, "Run it only when the person asks."
+    refute_includes open_deploy_section, "offer to"
   end
 
   def test_a_deploy_outside_the_repos_checkout_asks_for_a_new_session_there
     wrong_folder = section(deploy, "## When a deploy stops")[/^Wrong folder:\n\n(.*?)(?=\n\n\S)/m, 1] or flunk("no Wrong folder: lead-in")
     line = refusal(wrong_folder, "This folder isn't a checkout of <owner/repo>. Run cadre deploy in one.")
-    ["the session runs outside that repo's checkout", "start the session again in their checkout of it", "Claude Desktop asks for the folder",
+    ["the session runs outside that repo's checkout", "start a new session and pick their checkout of it as its folder",
      "run `cadre link` there once", "the Deploy button opens in it from then on"].each { |text| assert_includes line, text }
+    refute_includes line, "Claude Desktop asks for the folder"
   end
 
   def test_the_router_sends_cadre_link_to_deploy_md

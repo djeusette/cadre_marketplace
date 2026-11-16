@@ -49,17 +49,17 @@ Tick only what the person said is done, or what you just did at their request. W
 
 cadre's Deploy button opens Claude Desktop in the folder the person linked with `cadre link`. Without one, Desktop opens the folder it used last, and the prompt's last line names the repo.
 
-`cadre link`, run in a checkout of a repo cadre knows, remembers its main checkout for that person, even from a linked worktree or a subfolder; running it again replaces it. Run it only when the person asks, or offer to after the "Wrong folder:" line in "When a deploy stops". Its answers:
+`cadre link`, run in a checkout of a repo cadre knows, remembers its main checkout for that person, even from a linked worktree or a subfolder; running it again replaces it. Run it only when the person asks. Its answers:
 
 - `Linked <repo> to <path>. Its Deploy button in cadre opens there.`: tell the person.
-- `cadre doesn't know <owner/name>. …`: the checkout is of a repo no project names. Tell the person; `cadre link` works there once a milestone lists that repo.
+- `cadre doesn't know <owner/name>. A project names a repo before cadre knows it.`: no project names this checkout's repo, and a project must name the repo first. Tell the person; `cadre link` works there once a milestone of a project lists that repo.
 - `This folder isn't a checkout with an origin. Run cadre link in one.`: ask the person where their checkout of the repo is, and run it there.
 
 ## When a deploy stops
 
 Wrong folder:
 
-- `This folder isn't a checkout of <owner/repo>. Run cadre deploy in one.`: the session runs outside that repo's checkout. Tell the person to start the session again in their checkout of it (Claude Desktop asks for the folder), and to run `cadre link` there once, so the Deploy button opens in it from then on.
+- `This folder isn't a checkout of <owner/repo>. Run cadre deploy in one.`: the session runs outside that repo's checkout. Tell the person to start a new session and pick their checkout of it as its folder, and to run `cadre link` there once, so the Deploy button opens in it from then on.
 
 Which app:
 
