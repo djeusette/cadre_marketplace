@@ -495,7 +495,12 @@ class SkillTest < Minitest::Test
      %q{as "Tokens and keys" says}, "cadre app-store key remove <key-id>", "cadre google-play account remove <email>"].each { |text| assert_includes store_key, text }
   end
 
-  def refusal(text, prefix) = text[/^- `#{Regexp.escape(prefix)}.*$/] or flunk("no refusal #{prefix}")
+  def refusal(text, prefix) = text[/^- `#{Regexp.escape(prefix)}.*$/] || flunk("no refusal #{prefix}")
+
+  def test_a_missing_refusal_line_fails
+    error = assert_raises(Minitest::Assertion) { refusal("- `Something else.`", "No such refusal.") }
+    assert_equal "no refusal No such refusal.", error.message
+  end
 
   def test_it_reads_a_mobile_app_s_stores_field_by_field
     ["has a `label` (`App Store`, `Google Play`)", "the `app` it is there (the Apple ID or the package name)", "the `account` cadre reads it with",
