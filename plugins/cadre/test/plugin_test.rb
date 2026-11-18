@@ -1,6 +1,8 @@
 require "minitest/autorun"
+require "fileutils"
 require "json"
 require "open3"
+require "tmpdir"
 
 ROOT =File.expand_path("../../..", __dir__)
 PLUGIN = File.join(ROOT, "plugins", "cadre")
@@ -38,7 +40,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.27.0", manifest["version"]
+    assert_equal "0.28.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -78,6 +80,10 @@ class ManifestTest < Minitest::Test
   def test_readme_says_its_specs_and_plans_are_tracked_in_cadre
     assert_includes File.read(File.join(ROOT, "README.md")), "say they are tracked in Cadre"
   end
+
+  def test_readme_says_it_reads_and_drafts_the_skills_table
+    assert_includes File.read(File.join(ROOT, "README.md")), "Skills table"
+  end
 end
 
 class SkillTest < Minitest::Test
@@ -86,7 +92,7 @@ class SkillTest < Minitest::Test
   PLAN_LINE = %q{> **Tracked in Cadre as `<slug>/<n>`.** REQUIRED SKILL: use `cadre:cadre` while implementing this plan. Its pull request's description has the line `Cadre: <slug>/<n>`.}
   KEY_LINE = "Your key for <url> is no longer valid. Run cadre login --url <url>."
   SKILL_DIR = File.join(PLUGIN, "skills", "cadre")
-  BRANCHES = %w[project.md milestone.md connect.md deploy.md]
+  BRANCHES = %w[project.md milestone.md connect.md deploy.md skills.md]
 
   def read(name) = File.read(File.join(SKILL_DIR, name))
   def skill = read("SKILL.md")
@@ -411,6 +417,78 @@ class SkillTest < Minitest::Test
 
   def test_the_readme_mentions_the_before_deploying_section
     assert_includes File.read(File.join(ROOT, "README.md")), "## Before deploying"
+  end
+
+  # skills.md
+
+  SKILLS_HEADINGS = ["# A repo's Skills table", "## Read the table", "## Check each row", "## Load what the work needs",
+                     "## No Skills table", "## Draft a Skills table", "## The table's shape"].freeze
+
+  def skills = read("skills.md")
+  def read_table = section(skills, "## Read the table")
+  def check_rows = section(skills, "## Check each row")
+  def load_skills = section(skills, "## Load what the work needs")
+  def no_table = section(skills, "## No Skills table")
+  def draft_table = section(skills, "## Draft a Skills table")
+  def table_shape = section(skills, "## The table's shape")
+
+  def test_skills_md_has_its_sections
+    assert_equal SKILLS_HEADINGS, skills.scan(/^#+ .*$/)
+  end
+
+  def test_it_reads_the_table_with_the_script
+    ["ruby <this skill's folder>/skills_table.rb <repo root>", "git rev-parse --show-toplevel"].each { |text| assert_includes read_table, text }
+  end
+
+  def test_it_stops_on_a_missing_plugin_and_names_its_install_command
+    ["among the skills this session can load", "stop", "its Install command", "a new session",
+     "tell the person what the script names", "no row lists", "`@AGENTS.md`"].each { |text| assert_includes check_rows, text }
+  end
+
+  def test_each_plan_task_names_the_skills_it_needs
+    ["whose When fits", "before planning", "each task of the plan", "subagent"].each { |text| assert_includes load_skills, text }
+    [%q{as [skills.md](skills.md) says, before planning}, "each task names the skills it needs (from the table when the repo has one)"].each do |text|
+      assert_includes start_section, text
+    end
+  end
+
+  def test_no_table_offers_to_draft_and_never_blocks
+    ["draft it now or go on without it", "Going on without it is always allowed"].each { |text| assert_includes no_table, text }
+  end
+
+  def test_drafting_proposes_every_fitting_skill_and_waits_for_the_person
+    ["manifests", "user and project settings", "every skill the session can load for that kind of work", "a frontend app gets every frontend skill",
+     "neither a plugin nor installable from a public source", "writes nothing until the person confirms", "npx skills add",
+     "ln -s ../../.agents/skills/<name> .claude/skills/<name>", ".claude/settings.json", "extraKnownMarketplaces", "@AGENTS.md"].each do |text|
+      assert_includes draft_table, text
+    end
+  end
+
+  def test_the_table_shape_is_exact
+    ["| Skill | When | Install |", "committed in .agents/skills/", "claude plugin install <plugin>@<marketplace>"].each { |text| assert_includes table_shape, text }
+  end
+
+  def test_skills_md_names_no_skill_of_its_own
+    refute_match(/colette|elixir-phoenix|flutter|frontend-design:|vercel:|superpowers:/, skills)
+  end
+
+  def test_it_routes_the_skills_table_request
+    assert_includes description, "write a repo's Skills table"
+    assert_operator description.split.size, :<=, 100
+    assert_match(/^- \[skills\.md\]\(skills\.md\): .*"Write this repo's Skills table"/, router)
+  end
+
+  def test_each_section_says_where_to_go_next
+    ["exits non-zero", "show the person its output and stop", %q{go on to "Check each row"}].each { |text| assert_includes read_table, text }
+    assert_includes check_rows, %q{go on to "Load what the work needs"}
+    assert_includes no_table, %q{go on to "Load what the work needs"}
+    [%q{go on to "Check each row"}, "the milestone's branch"].each { |text| assert_includes draft_table, text }
+  end
+
+  def test_drafting_ends_once_no_row_has_problems
+    assert_includes draft_table, "until the script reports no `problems`, then name any `unlisted` folders"
+    refute_includes draft_table, "no `problems` and no `unlisted`"
+    assert_includes draft_table, "after the table"
   end
 
   # connect.md
@@ -796,6 +874,150 @@ class DesignLinkTest < Minitest::Test
       output, status = link(*args)
       refute status.success?, args.inspect
       assert_includes output, "Usage: ruby design_link.rb"
+    end
+  end
+end
+
+class SkillsTableTest < Minitest::Test
+  SCRIPT = File.join(PLUGIN, "skills", "cadre", "skills_table.rb")
+  HEADER = "| Skill | When | Install |\n| --- | --- | --- |\n"
+  COMMITTED = "committed in `.agents/skills/`"
+
+  def setup = @dir = Dir.mktmpdir
+  def teardown = FileUtils.remove_entry(@dir)
+
+  # A repo in a temporary folder: AGENTS.md, CLAUDE.md, skills committed with a
+  # SKILL.md, bare folders without one, and entries in .claude/skills (a link
+  # target, or :folder for a real folder).
+  def repo(agents_md:, claude_md: "@AGENTS.md\n", committed: [], folders: [], links: {})
+    File.write(File.join(@dir, "AGENTS.md"), agents_md) if agents_md
+    File.write(File.join(@dir, "CLAUDE.md"), claude_md) if claude_md
+    committed.each do |name|
+      FileUtils.mkdir_p(File.join(@dir, ".agents", "skills", name))
+      File.write(File.join(@dir, ".agents", "skills", name, "SKILL.md"), "---\nname: #{name}\n---\n")
+    end
+    folders.each { |name| FileUtils.mkdir_p(File.join(@dir, ".agents", "skills", name)) }
+    FileUtils.mkdir_p(File.join(@dir, ".claude", "skills"))
+    links.each do |name, target|
+      path = File.join(@dir, ".claude", "skills", name)
+      target == :folder ? FileUtils.mkdir_p(path) : File.symlink(target, path)
+    end
+    @dir
+  end
+
+  def table(rows) = "# repo\n\n## Skills\n\n#{HEADER}#{rows.map { |row| "| #{row.join(' | ')} |\n" }.join}\nLoad each skill.\n"
+  def link_to(name) = "../../.agents/skills/#{name}"
+
+  def read(dir, env = {})
+    output, status = Open3.capture2e(env, "ruby", SCRIPT, dir)
+    assert status.success?, output
+    JSON.parse(output.force_encoding("UTF-8"))
+  end
+
+  def problems(result) = result["rows"].to_h { |row| [row["skill"], row["problems"]] }
+
+  # An agent's shell may run with no locale, where Ruby reads files as US-ASCII.
+  def test_it_reads_a_row_with_non_ascii_text_without_a_locale
+    dir = repo(agents_md: table([["plugin:skill", "any LiveView — HEEx", "claude plugin install plugin@market"]]))
+
+    assert_equal "any LiveView — HEEx", read(dir, { "LANG" => "C", "LC_ALL" => "C" })["rows"].first["when"]
+  end
+
+  def test_it_finds_the_heading_with_trailing_spaces
+    dir = repo(agents_md: table([["plugin:skill", "work", "claude plugin install plugin@market"]]).sub("## Skills\n", "## Skills  \n"))
+
+    assert_equal ["plugin:skill"], read(dir)["rows"].map { |row| row["skill"] }
+  end
+
+  def test_it_reads_no_table_when_the_header_has_no_separator_line
+    dir = repo(agents_md: "## Skills\n\n| Skill | When | Install |\n| plugin:skill | work | claude plugin install plugin@market |\n")
+
+    assert_equal false, read(dir)["table"]
+  end
+
+  def test_it_skips_an_example_table_in_a_code_block
+    example = "```markdown\n#{HEADER}| `<skill>` | <when> | committed in `.agents/skills/` |\n```\n\n"
+    dir = repo(agents_md: table([["plugin:skill", "work", "claude plugin install plugin@market"]]).sub("## Skills\n\n", "## Skills\n\n#{example}"))
+
+    assert_equal ["plugin:skill"], read(dir)["rows"].map { |row| row["skill"] }
+  end
+
+  def test_it_reads_each_row_and_passes_a_committed_skill_with_its_folder_and_link
+    dir = repo(agents_md: table([["`flutter-expert`", "widgets", COMMITTED],
+                                 ["`plugin:skill`", "any code", "`claude plugin install plugin@market`"]]),
+               committed: ["flutter-expert"], links: { "flutter-expert" => link_to("flutter-expert") })
+
+    result = read(dir)
+
+    assert_equal true, result["table"]
+    assert_equal [{ "skill" => "flutter-expert", "when" => "widgets", "install" => "committed in .agents/skills/", "committed" => true, "problems" => [] },
+                  { "skill" => "plugin:skill", "when" => "any code", "install" => "claude plugin install plugin@market", "committed" => false, "problems" => [] }],
+                 result["rows"]
+    assert_equal [], result["unlisted"]
+  end
+
+  def test_it_names_what_a_committed_row_lacks
+    names = %w[gone bare unlinked absolute crossed copied]
+    dir = repo(agents_md: table(names.map { |name| [name, "work", COMMITTED] }),
+               committed: %w[unlinked absolute crossed copied], folders: ["bare"],
+               links: { "bare" => link_to("bare"), "absolute" => File.join(@dir, ".agents", "skills", "absolute"),
+                        "crossed" => link_to("copied"), "copied" => :folder })
+
+    assert_equal({ "gone" => ["no folder .agents/skills/gone", ".claude/skills/gone does not link to ../../.agents/skills/gone"],
+                   "bare" => ["no SKILL.md in .agents/skills/bare"],
+                   "unlinked" => [".claude/skills/unlinked does not link to ../../.agents/skills/unlinked"],
+                   "absolute" => [".claude/skills/absolute does not link to ../../.agents/skills/absolute"],
+                   "crossed" => [".claude/skills/crossed does not link to ../../.agents/skills/crossed"],
+                   "copied" => [".claude/skills/copied does not link to ../../.agents/skills/copied"] },
+                 problems(read(dir)))
+  end
+
+  def test_it_flags_a_plugin_row_without_an_install_command
+    dir = repo(agents_md: table([["plugin:skill", "work", "see the wiki"]]))
+
+    assert_equal({ "plugin:skill" => ["Install is neither committed in .agents/skills/ nor claude plugin install <plugin>@<marketplace>"] },
+                 problems(read(dir)))
+  end
+
+  def test_it_keeps_an_escaped_pipe_inside_a_cell
+    dir = repo(agents_md: table([["plugin:skill", "`a \\| b`", "claude plugin install plugin@market"]]))
+
+    assert_equal "a | b", read(dir)["rows"].first["when"]
+  end
+
+  def test_it_reports_folders_no_row_lists
+    dir = repo(agents_md: table([["kept", "work", COMMITTED]]), committed: %w[kept stray], links: { "kept" => link_to("kept") })
+
+    assert_equal ["stray"], read(dir)["unlisted"]
+  end
+
+  def test_it_reads_no_table_when_there_is_none
+    [nil, "# repo\n\n## Skills\n\nNone yet.\n", "# repo\n\n## Skills\n\nSoon.\n\n## Other\n\n#{HEADER}| a | b | c |\n"].each do |agents_md|
+      FileUtils.rm_f(File.join(@dir, "AGENTS.md"))
+      result = read(repo(agents_md: agents_md, committed: ["stray"]))
+
+      assert_equal false, result["table"], agents_md.inspect
+      assert_equal [], result["rows"]
+      assert_equal ["stray"], result["unlisted"]
+    end
+  end
+
+  def test_it_says_whether_claude_md_imports_agents_md
+    { "# Repo\n\n@AGENTS.md\n" => true, nil => false, "# Repo\n\nsee @AGENTS.md\n" => false }.each do |claude_md, imports|
+      FileUtils.rm_f(File.join(@dir, "CLAUDE.md"))
+
+      assert_equal imports, read(repo(agents_md: table([]), claude_md: claude_md))["imports_agents_md"], claude_md.inspect
+    end
+  end
+
+  def test_it_shows_its_usage_when_called_any_other_way
+    file = File.join(@dir, "AGENTS.md")
+    File.write(file, "")
+    [[], [@dir, @dir], [file]].each do |args|
+      output, status = Open3.capture2e("ruby", SCRIPT, *args)
+
+      refute status.success?, args.inspect
+      assert_includes output, "Usage: ruby skills_table.rb"
     end
   end
 end
