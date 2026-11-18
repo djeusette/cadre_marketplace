@@ -48,6 +48,6 @@ Read the file that holds what the person asked for, and follow it:
 - [connect.md](connect.md): connect a repo to its Fly app, its Vercel project or its mobile app's stores; connect or disconnect a Fly org, a Vercel team or a store's key; say where a repo deploys, or which build of a mobile app is public.
 - [deploy.md](deploy.md): deploy a repo that runs on Fly or Vercel; remember where a repo's checkout is for cadre's Deploy button (`cadre link`); tick a Before deploying item.
 
-`brainstorm.md` and `design_link.rb` belong to project.md, which says when it needs each.
+`brainstorm.md` and `design_link.rb` belong to project.md, which says when it needs each. `skills_table.rb` reads a repo's Skills table.
 
 For a command's flags, run `cadre help <command>`: these files name a flag only to say when to pass it.

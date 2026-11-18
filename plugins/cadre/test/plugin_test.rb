@@ -1,6 +1,8 @@
 require "minitest/autorun"
+require "fileutils"
 require "json"
 require "open3"
+require "tmpdir"
 
 ROOT =File.expand_path("../../..", __dir__)
 PLUGIN = File.join(ROOT, "plugins", "cadre")
@@ -796,6 +798,124 @@ class DesignLinkTest < Minitest::Test
       output, status = link(*args)
       refute status.success?, args.inspect
       assert_includes output, "Usage: ruby design_link.rb"
+    end
+  end
+end
+
+class SkillsTableTest < Minitest::Test
+  SCRIPT = File.join(PLUGIN, "skills", "cadre", "skills_table.rb")
+  HEADER = "| Skill | When | Install |\n| --- | --- | --- |\n"
+  COMMITTED = "committed in `.agents/skills/`"
+
+  def setup = @dir = Dir.mktmpdir
+  def teardown = FileUtils.remove_entry(@dir)
+
+  # A repo in a temporary folder: AGENTS.md, CLAUDE.md, skills committed with a
+  # SKILL.md, bare folders without one, and entries in .claude/skills (a link
+  # target, or :folder for a real folder).
+  def repo(agents_md:, claude_md: "@AGENTS.md\n", committed: [], folders: [], links: {})
+    File.write(File.join(@dir, "AGENTS.md"), agents_md) if agents_md
+    File.write(File.join(@dir, "CLAUDE.md"), claude_md) if claude_md
+    committed.each do |name|
+      FileUtils.mkdir_p(File.join(@dir, ".agents", "skills", name))
+      File.write(File.join(@dir, ".agents", "skills", name, "SKILL.md"), "---\nname: #{name}\n---\n")
+    end
+    folders.each { |name| FileUtils.mkdir_p(File.join(@dir, ".agents", "skills", name)) }
+    FileUtils.mkdir_p(File.join(@dir, ".claude", "skills"))
+    links.each do |name, target|
+      path = File.join(@dir, ".claude", "skills", name)
+      target == :folder ? FileUtils.mkdir_p(path) : File.symlink(target, path)
+    end
+    @dir
+  end
+
+  def table(rows) = "# repo\n\n## Skills\n\n#{HEADER}#{rows.map { |row| "| #{row.join(' | ')} |\n" }.join}\nLoad each skill.\n"
+  def link_to(name) = "../../.agents/skills/#{name}"
+
+  def read(dir)
+    output, status = Open3.capture2e("ruby", SCRIPT, dir)
+    assert status.success?, output
+    JSON.parse(output)
+  end
+
+  def problems(result) = result["rows"].to_h { |row| [row["skill"], row["problems"]] }
+
+  def test_it_reads_each_row_and_passes_a_committed_skill_with_its_folder_and_link
+    dir = repo(agents_md: table([["`flutter-expert`", "widgets", COMMITTED],
+                                 ["`plugin:skill`", "any code", "`claude plugin install plugin@market`"]]),
+               committed: ["flutter-expert"], links: { "flutter-expert" => link_to("flutter-expert") })
+
+    result = read(dir)
+
+    assert_equal true, result["table"]
+    assert_equal [{ "skill" => "flutter-expert", "when" => "widgets", "install" => "committed in .agents/skills/", "committed" => true, "problems" => [] },
+                  { "skill" => "plugin:skill", "when" => "any code", "install" => "claude plugin install plugin@market", "committed" => false, "problems" => [] }],
+                 result["rows"]
+    assert_equal [], result["unlisted"]
+  end
+
+  def test_it_names_what_a_committed_row_lacks
+    names = %w[gone bare unlinked absolute crossed copied]
+    dir = repo(agents_md: table(names.map { |name| [name, "work", COMMITTED] }),
+               committed: %w[unlinked absolute crossed copied], folders: ["bare"],
+               links: { "bare" => link_to("bare"), "absolute" => File.join(@dir, ".agents", "skills", "absolute"),
+                        "crossed" => link_to("copied"), "copied" => :folder })
+
+    assert_equal({ "gone" => ["no folder .agents/skills/gone", ".claude/skills/gone does not link to ../../.agents/skills/gone"],
+                   "bare" => ["no SKILL.md in .agents/skills/bare"],
+                   "unlinked" => [".claude/skills/unlinked does not link to ../../.agents/skills/unlinked"],
+                   "absolute" => [".claude/skills/absolute does not link to ../../.agents/skills/absolute"],
+                   "crossed" => [".claude/skills/crossed does not link to ../../.agents/skills/crossed"],
+                   "copied" => [".claude/skills/copied does not link to ../../.agents/skills/copied"] },
+                 problems(read(dir)))
+  end
+
+  def test_it_flags_a_plugin_row_without_an_install_command
+    dir = repo(agents_md: table([["plugin:skill", "work", "see the wiki"]]))
+
+    assert_equal({ "plugin:skill" => ["Install is neither committed in .agents/skills/ nor claude plugin install <plugin>@<marketplace>"] },
+                 problems(read(dir)))
+  end
+
+  def test_it_keeps_an_escaped_pipe_inside_a_cell
+    dir = repo(agents_md: table([["plugin:skill", "`a \\| b`", "claude plugin install plugin@market"]]))
+
+    assert_equal "a | b", read(dir)["rows"].first["when"]
+  end
+
+  def test_it_reports_folders_no_row_lists
+    dir = repo(agents_md: table([["kept", "work", COMMITTED]]), committed: %w[kept stray], links: { "kept" => link_to("kept") })
+
+    assert_equal ["stray"], read(dir)["unlisted"]
+  end
+
+  def test_it_reads_no_table_when_there_is_none
+    [nil, "# repo\n\n## Skills\n\nNone yet.\n", "# repo\n\n## Skills\n\nSoon.\n\n## Other\n\n#{HEADER}| a | b | c |\n"].each do |agents_md|
+      FileUtils.rm_f(File.join(@dir, "AGENTS.md"))
+      result = read(repo(agents_md: agents_md, committed: ["stray"]))
+
+      assert_equal false, result["table"], agents_md.inspect
+      assert_equal [], result["rows"]
+      assert_equal ["stray"], result["unlisted"]
+    end
+  end
+
+  def test_it_says_whether_claude_md_imports_agents_md
+    { "# Repo\n\n@AGENTS.md\n" => true, nil => false, "# Repo\n\nsee @AGENTS.md\n" => false }.each do |claude_md, imports|
+      FileUtils.rm_f(File.join(@dir, "CLAUDE.md"))
+
+      assert_equal imports, read(repo(agents_md: table([]), claude_md: claude_md))["imports_agents_md"], claude_md.inspect
+    end
+  end
+
+  def test_it_shows_its_usage_when_called_any_other_way
+    file = File.join(@dir, "AGENTS.md")
+    File.write(file, "")
+    [[], [@dir, @dir], [file]].each do |args|
+      output, status = Open3.capture2e("ruby", SCRIPT, *args)
+
+      refute status.success?, args.inspect
+      assert_includes output, "Usage: ruby skills_table.rb"
     end
   end
 end
