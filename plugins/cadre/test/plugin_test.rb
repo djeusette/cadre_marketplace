@@ -123,15 +123,15 @@ class SkillTest < Minitest::Test
 
   def test_the_description_starts_with_cadre_and_stays_short
     assert description.start_with?("Cadre"), description
-    assert_operator description.split.size, :<=, 110
+    assert_operator description.split.size, :<=, 100
   end
 
   def test_the_description_has_a_trigger_for_every_branch
     ["create, change or drop a project or its milestones in Cadre", "read or update a milestone's spec",
      "start a milestone (\"start milestone <project>/<n>\")", "link a pull request to a milestone",
      "connect a repo to where it deploys or ask where it does", "connect a mobile app to its stores",
-     "deploy a repo that runs on Fly or Vercel or remember where its checkout is (`cadre link`)", "tick a Before deploying item",
-     "implement a spec or plan that says it is tracked in Cadre", "ask what can deploy or what's next on a project", "sign in to Cadre"].each { |text| assert_includes description, text }
+     "deploy a Fly or Vercel repo or remember its checkout (`cadre link`)", "tick a Before deploying item",
+     "implement a spec or plan tracked in Cadre", "ask what can deploy or what's next", "sign in to Cadre"].each { |text| assert_includes description, text }
   end
 
   def router = section(skill, "## What to read next")
@@ -474,7 +474,7 @@ class SkillTest < Minitest::Test
 
   def test_it_routes_the_skills_table_request
     assert_includes description, "write a repo's Skills table"
-    assert_operator description.split.size, :<=, 110
+    assert_operator description.split.size, :<=, 100
     assert_match(/^- \[skills\.md\]\(skills\.md\): .*"Write this repo's Skills table"/, router)
   end
 
