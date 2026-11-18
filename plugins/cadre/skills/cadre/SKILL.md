@@ -1,6 +1,6 @@
 ---
 name: cadre
-description: Cadre CLI workflows. Use when the person asks to create, change or drop a project or its milestones in Cadre, read or update a milestone's spec, start a milestone ("start milestone <project>/<n>"), link a pull request to a milestone, connect a repo to where it deploys or ask where it does, connect a mobile app to its stores, deploy a repo that runs on Fly or Vercel or remember where its checkout is (`cadre link`), tick a Before deploying item, implement a spec or plan that says it is tracked in Cadre, or sign in to Cadre.
+description: Cadre CLI workflows. Use when asked to create, change or drop a project or its milestones in Cadre, read or update a milestone's spec, start a milestone ("start milestone <project>/<n>"), link a pull request to a milestone, connect a repo to where it deploys or ask where it does, connect a mobile app to its stores, deploy a repo that runs on Fly or Vercel or remember where its checkout is (`cadre link`), tick a Before deploying item, write a repo's Skills table, implement a spec or plan that says it is tracked in Cadre, or sign in to Cadre.
 ---
 
 # Cadre
@@ -47,7 +47,8 @@ Read the file that holds what the person asked for, and follow it:
 - [milestone.md](milestone.md): start a milestone; implement a spec or plan that says it is tracked in Cadre; link a pull request to a milestone.
 - [connect.md](connect.md): connect a repo to its Fly app, its Vercel project or its mobile app's stores; connect or disconnect a Fly org, a Vercel team or a store's key; say where a repo deploys, or which build of a mobile app is public.
 - [deploy.md](deploy.md): deploy a repo that runs on Fly or Vercel; remember where a repo's checkout is for cadre's Deploy button (`cadre link`); tick a Before deploying item.
+- [skills.md](skills.md): read and check a repo's Skills table when starting a milestone; Write this repo's Skills table, or draft one when the repo has none.
 
-`brainstorm.md` and `design_link.rb` belong to project.md, which says when it needs each. `skills_table.rb` reads a repo's Skills table.
+`brainstorm.md` and `design_link.rb` belong to project.md, which says when it needs each; `skills_table.rb` belongs to skills.md.
 
 For a command's flags, run `cadre help <command>`: these files name a flag only to say when to pass it.

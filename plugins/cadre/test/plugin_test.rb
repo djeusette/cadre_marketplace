@@ -40,7 +40,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.27.0", manifest["version"]
+    assert_equal "0.28.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -80,6 +80,10 @@ class ManifestTest < Minitest::Test
   def test_readme_says_its_specs_and_plans_are_tracked_in_cadre
     assert_includes File.read(File.join(ROOT, "README.md")), "say they are tracked in Cadre"
   end
+
+  def test_readme_says_it_reads_and_drafts_the_skills_table
+    assert_includes File.read(File.join(ROOT, "README.md")), "Skills table"
+  end
 end
 
 class SkillTest < Minitest::Test
@@ -88,7 +92,7 @@ class SkillTest < Minitest::Test
   PLAN_LINE = %q{> **Tracked in Cadre as `<slug>/<n>`.** REQUIRED SKILL: use `cadre:cadre` while implementing this plan. Its pull request's description has the line `Cadre: <slug>/<n>`.}
   KEY_LINE = "Your key for <url> is no longer valid. Run cadre login --url <url>."
   SKILL_DIR = File.join(PLUGIN, "skills", "cadre")
-  BRANCHES = %w[project.md milestone.md connect.md deploy.md]
+  BRANCHES = %w[project.md milestone.md connect.md deploy.md skills.md]
 
   def read(name) = File.read(File.join(SKILL_DIR, name))
   def skill = read("SKILL.md")
@@ -413,6 +417,65 @@ class SkillTest < Minitest::Test
 
   def test_the_readme_mentions_the_before_deploying_section
     assert_includes File.read(File.join(ROOT, "README.md")), "## Before deploying"
+  end
+
+  # skills.md
+
+  SKILLS_HEADINGS = ["# A repo's Skills table", "## Read the table", "## Check each row", "## Load what the work needs",
+                     "## No Skills table", "## Draft a Skills table", "## The table's shape"].freeze
+
+  def skills = read("skills.md")
+  def read_table = section(skills, "## Read the table")
+  def check_rows = section(skills, "## Check each row")
+  def load_skills = section(skills, "## Load what the work needs")
+  def no_table = section(skills, "## No Skills table")
+  def draft_table = section(skills, "## Draft a Skills table")
+  def table_shape = section(skills, "## The table's shape")
+
+  def test_skills_md_has_its_sections
+    assert_equal SKILLS_HEADINGS, skills.scan(/^#+ .*$/)
+  end
+
+  def test_it_reads_the_table_with_the_script
+    ["ruby <this skill's folder>/skills_table.rb <repo root>", "git rev-parse --show-toplevel"].each { |text| assert_includes read_table, text }
+  end
+
+  def test_it_stops_on_a_missing_plugin_and_names_its_install_command
+    ["among the skills this session can load", "stop", "its Install command", "a new session",
+     "tell the person what the script names", "no row lists", "`@AGENTS.md`"].each { |text| assert_includes check_rows, text }
+  end
+
+  def test_each_plan_task_names_the_skills_it_needs
+    ["whose When fits", "before planning", "each task of the plan", "subagent"].each { |text| assert_includes load_skills, text }
+    [%q{as "Read the table" in [skills.md](skills.md) says, before planning}, "each task names the skills from the table it needs"].each do |text|
+      assert_includes start_section, text
+    end
+  end
+
+  def test_no_table_offers_to_draft_and_never_blocks
+    ["draft it now or go on without it", "Going on without it is always allowed"].each { |text| assert_includes no_table, text }
+  end
+
+  def test_drafting_proposes_every_fitting_skill_and_waits_for_the_person
+    ["manifests", "user and project settings", "every skill the session can load for that kind of work", "a frontend app gets every frontend skill",
+     "neither a plugin nor installable from a public source", "writes nothing until the person confirms", "npx skills add",
+     "ln -s ../../.agents/skills/<name> .claude/skills/<name>", ".claude/settings.json", "extraKnownMarketplaces", "@AGENTS.md"].each do |text|
+      assert_includes draft_table, text
+    end
+  end
+
+  def test_the_table_shape_is_exact
+    ["| Skill | When | Install |", "committed in .agents/skills/", "claude plugin install <plugin>@<marketplace>"].each { |text| assert_includes table_shape, text }
+  end
+
+  def test_skills_md_names_no_skill_of_its_own
+    refute_match(/colette|elixir-phoenix|flutter|frontend-design:|vercel:|superpowers:/, skills)
+  end
+
+  def test_it_routes_the_skills_table_request
+    assert_includes description, "write a repo's Skills table"
+    assert_operator description.split.size, :<=, 100
+    assert_match(/^- \[skills\.md\]\(skills\.md\): .*Write this repo's Skills table/, router)
   end
 
   # connect.md
