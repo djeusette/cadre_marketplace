@@ -63,6 +63,11 @@ class ManifestTest < Minitest::Test
     ["cadre repo set", "cadre fly org add"].each { |text| assert_includes readme, text }
   end
 
+  def test_readme_says_it_answers_what_can_deploy
+    readme = File.read(File.join(ROOT, "README.md"))
+    ["cadre status", "what can deploy"].each { |text| assert_includes readme, text }
+  end
+
   def test_readme_says_it_deploys_with_the_commit
     assert_includes File.read(File.join(ROOT, "README.md")), "cadre deploy"
   end
@@ -695,6 +700,27 @@ class SkillTest < Minitest::Test
   def deploy_anyway = section(deploy, "## Deploy anyway?")
   def tick_section = section(deploy, "## Tick a Before deploying item")
   def deploy_stops = section(deploy, "## When a deploy stops")
+  def status_section = section(deploy, "## What can deploy, and what's next")
+
+  def test_it_answers_what_can_deploy_and_what_is_next_from_cadre_status
+    ["cadre status --json", "cadre status <slug> --json", "`can_deploy`", "`held`", "`blocked_by`", "`nothing_to_ship`", "`not_tracked`",
+     "`next_step.text`", "don't rephrase them", "Don't guess from GitHub", "don't deploy"].each { |text| assert_includes status_section, text }
+  end
+
+  def test_it_looks_a_project_up_by_name_before_asking_for_its_status
+    ["takes its slug", "`slug` of the entry of `cadre status --json`'s `projects` whose `name` matches",
+     "ask which when none or several do", "use what the person typed as the slug when it is one"].each { |text| assert_includes status_section, text }
+    refute_includes status_section, "cadre status <project>"
+    assert_operator status_section.index("`slug` of the entry"), :<, status_section.index("cadre status <slug> --json")
+  end
+
+  def test_it_says_a_project_without_a_next_step_is_finished_or_archived
+    assert_includes status_section, "When `next_step` is null, say the project is finished or archived, as `group` says."
+  end
+
+  def test_it_lists_each_project_s_next_step_when_no_project_is_named
+    assert_includes status_section, "\"What's next?\" with no project named: run `cadre status --json` and give each project's `name` with its `next_step.text`"
+  end
 
   def test_it_deploys_with_cadre_deploy_once_the_person_confirms
     ["cadre deploy <repo>", "Confirm first", "never run it without the confirmation", "Once the person confirms", "600000", "run_in_background",

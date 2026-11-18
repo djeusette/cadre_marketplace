@@ -35,7 +35,8 @@ With `--app`, it lists only that app's items and Blocked PRs. You run it with no
 When the person asks what they can deploy, or what's next on a project, ask cadre. Don't guess from GitHub, and don't deploy.
 
 - "What can I deploy?": run `cadre status --json`. Answer from `can_deploy`: each card's `name` and the PRs it ships, in order, saying when one is `held` or `blocked_by` another. Then name `nothing_to_ship` and `not_tracked` in one line.
-- "What's next on `<project>`?": run `cadre status <project> --json`. Answer with `next_step.text` and its `meta`, in cadre's words: don't rephrase them.
+- "What's next on `<project>`?": the person names a project by its name, but cadre takes its slug. Take the `slug` of the entry of `cadre status --json`'s `projects` whose `name` matches, and ask which when none or several do (finished and archived projects aren't listed, so use what the person typed as the slug when it is one). Then run `cadre status <slug> --json`. Answer with `next_step.text` and its `meta`, in cadre's words: don't rephrase them. When `next_step` is null, say the project is finished or archived, as `group` says.
+- "What's next?" with no project named: run `cadre status --json` and give each project's `name` with its `next_step.text`.
 - When cadre says it doesn't know the project, tell the person what it printed.
 
 ## Tick a Before deploying item
