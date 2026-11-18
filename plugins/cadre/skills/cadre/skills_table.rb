@@ -21,10 +21,25 @@ HEADER = %w[Skill When Install].freeze
 COMMITTED = "committed in .agents/skills/".freeze
 PLUGIN_INSTALL = /\Aclaude plugin install [\w.-]+@[\w.-]+\z/
 
+SEPARATOR = /\A\|(\s*:?-+:?\s*\|)+\z/
+
+# Files are read as UTF-8 whatever the locale: an agent's shell may have none.
+def read_utf8(path) = File.read(path, encoding: "UTF-8")
+
+# Lines outside fenced code blocks, so an example table in one isn't the table.
+def outside_fences(lines)
+  fenced = false
+  lines.reject do |line|
+    fence = line.start_with?("```")
+    fenced = !fenced if fence
+    fence || fenced
+  end
+end
+
 def table_lines(agents_md)
   return [] unless File.file?(agents_md)
 
-  lines = File.read(agents_md).lines.map(&:chomp)
+  lines = outside_fences(read_utf8(agents_md).lines.map(&:rstrip))
   heading = lines.index("## Skills") or return []
   section = lines.drop(heading + 1).take_while { |line| !line.start_with?("## ") }
   section.drop_while { |line| !line.start_with?("|") }.take_while { |line| line.start_with?("|") }
@@ -68,12 +83,12 @@ end
 
 def imports_agents_md?(root)
   claude_md = File.join(root, "CLAUDE.md")
-  File.file?(claude_md) && File.read(claude_md).lines.any? { |line| line.chomp == "@AGENTS.md" }
+  File.file?(claude_md) && read_utf8(claude_md).lines.any? { |line| line.chomp == "@AGENTS.md" }
 end
 
 def report(root)
   lines = table_lines(File.join(root, "AGENTS.md"))
-  table = !lines.empty? && cells(lines.first) == HEADER
+  table = lines.length >= 2 && cells(lines.first) == HEADER && lines[1].delete(" ").match?(SEPARATOR)
   rows = table ? lines.drop(2).map { |line| row(root, *cells(line).values_at(0, 1, 2).map(&:to_s)) } : []
   listed = rows.select { |entry| entry["committed"] }.map { |entry| entry["skill"] }
   { "table" => table, "imports_agents_md" => imports_agents_md?(root), "rows" => rows, "unlisted" => folders(root) - listed }

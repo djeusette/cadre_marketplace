@@ -447,7 +447,7 @@ class SkillTest < Minitest::Test
 
   def test_each_plan_task_names_the_skills_it_needs
     ["whose When fits", "before planning", "each task of the plan", "subagent"].each { |text| assert_includes load_skills, text }
-    [%q{as "Read the table" in [skills.md](skills.md) says, before planning}, "each task names the skills from the table it needs"].each do |text|
+    [%q{as [skills.md](skills.md) says, before planning}, "each task names the skills it needs (from the table when the repo has one)"].each do |text|
       assert_includes start_section, text
     end
   end
@@ -475,7 +475,20 @@ class SkillTest < Minitest::Test
   def test_it_routes_the_skills_table_request
     assert_includes description, "write a repo's Skills table"
     assert_operator description.split.size, :<=, 100
-    assert_match(/^- \[skills\.md\]\(skills\.md\): .*Write this repo's Skills table/, router)
+    assert_match(/^- \[skills\.md\]\(skills\.md\): .*"Write this repo's Skills table"/, router)
+  end
+
+  def test_each_section_says_where_to_go_next
+    ["exits non-zero", "show the person its output and stop", %q{go on to "Check each row"}].each { |text| assert_includes read_table, text }
+    assert_includes check_rows, %q{go on to "Load what the work needs"}
+    assert_includes no_table, %q{go on to "Load what the work needs"}
+    [%q{go on to "Check each row"}, "the milestone's branch"].each { |text| assert_includes draft_table, text }
+  end
+
+  def test_drafting_ends_once_no_row_has_problems
+    assert_includes draft_table, "until the script reports no `problems`, then name any `unlisted` folders"
+    refute_includes draft_table, "no `problems` and no `unlisted`"
+    assert_includes draft_table, "after the table"
   end
 
   # connect.md
@@ -895,13 +908,39 @@ class SkillsTableTest < Minitest::Test
   def table(rows) = "# repo\n\n## Skills\n\n#{HEADER}#{rows.map { |row| "| #{row.join(' | ')} |\n" }.join}\nLoad each skill.\n"
   def link_to(name) = "../../.agents/skills/#{name}"
 
-  def read(dir)
-    output, status = Open3.capture2e("ruby", SCRIPT, dir)
+  def read(dir, env = {})
+    output, status = Open3.capture2e(env, "ruby", SCRIPT, dir)
     assert status.success?, output
-    JSON.parse(output)
+    JSON.parse(output.force_encoding("UTF-8"))
   end
 
   def problems(result) = result["rows"].to_h { |row| [row["skill"], row["problems"]] }
+
+  # An agent's shell may run with no locale, where Ruby reads files as US-ASCII.
+  def test_it_reads_a_row_with_non_ascii_text_without_a_locale
+    dir = repo(agents_md: table([["plugin:skill", "any LiveView — HEEx", "claude plugin install plugin@market"]]))
+
+    assert_equal "any LiveView — HEEx", read(dir, { "LANG" => "C", "LC_ALL" => "C" })["rows"].first["when"]
+  end
+
+  def test_it_finds_the_heading_with_trailing_spaces
+    dir = repo(agents_md: table([["plugin:skill", "work", "claude plugin install plugin@market"]]).sub("## Skills\n", "## Skills  \n"))
+
+    assert_equal ["plugin:skill"], read(dir)["rows"].map { |row| row["skill"] }
+  end
+
+  def test_it_reads_no_table_when_the_header_has_no_separator_line
+    dir = repo(agents_md: "## Skills\n\n| Skill | When | Install |\n| plugin:skill | work | claude plugin install plugin@market |\n")
+
+    assert_equal false, read(dir)["table"]
+  end
+
+  def test_it_skips_an_example_table_in_a_code_block
+    example = "```markdown\n#{HEADER}| `<skill>` | <when> | committed in `.agents/skills/` |\n```\n\n"
+    dir = repo(agents_md: table([["plugin:skill", "work", "claude plugin install plugin@market"]]).sub("## Skills\n\n", "## Skills\n\n#{example}"))
+
+    assert_equal ["plugin:skill"], read(dir)["rows"].map { |row| row["skill"] }
+  end
 
   def test_it_reads_each_row_and_passes_a_committed_skill_with_its_folder_and_link
     dir = repo(agents_md: table([["`flutter-expert`", "widgets", COMMITTED],

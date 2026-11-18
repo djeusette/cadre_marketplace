@@ -10,7 +10,11 @@ Run, from the repo:
 ruby <this skill's folder>/skills_table.rb <repo root>
 ```
 
-`<repo root>` is what `git rev-parse --show-toplevel` prints. It prints JSON: `table` (whether there is one), `rows` (each with `skill`, `when`, `install`, `committed` and `problems`), `unlisted` (committed folders no row names) and `imports_agents_md`. When `table` is false, go to "No Skills table".
+`<repo root>` is what `git rev-parse --show-toplevel` prints. It prints JSON: `table` (whether there is one), `rows` (each with `skill`, `when`, `install`, `committed` and `problems`), `unlisted` (committed folders no row names) and `imports_agents_md`.
+
+- When the script exits non-zero, show the person its output and stop.
+- When `table` is false, go to "No Skills table".
+- Otherwise, go on to "Check each row".
 
 ## Check each row
 
@@ -19,13 +23,18 @@ ruby <this skill's folder>/skills_table.rb <repo root>
 - `unlisted`: tell the person no row lists those folders, and go on.
 - `imports_agents_md` false: tell the person `CLAUDE.md` lacks the line `@AGENTS.md`, so Claude Code doesn't read the table on its own, and go on.
 
+With no row stopping you, go on to "Load what the work needs".
+
 ## Load what the work needs
 
 Load every row whose When fits the milestone's work, before planning. Then name, in each task of the plan, the skills that task needs: execution runs each task in a subagent, which loads only the skills its brief names.
 
 ## No Skills table
 
-Tell the person the repo has no Skills table, and ask whether to draft it now or go on without it. Going on without it is always allowed: then plan as you would have, naming in each task the skills the session has that fit it.
+Tell the person the repo has no Skills table, and ask whether to draft it now or go on without it.
+
+- Draft it now: follow "Draft a Skills table".
+- Going on without it is always allowed: go on to "Load what the work needs", loading and naming the skills the session has that fit the work.
 
 ## Draft a Skills table
 
@@ -33,11 +42,12 @@ Tell the person the repo has no Skills table, and ask whether to draft it now or
 2. For each kind of work the repo has, list every skill the session can load for that kind of work, from the person's user and project settings and their plugins alike: a frontend app gets every frontend skill (design, accessibility, UI copy and design-to-code included), a repo with a database gets the skills for its queries and migrations, and every repo gets the skills for any code (engineering principles, security, writing tests first). The list is exhaustive: the person trims it, so a skill that might fit is a row. Leave out only a skill that is neither a plugin nor installable from a public source, and say which you left out: a teammate couldn't get it.
 3. Show the person the proposed rows: Skill, When, and how to get it (the plugin, or committed from its source). Ask them to confirm or change them. The draft writes nothing until the person confirms.
 4. Once they confirm:
-   - write the `## Skills` section as "The table's shape" says, with the line `Load each skill whose When fits the work before starting it, and name them in every subagent brief.` under it;
+   - write the `## Skills` section as "The table's shape" says, with the line `Load each skill whose When fits the work before starting it, and name them in every subagent brief.` after the table;
    - commit each skill that isn't a plugin: `npx skills add <owner/repo> -s <name> -a claude-code -y` writes it into `.claude/skills/`; move that folder to `.agents/skills/<name>`, then `ln -s ../../.agents/skills/<name> .claude/skills/<name>`;
    - enable each plugin in `.claude/settings.json` under `enabledPlugins`, and add its marketplace under `extraKnownMarketplaces` when it isn't `claude-plugins-official`;
    - add the line `@AGENTS.md` to `CLAUDE.md`, creating it when the repo has none.
-5. Read the table again until the script reports no `problems` and no `unlisted`, then show the person the diff. Commit when the person says.
+5. Read the table again, fixing what it names, until the script reports no `problems`, then name any `unlisted` folders to the person and show them the diff.
+6. When the person says, commit those files on their own, on the current branch: while starting a milestone that is the milestone's branch, so the table ships with its pull request. Then, while starting a milestone, go on to "Check each row".
 
 ## The table's shape
 
