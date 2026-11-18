@@ -40,7 +40,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.28.0", manifest["version"]
+    assert_equal "0.29.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -61,6 +61,11 @@ class ManifestTest < Minitest::Test
   def test_readme_says_it_connects_repos_and_fly_orgs
     readme = File.read(File.join(ROOT, "README.md"))
     ["cadre repo set", "cadre fly org add"].each { |text| assert_includes readme, text }
+  end
+
+  def test_readme_says_it_answers_what_can_deploy
+    readme = File.read(File.join(ROOT, "README.md"))
+    ["cadre status", "what can deploy"].each { |text| assert_includes readme, text }
   end
 
   def test_readme_says_it_deploys_with_the_commit
@@ -130,8 +135,8 @@ class SkillTest < Minitest::Test
     ["create, change or drop a project or its milestones in Cadre", "read or update a milestone's spec",
      "start a milestone (\"start milestone <project>/<n>\")", "link a pull request to a milestone",
      "connect a repo to where it deploys or ask where it does", "connect a mobile app to its stores",
-     "deploy a repo that runs on Fly or Vercel or remember where its checkout is (`cadre link`)", "tick a Before deploying item",
-     "implement a spec or plan that says it is tracked in Cadre", "sign in to Cadre"].each { |text| assert_includes description, text }
+     "deploy a Fly or Vercel repo or remember its checkout (`cadre link`)", "tick a Before deploying item",
+     "implement a spec or plan tracked in Cadre", "ask what can deploy or what's next", "sign in to Cadre"].each { |text| assert_includes description, text }
   end
 
   def router = section(skill, "## What to read next")
@@ -158,7 +163,7 @@ class SkillTest < Minitest::Test
                   "## Update a milestone's spec", "## Change a project", "## Limits"],
       milestone => ["## Start a milestone", "## Track a milestone's implementation", "## Link a pull request by hand"],
       connect => ["## A Fly app", "## A Vercel app", "## A mobile app", "## Any other host", "## Remove an app"],
-      deploy => ["# Deploy a repo", "## Tick a Before deploying item", "## Open Deploy in the right folder"] }.each do |text, headings|
+      deploy => ["# Deploy a repo", "## What can deploy, and what's next", "## Tick a Before deploying item", "## Open Deploy in the right folder"] }.each do |text, headings|
       headings.each { |heading| assert_match(/^#{Regexp.escape(heading)}$/, text) }
     end
   end
@@ -167,8 +172,8 @@ class SkillTest < Minitest::Test
 
   def test_it_installs_a_missing_cli_and_upgrades_an_old_one
     assert_includes install_section, INSTALL
-    ["When the command is missing,", "below `0.21.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
-    ["0.1.0", "below `0.19.0`", "below `0.18.0`", "below `0.17.0`", "below `0.16.0`", "below `0.15.0`", "below `0.14.0`", "below `0.13.0`", "below `0.12.0`", "below `0.11.0`", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes everything, text }
+    ["When the command is missing,", "below `0.23.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
+    ["0.1.0", "below `0.21.0`", "below `0.19.0`", "below `0.18.0`", "below `0.17.0`", "below `0.16.0`", "below `0.15.0`", "below `0.14.0`", "below `0.13.0`", "below `0.12.0`", "below `0.11.0`", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes everything, text }
   end
 
   def sign_in = section(skill, "## Sign in")
@@ -695,6 +700,27 @@ class SkillTest < Minitest::Test
   def deploy_anyway = section(deploy, "## Deploy anyway?")
   def tick_section = section(deploy, "## Tick a Before deploying item")
   def deploy_stops = section(deploy, "## When a deploy stops")
+  def status_section = section(deploy, "## What can deploy, and what's next")
+
+  def test_it_answers_what_can_deploy_and_what_is_next_from_cadre_status
+    ["cadre status --json", "cadre status <slug> --json", "`can_deploy`", "`held`", "`blocked_by`", "`nothing_to_ship`", "`not_tracked`",
+     "`next_step.text`", "don't rephrase them", "Don't guess from GitHub", "don't deploy"].each { |text| assert_includes status_section, text }
+  end
+
+  def test_it_looks_a_project_up_by_name_before_asking_for_its_status
+    ["takes its slug", "`slug` of the entry of `cadre status --json`'s `projects` whose `name` matches",
+     "ask which when none or several do", "use what the person typed as the slug when it is one"].each { |text| assert_includes status_section, text }
+    refute_includes status_section, "cadre status <project>"
+    assert_operator status_section.index("`slug` of the entry"), :<, status_section.index("cadre status <slug> --json")
+  end
+
+  def test_it_says_a_project_without_a_next_step_is_finished_or_archived
+    assert_includes status_section, "When `next_step` is null, say the project is finished or archived, as `group` says."
+  end
+
+  def test_it_lists_each_project_s_next_step_when_no_project_is_named
+    assert_includes status_section, "\"What's next?\" with no project named: run `cadre status --json` and give each project's `name` with its `next_step.text`"
+  end
 
   def test_it_deploys_with_cadre_deploy_once_the_person_confirms
     ["cadre deploy <repo>", "Confirm first", "never run it without the confirmation", "Once the person confirms", "600000", "run_in_background",
