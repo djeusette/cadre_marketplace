@@ -30,6 +30,14 @@ With `--app`, it lists only that app's items and Blocked PRs. You run it with no
 3. When they say an item is done, tick it as "Tick a Before deploying item" says.
 4. Run `cadre deploy <repo> --yes` only once they confirm after seeing them all, with the same `--app` or `--all`.
 
+## What can deploy, and what's next
+
+When the person asks what they can deploy, or what's next on a project, ask cadre. Don't guess from GitHub, and don't deploy.
+
+- "What can I deploy?": run `cadre status --json`. Answer from `can_deploy`: each card's `name` and the PRs it ships, in order, saying when one is `held` or `blocked_by` another. Then name `nothing_to_ship` and `not_tracked` in one line.
+- "What's next on `<project>`?": run `cadre status <project> --json`. Answer with `next_step.text` and its `meta`, in cadre's words: don't rephrase them.
+- When cadre says it doesn't know the project, tell the person what it printed.
+
 ## Tick a Before deploying item
 
 An open item keeps its pull request Held in Cadre: it reads Held until the item is ticked or a deploy ships it. Items are ticked in GitHub, where Cadre reads them. `cadre deploy` names each item's pull request by its number. In that repo's checkout, `gh pr view <number>` works with the number alone; from anywhere, pass its URL or `--repo <owner>/<repo>`. When the person says an item is done, or you have just done it at their request:

@@ -40,7 +40,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.28.0", manifest["version"]
+    assert_equal "0.29.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -123,7 +123,7 @@ class SkillTest < Minitest::Test
 
   def test_the_description_starts_with_cadre_and_stays_short
     assert description.start_with?("Cadre"), description
-    assert_operator description.split.size, :<=, 100
+    assert_operator description.split.size, :<=, 110
   end
 
   def test_the_description_has_a_trigger_for_every_branch
@@ -131,7 +131,7 @@ class SkillTest < Minitest::Test
      "start a milestone (\"start milestone <project>/<n>\")", "link a pull request to a milestone",
      "connect a repo to where it deploys or ask where it does", "connect a mobile app to its stores",
      "deploy a repo that runs on Fly or Vercel or remember where its checkout is (`cadre link`)", "tick a Before deploying item",
-     "implement a spec or plan that says it is tracked in Cadre", "sign in to Cadre"].each { |text| assert_includes description, text }
+     "implement a spec or plan that says it is tracked in Cadre", "ask what can deploy or what's next on a project", "sign in to Cadre"].each { |text| assert_includes description, text }
   end
 
   def router = section(skill, "## What to read next")
@@ -158,7 +158,7 @@ class SkillTest < Minitest::Test
                   "## Update a milestone's spec", "## Change a project", "## Limits"],
       milestone => ["## Start a milestone", "## Track a milestone's implementation", "## Link a pull request by hand"],
       connect => ["## A Fly app", "## A Vercel app", "## A mobile app", "## Any other host", "## Remove an app"],
-      deploy => ["# Deploy a repo", "## Tick a Before deploying item", "## Open Deploy in the right folder"] }.each do |text, headings|
+      deploy => ["# Deploy a repo", "## What can deploy, and what's next", "## Tick a Before deploying item", "## Open Deploy in the right folder"] }.each do |text, headings|
       headings.each { |heading| assert_match(/^#{Regexp.escape(heading)}$/, text) }
     end
   end
@@ -167,8 +167,8 @@ class SkillTest < Minitest::Test
 
   def test_it_installs_a_missing_cli_and_upgrades_an_old_one
     assert_includes install_section, INSTALL
-    ["When the command is missing,", "below `0.21.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
-    ["0.1.0", "below `0.19.0`", "below `0.18.0`", "below `0.17.0`", "below `0.16.0`", "below `0.15.0`", "below `0.14.0`", "below `0.13.0`", "below `0.12.0`", "below `0.11.0`", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes everything, text }
+    ["When the command is missing,", "below `0.23.0`", "run `cadre upgrade`"].each { |text| assert_includes install_section, text }
+    ["0.1.0", "below `0.21.0`", "below `0.19.0`", "below `0.18.0`", "below `0.17.0`", "below `0.16.0`", "below `0.15.0`", "below `0.14.0`", "below `0.13.0`", "below `0.12.0`", "below `0.11.0`", "below `0.2.0`", "below `0.3.0`", "below `0.4.0`", "below `0.5.0`", "below `0.6.0`", "below `0.7.0`", "below `0.8.0`"].each { |text| refute_includes everything, text }
   end
 
   def sign_in = section(skill, "## Sign in")
@@ -474,7 +474,7 @@ class SkillTest < Minitest::Test
 
   def test_it_routes_the_skills_table_request
     assert_includes description, "write a repo's Skills table"
-    assert_operator description.split.size, :<=, 100
+    assert_operator description.split.size, :<=, 110
     assert_match(/^- \[skills\.md\]\(skills\.md\): .*"Write this repo's Skills table"/, router)
   end
 
