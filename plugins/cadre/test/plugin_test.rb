@@ -1120,6 +1120,16 @@ class BrainstormTest < Minitest::Test
      "two smaller", "never invent a split"].each { |text| assert_includes brainstorm, text }
   end
 
+  def test_a_milestone_is_a_vertical_slice_and_contracts_change_by_expand_contract
+    ["a *vertical slice*", "thin and end to end", "by *expand–contract*: add the new, move every consumer"].each { |text| assert_includes brainstorm, text }
+    assert_equal 1, brainstorm.scan("out of users' reach").size
+  end
+
+  def test_a_large_milestone_says_why_on_its_code_files_line
+    assert_includes brainstorm, "its **Code files** line says why it can't be smaller"
+    ["This is a preference, not a limit", "Don't ask the person this"].each { |text| refute_includes brainstorm, text }
+  end
+
   def test_skipping_the_questions_leaves_one_approval_before_the_commit
     skip_path = brainstorm[/When the person says to skip the questions(.*?)$/, 1]
     ["still ends with the spec", "mark every open point as your call", "approve the spec"].each { |text| assert_includes skip_path, text }
@@ -1144,7 +1154,7 @@ class BrainstormTest < Minitest::Test
   def test_it_writes_and_commits_the_feature_spec
     ["docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md", "`-2`", "## End goal", "## Increments", "### Increment <i> — ",
      "**Delivers:**", "**Deployable alone:**", "**Consumers:**", "**Code files:**",
-     "plans increment 1", "until the person approves", "commit only the spec file", "never push"].each { |text| assert_includes brainstorm, text }
+     "plans increment 1", "Once the person approves the spec", "commit only the spec file", "leave the push to the person"].each { |text| assert_includes brainstorm, text }
     refute_includes brainstorm, "Not shipped"
   end
 end
