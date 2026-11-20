@@ -230,8 +230,9 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_builds_from_a_spec_the_person_names
-    ["already has an `## End goal` and an `## Increments` section", "When a spec in `docs/superpowers/specs/` might be this feature, ask the person whether it is",
-     "a spec is this feature's only once the person says so"].each { |text| assert_includes create_section, text }
+    ["one with an `## End goal` and an `## Increments` section", "the spec the person names",
+     "a likely one in `docs/superpowers/specs/` once you ask and the person confirms it is this feature",
+     "This step is done when you hold that spec."].each { |text| assert_includes create_section, text }
   end
 
   def test_it_writes_a_spec_and_designs_for_every_milestone
@@ -249,16 +250,19 @@ class SkillTest < Minitest::Test
   end
 
   def test_the_feature_spec_says_it_is_tracked_in_cadre
-    [FEATURE_LINE, "Add the line when the spec lacks it"].each { |text| assert_includes create_section, text }
+    [FEATURE_LINE, "When a spec the person named lacks the line, add it and leave the commit to them."].each { |text| assert_includes create_section, text }
     assert_includes project_refusals, "change it on the spec's tracking line too"
   end
 
   def test_a_corrected_spec_is_committed_alone_or_left_to_the_person
-    ['git commit -m "docs: <feature> design" -- <path>', "never push", "leave the commit to them"].each { |text| assert_includes create_section, text }
+    [%q{commit it as "The handoff" in [brainstorm.md](brainstorm.md) commits it}, "leave the commit to them"].each { |text| assert_includes create_section, text }
+    ["git commit", "never push"].each { |text| refute_includes create_section, text }
   end
 
   def test_it_reports_the_json_url_and_explains_zero_based_paths
     assert_includes create_section, "`url` field"
+    assert_includes create_section, %q{On a `422`, fix it as "When `cadre` refuses" says.}
+    refute_includes create_section, "then run the command again"
     ["0-based positions", "milestones.1.repos.0"].each { |text| assert_includes project_refusals, text }
     refute_includes everything, "Report the URL from"
   end
@@ -271,17 +275,23 @@ class SkillTest < Minitest::Test
   def test_it_names_a_milestones_apps
     ["cadre repo show <repo> --json", '"repos": ["kinfield/kinfield", "kinfield/kinfield-family"]', "the API before the frontend",
      "A repo with one app stays a bare repo", "When the spec doesn't say which apps, ask the person",
-     "An app that isn't connected yet can be named", "A milestone lists a repo one way only: bare, or by its apps",
+     "A milestone lists a repo one way only: bare, or by its apps",
      "No repo <repo> on <server>.", "stays a bare `repo` unless the spec names its apps"].each do |text|
       assert_includes repos_section, text
     end
     assert_includes create_section, %q{its `repos` as "A milestone's `repos`" says}
+    ["the API before the frontend", "isn't connected yet"].each { |text| assert_equal 1, repos_section.scan(text).size, text }
     assert_includes change_section, %q{name their apps, as "A milestone's `repos`" says}
     assert_includes limits, "| `repos` | 1–10 per milestone, no repeats, each `repo` or `repo/app`"
   end
 
   def test_a_milestones_spec_says_it_is_tracked_in_cadre
     assert_includes write_section, MILESTONE_LINE
+  end
+
+  def test_a_milestones_spec_holds_only_its_part_of_the_feature_spec
+    assert_includes write_section, "It holds only this milestone's part of the feature spec"
+    ["Not shipped", "It has no"].each { |text| refute_includes write_section, text }
   end
 
   def test_it_links_each_milestone_to_its_own_page
@@ -299,6 +309,16 @@ class SkillTest < Minitest::Test
     ["changed since you pulled it. Pull it again.", "tell the person who (`updated_by`)", "No milestone <project>/<n> on <server>."].each do |text|
       assert_includes project_refusals, text
     end
+  end
+
+  def test_a_push_leaves_design_links_to_changing_a_project
+    assert_includes update_section, %q{A push changes only the spec; a design link changes as "Change a project" says.}
+    ["exactly as Cadre stores it", "exactly as written", "a design link is set when the project is created"].each { |text| refute_includes update_section, text }
+  end
+
+  def test_it_shows_a_spec_under_its_own_heading
+    assert_includes section(project, "## Show a milestone's spec"), "`cadre spec pull <project>/<n>`"
+    refute_includes update_section, "To show the person a spec"
   end
 
   def test_it_no_longer_asks_before_replacing_a_spec
@@ -327,7 +347,9 @@ class SkillTest < Minitest::Test
   end
 
   def test_a_new_milestone_gets_its_page_and_its_number_is_reported
-    ["Draw its page in the project's design canvas", "`design_url`", "Report the new number"].each { |text| assert_includes change_section, text }
+    ["Draw its page in the project's design canvas", "`design_url`", "Report the new number",
+     "Once its page exists, pull the project again, set that entry's `design_url`"].each { |text| assert_includes change_section, text }
+    ["Pull once more", "edit that one entry"].each { |text| refute_includes change_section, text }
   end
 
   def test_an_unarchived_project_keeps_its_file
@@ -361,26 +383,41 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_commits_the_spec_copy_on_the_milestones_branch_and_leaves_the_default_branch
-    ["gh repo view --json defaultBranchRef -q .defaultBranchRef.name", "git switch -c <slug>-<n>", "git switch <slug>-<n>",
+    ["gh repo view --json defaultBranchRef -q .defaultBranchRef.name", "`git switch -c <branch>`, or `git switch <branch>` when it already exists",
      "the default branch stays as it was"].each { |text| assert_includes start_section, text }
-    assert_operator start_section.index("git switch -c <slug>-<n>"), :<, start_section.index("git add <path>")
+    assert_equal 1, start_section.scan("git switch -c").size
+    assert_operator start_section.index("git switch -c <branch>"), :<, start_section.index("git add <path>")
   end
 
   def test_it_skips_the_commit_when_the_spec_copy_is_unchanged
-    assert_includes start_section, "already holds this text, as when a milestone is started again, skip the commit"
+    assert_includes start_section, "already holds this text, as when a milestone is started again, skip the commit."
+    ["creating the folder", "there is nothing to commit"].each { |text| refute_includes start_section, text }
+  end
+
+  def test_step_two_ends_knowing_this_repos_part_and_its_app
+    ["This step is done when you know this repo's part and, for one app's pull request, its app.",
+     "the app the person named, otherwise the first of this repo's app steps with no pull request",
+     "name the step it starts at, the first step with no pull request", "in its own session in that repo"].each { |text| assert_includes start_section, text }
+    assert_operator start_section.index("for one app's pull request, its app"), :<, start_section.index("git switch -c <branch>")
+  end
+
+  def test_each_task_names_its_skills_for_the_subagent_that_executes_it
+    assert_includes start_section, "each task names the skills it needs (from the table when the repo has one), since a subagent executing it loads only those"
   end
 
   def test_it_starts_a_milestone_from_its_app_steps
-    ["a repo/app entry is its repo", "one plan and one pull request per repo, or per app", "the first step with no pull request",
-     %q{found as "The first step with no pull request" says}, "the branch is `<slug>-<n>-<app>` instead",
-     "the header's last line names it", "Its pull request's description has the line `Cadre: <slug>/<n> <app>`.\n     ```"].each { |text| assert_includes start_section, text }
-    ["gh pr list --repo <owner>/<repo> --state all --search", "A closed, unmerged pull request holds nothing",
-     "`gh repo view --json owner -q .owner.login`", "also matches `<slug>/20`", "names exactly `<slug>/<n>`, optionally followed by an app",
-     "When the first step none holds is unclear, ask the person."].each { |text| assert_includes first_step, text }
+    ["a repo/app entry is its repo", "one plan and one pull request", "the first step with no pull request",
+     %q{found as "The first step with no pull request" says}, "`<slug>-<n>-<app>` for one app's pull request"].each { |text| assert_includes start_section, text }
+    ["cadre status <slug> --json", "`number`", "`steps` in deploy order", "`app` (null for a whole-repo step)",
+     "the open and merged `pull_requests` that count on it", "The first step whose `pull_requests` is empty",
+     "When it is unclear, ask the person."].each { |text| assert_includes first_step, text }
+    ["gh pr list", "<slug>/20", "owner.login"].each { |text| refute_includes milestone, text }
   end
 
   def test_the_plan_says_it_is_tracked_in_cadre
     assert_includes start_section, PLAN_LINE
+    assert_includes start_section, "For one app's plan, the line ends with ` <app>`: `Cadre: <slug>/<n> <app>`."
+    assert_equal 1, start_section.scan("REQUIRED SKILL").size
   end
 
   def test_the_cadre_line_links_a_pull_request_and_names_its_app
@@ -389,9 +426,11 @@ class SkillTest < Minitest::Test
   end
 
   def test_the_pull_request_lists_what_a_deploy_needs_first
-    ["a heading line `## Before deploying`", "- [ ]", "env var", "another repo", "manual step", "A change that needs nothing has no section"].each do |text|
+    ["a heading line `## Before deploying`", "- [ ]", "env var", "another repo", "manual step", "A change that needs nothing has no section",
+     %q{Its items are ticked as "Tick a Before deploying item" in [deploy.md](deploy.md) says.}].each do |text|
       assert_includes pr_description, text
     end
+    refute_includes milestone, "ticks an item in GitHub"
     assert_equal 1, everything.scan("a heading line `## Before deploying`").size
     assert_includes start_section, %q{the two rules of "The pull request's description", given in full: its `Cadre:` line and its `## Before deploying` section}
     assert_includes track_section, %q{Its pull request's description is as "The pull request's description" says}
@@ -403,15 +442,18 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_links_a_pull_request_by_hand_and_relays_the_cli_errors
-    ["cadre pr link <pr-url> <slug>/<n> --json", "cadre pr link <pr-url> --none --json", "wins at its next sync", "`project_url`"].each { |text| assert_includes link_section, text }
+    ["`cadre pr link <pr-url> <slug>/<n> --json`", "`--none` in place of `<slug>/<n>` to unlink it", "`project_url`",
+     "A `Cadre:` line in the description overrides this link, so edit that line."].each { |text| assert_includes link_section, text }
+    refute_includes link_section, "wins at its next sync"
     ["No milestone <slug>/<n> on <server>.", "GitHub has no pull request at <url>.", "GitHub isn't connected on <server> yet.",
      "tell the person, and stop", %q{as "Change a project" in [project.md](project.md) adds it},
      "url: is in a repo no project names"].each { |text| assert_includes milestone_refusals, text }
   end
 
   def test_it_links_a_pull_request_to_an_app
-    assert_includes link_section, "cadre pr link <pr-url> <slug>/<n> --app <app> --json"
+    assert_includes link_section, "with `--app <app>` for one app"
     assert_includes milestone_refusals, "app: must be lowercase letters, digits, - or _"
+    assert_equal 1, milestone.scan("as `cadre repo show` lists it").size
     refute_includes milestone, "app: needs a milestone"
   end
 
@@ -1078,6 +1120,16 @@ class BrainstormTest < Minitest::Test
      "two smaller", "never invent a split"].each { |text| assert_includes brainstorm, text }
   end
 
+  def test_a_milestone_is_a_vertical_slice_and_contracts_change_by_expand_contract
+    ["a *vertical slice*", "thin and end to end", "by *expand–contract*: add the new, move every consumer"].each { |text| assert_includes brainstorm, text }
+    assert_equal 1, brainstorm.scan("out of users' reach").size
+  end
+
+  def test_a_large_milestone_says_why_on_its_code_files_line
+    assert_includes brainstorm, "its **Code files** line says why it can't be smaller"
+    ["This is a preference, not a limit", "Don't ask the person this"].each { |text| refute_includes brainstorm, text }
+  end
+
   def test_skipping_the_questions_leaves_one_approval_before_the_commit
     skip_path = brainstorm[/When the person says to skip the questions(.*?)$/, 1]
     ["still ends with the spec", "mark every open point as your call", "approve the spec"].each { |text| assert_includes skip_path, text }
@@ -1102,7 +1154,7 @@ class BrainstormTest < Minitest::Test
   def test_it_writes_and_commits_the_feature_spec
     ["docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md", "`-2`", "## End goal", "## Increments", "### Increment <i> — ",
      "**Delivers:**", "**Deployable alone:**", "**Consumers:**", "**Code files:**",
-     "plans increment 1", "until the person approves", "commit only the spec file", "never push"].each { |text| assert_includes brainstorm, text }
+     "plans increment 1", "Once the person approves the spec", "commit only the spec file", "leave the push to the person"].each { |text| assert_includes brainstorm, text }
     refute_includes brainstorm, "Not shipped"
   end
 end

@@ -19,16 +19,16 @@ Invoke `superpowers:brainstorming` with the person's request, and follow it as w
 
 ## What a milestone is
 
-Each milestone is one increment of the feature. It:
+Each milestone is one increment of the feature, a *vertical slice*: the smallest step that can be deployed and used, thin and end to end. It:
 
-- ships one feature as the smallest step that can be deployed and used: no unrelated fix or refactor, no code the feature doesn't use yet, nothing that could ship on its own first;
+- ships one feature: no unrelated fix or refactor, no code the feature doesn't use yet, nothing that could ship on its own first;
 - deploys on its own: it works while the previous version still runs during the rollout, so no column the running version uses is dropped or renamed; what is unfinished stays out of users' reach; and a rollback loses no data;
-- changes a contract other apps use, such as an API field or endpoint, an error, an event or webhook payload or a shared table, only in a backward-compatible way: add the new, move every consumer, and remove the old only once no deployed consumer uses it, installed mobile app versions included;
+- changes a contract other apps use, such as an API field or endpoint, an error, an event or webhook payload or a shared table, by *expand–contract*: add the new, move every consumer, and remove the old only once no deployed consumer uses it, installed mobile app versions included;
 - names its consumers: every frontend and app that depends on what changes, whether each must change, and the deploy order, with the repo that must deploy first listed first;
 - may rely on earlier milestones, never on a later one;
 - moves the end goal forward: the milestones are the path to it, not slices cut from a finished design afterwards.
 
-Prefer the thinnest slice someone can use end to end. Cut by layer (data, then the write path, then the API) only when no usable slice fits, and keep the unfinished part out of users' reach.
+Cut by layer (data, then the write path, then the API) only when no vertical slice fits.
 
 A request that fits in one milestone gets one milestone: never invent a split to make the work look incremental.
 
@@ -37,8 +37,8 @@ A request that fits in one milestone gets one milestone: never invent a split to
 Draft the milestones while the design takes shape:
 
 1. Read the code to estimate the code files each milestone touches. Tests and docs are not code files.
-2. Size each one: aim for 10 code files, and prefer 20 code files or fewer. This is a preference, not a limit: a milestone above 20 says why it can't be smaller.
-3. Challenge each milestone once, yourself: could it ship as two smaller ones that each deploy and give someone something to use? If so, split it. Don't ask the person this for each milestone.
+2. Size each one: aim for 10 code files, and prefer 20 code files or fewer; for a milestone above 20, its **Code files** line says why it can't be smaller.
+3. Challenge each milestone once, yourself: could it ship as two smaller ones that each deploy and give someone something to use? If so, split it.
 4. Play the milestones back with the rest of the design, so the person sees and corrects the path, not only the end goal.
 
 ## The feature spec
@@ -68,6 +68,6 @@ In the builder check, the builder plans increment 1 from the spec.
 
 ## The handoff
 
-Commit nothing until the person approves the spec. Once they do, commit only the spec file, with `git add <path>` and `git commit -m "docs: <feature> design" -- <path>`, and never push: the person's other changes, staged or not, stay as they are.
+Once the person approves the spec, commit only the spec file, with `git add <path>` and `git commit -m "docs: <feature> design" -- <path>`, and leave the push to the person: their other changes, staged or not, stay as they are.
 
 Go back to step 2 of "Create a project" in [project.md](project.md).
