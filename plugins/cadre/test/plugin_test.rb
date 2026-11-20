@@ -48,6 +48,7 @@ class ManifestTest < Minitest::Test
   def test_descriptions_match
     refute_empty manifest["description"]
     assert_equal manifest["description"], entry["description"]
+    assert manifest["description"].start_with?("Run Cadre from Claude Code: "), manifest["description"]
   end
 
   def test_readme_lists_cadre
