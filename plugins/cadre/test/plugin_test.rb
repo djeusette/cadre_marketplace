@@ -41,7 +41,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.30.0", manifest["version"]
+    assert_equal "0.31.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -414,11 +414,18 @@ class SkillTest < Minitest::Test
     ["git add <path>", 'git commit -m "docs: spec of <slug>/<n>" -- <path>', "cadre reads only its own"].each { |text| assert_includes start_section, text }
   end
 
-  def test_it_commits_the_spec_copy_on_the_milestones_branch_and_leaves_the_default_branch
-    ["gh repo view --json defaultBranchRef -q .defaultBranchRef.name", "`git switch -c <branch>`, or `git switch <branch>` when it already exists",
-     "the default branch stays as it was"].each { |text| assert_includes start_section, text }
+  def test_it_works_in_a_hidden_worktree_inside_the_main_checkout
+    ["`superpowers:using-git-worktrees`", "The person has agreed to a worktree: make one without asking.",
+     "a hidden folder of the main checkout", "`.claude/worktrees/<branch>`", "`.worktrees/<branch>`",
+     "`git worktree list`", "git worktree add .worktrees/<branch> <branch>",
+     "`git switch -c <branch>`, or `git switch <branch>` when it already exists",
+     "This step is done when `git branch --show-current` prints `<branch>` in a worktree under the main checkout.",
+     "The main checkout stays on its branch"].each { |text| assert_includes start_section, text }
     assert_equal 1, start_section.scan("git switch -c").size
-    assert_operator start_section.index("git switch -c <branch>"), :<, start_section.index("git add <path>")
+    assert_operator start_section.index("superpowers:using-git-worktrees"), :<, start_section.index("git add <path>")
+    assert_operator start_section.index("`git worktree list`"), :<, start_section.index("`superpowers:using-git-worktrees`")
+    ["a native tool makes only new branches", "move into it"].each { |text| assert_includes start_section, text }
+    ["git branch --show-current` prints the repo's default branch", "the default branch stays as it was"].each { |text| refute_includes start_section, text }
   end
 
   def test_it_skips_the_commit_when_the_spec_copy_is_unchanged
@@ -956,7 +963,7 @@ class SkillTest < Minitest::Test
 
   def test_skill_files_call_only_superpowers_skills_and_cadre_itself
     calls = skill_files.flat_map { |path| File.read(path).scan(/`([a-z][a-z0-9-]*:[a-z][a-z0-9-]*)`/).flatten }
-    assert_equal %w[cadre:cadre superpowers:brainstorming superpowers:writing-plans], calls.uniq.sort
+    assert_equal %w[cadre:cadre superpowers:brainstorming superpowers:using-git-worktrees superpowers:writing-plans], calls.uniq.sort
     skill_files.each { |path| refute_match(/\bEP-[A-Z]\d/, File.read(path), path) }
   end
 
