@@ -29,6 +29,7 @@ class ManifestTest < Minitest::Test
     install = "/plugin marketplace add anthropics/claude-plugins-official\n/plugin marketplace add djeusette/cadre_marketplace\n/plugin install cadre@cadre"
     [install, "installs `superpowers` from `claude-plugins-official` with it"].each { |text| assert_includes readme, text }
     refute_includes readme, "needs no other plugin"
+    refute_includes readme, "without it cadre fails to load"
     refute_match(/colette/i, readme.sub("(https://colette-cadre.fly.dev)", ""))
   end
 
@@ -47,47 +48,38 @@ class ManifestTest < Minitest::Test
   def test_descriptions_match
     refute_empty manifest["description"]
     assert_equal manifest["description"], entry["description"]
+    assert manifest["description"].start_with?("Run Cadre from Claude Code: "), manifest["description"]
   end
 
   def test_readme_lists_cadre
     assert_match(/^- \*\*cadre\*\* — /, File.read(File.join(ROOT, "README.md")))
   end
 
-  def test_readme_says_it_starts_a_milestone_and_links_a_pull_request
-    readme = File.read(File.join(ROOT, "README.md"))
-    ["start milestone <project>/<n>", "cadre pr link"].each { |text| assert_includes readme, text }
+  def test_readme_sums_cadre_up_and_links_its_skill
+    bullet = File.read(File.join(ROOT, "README.md"))[/^- \*\*cadre\*\* — .*?(?=^#|\z)/m]
+    assert_includes bullet, "(plugins/cadre/skills/cadre/SKILL.md)"
+    assert_operator bullet.split.size, :<=, 70
   end
 
-  def test_readme_says_it_connects_repos_and_fly_orgs
-    readme = File.read(File.join(ROOT, "README.md"))
-    ["cadre repo set", "cadre fly org add"].each { |text| assert_includes readme, text }
+  def agents_md = File.read(File.join(ROOT, "AGENTS.md"))
+
+  def test_agents_md_names_the_checks_the_release_and_which_skill_wins
+    ["`LANG=en_US.UTF-8 ruby plugins/cadre/test/plugin_test.rb`", "invalid byte sequence in US-ASCII",
+     "change the test first, watch it go red, then the text", "`test_marketplace_lists_cadre_last_at_the_plugin_version`",
+     "`mattpocock-skills:writing-for-agents` wins", "starts with `Cadre`",
+     "enable its plugin under `enabledPlugins` in `.claude/settings.json`"].each { |text| assert_includes agents_md, text }
+    assert_includes ManifestTest.public_instance_methods, :test_marketplace_lists_cadre_last_at_the_plugin_version
+    refute_includes agents_md, "Rules for any agent"
   end
 
-  def test_readme_says_it_answers_what_can_deploy
-    readme = File.read(File.join(ROOT, "README.md"))
-    ["cadre status", "what can deploy"].each { |text| assert_includes readme, text }
-  end
-
-  def test_readme_says_it_deploys_with_the_commit
-    assert_includes File.read(File.join(ROOT, "README.md")), "cadre deploy"
-  end
-
-  def test_readme_says_it_links_a_checkout_for_the_deploy_button
-    assert_includes File.read(File.join(ROOT, "README.md")),
-                    "Asked to remember where a repo's checkout is, it runs `cadre link` there, so cadre's Deploy button opens Claude Desktop in it."
-  end
-
-  def test_readme_says_a_repo_can_have_several_apps
-    readme = File.read(File.join(ROOT, "README.md"))
-    ["several apps", "`--app`", "`--all`", "`cadre repo unset --name`"].each { |text| assert_includes readme, text }
-  end
-
-  def test_readme_says_its_specs_and_plans_are_tracked_in_cadre
-    assert_includes File.read(File.join(ROOT, "README.md")), "say they are tracked in Cadre"
-  end
-
-  def test_readme_says_it_reads_and_drafts_the_skills_table
-    assert_includes File.read(File.join(ROOT, "README.md")), "Skills table"
+  def test_agents_md_skills_table_has_no_problems
+    out, status = Open3.capture2("ruby", File.join(PLUGIN, "skills", "cadre", "skills_table.rb"), ROOT)
+    assert status.success?, out
+    result = JSON.parse(out)
+    assert result["table"]
+    assert result["imports_agents_md"]
+    assert_equal [], result["rows"].flat_map { |row| row["problems"] }
+    assert_equal [], result["unlisted"]
   end
 end
 
@@ -132,14 +124,31 @@ class SkillTest < Minitest::Test
   end
 
   def test_the_description_has_a_trigger_for_every_branch
-    ["create, change or drop a project or its milestones in Cadre", "read or update a milestone's spec",
-     "start a milestone (\"start milestone <project>/<n>\")", "link a pull request to a milestone",
-     "connect a repo to where it deploys or ask where it does", "connect a mobile app to its stores",
-     "deploy a Fly or Vercel repo or remember its checkout (`cadre link`)", "tick a Before deploying item",
-     "implement a spec or plan tracked in Cadre", "ask what can deploy or what's next", "sign in to Cadre"].each { |text| assert_includes description, text }
+    { "project.md" => "create, read, change or drop a Cadre project, milestone or spec",
+      "milestone.md" => "start a milestone (\"start milestone <project>/<n>\")",
+      "connect.md" => "connect a repo or mobile app to where it deploys or releases",
+      "deploy.md" => "deploy a Fly or Vercel repo",
+      "skills.md" => "write a repo's Skills table",
+      "SKILL.md" => "sign in to Cadre" }.each { |branch, text| assert_includes description, text, branch }
+    assert_includes description, "what's next on a Cadre project"
+  end
+
+  def test_the_opening_says_what_cadre_is_and_nothing_a_branch_says
+    ["You register a project there", "brainstorm it with the person first"].each { |text| refute_includes skill, text }
+  end
+
+  def test_a_skills_table_request_skips_the_cli_steps
+    assert_includes skill[/\A.*?(?=^## Before you start)/m], "To write a repo's Skills table, go straight to [skills.md](skills.md): it runs no `cadre` command."
   end
 
   def router = section(skill, "## What to read next")
+
+  def router_line(name) = router.lines.find { |line| line.include?("[#{name}]") }
+
+  def test_the_router_names_every_branch_a_file_handles
+    ["archive or bring back a project"].each { |text| assert_includes router_line("project.md"), text }
+    ["remove an app", "record a host other than Fly or Vercel"].each { |text| assert_includes router_line("connect.md"), text }
+  end
 
   def test_the_router_names_every_file_and_every_file_it_names_exists
     linked = router.scan(/\]\(([^)]+)\)/).flatten
@@ -185,7 +194,13 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_runs_the_login_in_the_background_and_relays_the_code
-    ["run_in_background", "600000 ms", "Opening <uri> in your browser.", "Check that the page shows this code: <code>"].each { |text| assert_includes sign_in, text }
+    ["Run `cadre login --url <url>` with it in the background (Bash `run_in_background`)", "waits up to 10 minutes",
+     "Opening <uri> in your browser.", "Check that the page shows this code: <code>"].each { |text| assert_includes sign_in, text }
+    refute_includes sign_in, "600000"
+  end
+
+  def test_any_other_sign_in_output_is_relayed_and_stops
+    assert_includes sign_in, "- Any other output from `cadre whoami` or `cadre login`: tell the person what it printed, and stop."
   end
 
   def test_it_uses_the_cli_copy
@@ -206,6 +221,10 @@ class SkillTest < Minitest::Test
 
   def test_it_points_to_the_clis_help_for_flags
     assert_includes skill, "run `cadre help <command>`"
+  end
+
+  def test_an_unnamed_refusal_is_relayed_once_for_every_branch
+    assert_includes router, "When `cadre` refuses with a line no file names, tell the person what it printed and stop: its message says what to do."
   end
 
   def test_it_leaves_what_the_clis_own_message_says_to_the_cli
@@ -457,13 +476,8 @@ class SkillTest < Minitest::Test
     refute_includes milestone, "app: needs a milestone"
   end
 
-  def test_the_readme_and_brainstorm_name_apps
-    assert_includes File.read(File.join(ROOT, "README.md")), "Cadre: <project>/<n> <app>"
+  def test_brainstorm_names_apps
     assert_includes read("brainstorm.md"), "apps of a repo that has several"
-  end
-
-  def test_the_readme_mentions_the_before_deploying_section
-    assert_includes File.read(File.join(ROOT, "README.md")), "## Before deploying"
   end
 
   # skills.md
@@ -663,12 +677,6 @@ class SkillTest < Minitest::Test
   def test_it_explains_the_https_only_refusal
     line = refusal(connect_refusals, "Cadre sends a key or a token over https only. Sign in to an https address first: cadre login --url https://<your cadre>.")
     ["isn't https, and nothing was sent", "Tell the person what it printed and stop", "they sign in again with an https address"].each { |text| assert_includes line, text }
-  end
-
-  def test_the_readme_says_how_a_mobile_app_is_connected
-    bullet = File.read(File.join(ROOT, "README.md"))[/^- \*\*cadre\*\* — .*?(?=^- |\z)/m]
-    ["Asked to connect a mobile app, it sets its App Store app and Google Play package with `cadre repo set`",
-     "`cadre app-store key add` or `cadre google-play account add` in their own terminal", "Claude Code never handles a store's key"].each { |text| assert_includes bullet, text }
   end
 
   def test_a_new_app_store_key_means_setting_its_apps_again
