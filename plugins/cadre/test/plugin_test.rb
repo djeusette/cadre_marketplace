@@ -498,16 +498,20 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_reads_the_table_with_the_script
-    ["ruby <this skill's folder>/skills_table.rb <repo root>", "git rev-parse --show-toplevel"].each { |text| assert_includes read_table, text }
+    assert_includes read_table, %q{ruby <this skill's folder>/skills_table.rb "$(git rev-parse --show-toplevel)"}
+    ["<repo root>", "It prints JSON"].each { |text| refute_includes read_table, text }
   end
 
   def test_it_stops_on_a_missing_plugin_and_names_its_install_command
-    ["among the skills this session can load", "stop", "its Install command", "a new session",
-     "tell the person what the script names", "no row lists", "`@AGENTS.md`"].each { |text| assert_includes check_rows, text }
+    ["among the skills this session can load", "its Install command", "a new session",
+     "what the script names", "no row lists", "`@AGENTS.md`", "Check every row before answering",
+     "name every such row to the person in one answer, and stop"].each { |text| assert_includes check_rows, text }
+    refute_includes check_rows, "Then stop"
+    assert_equal 1, check_rows.scan(/\bstop\b/).size
   end
 
   def test_each_plan_task_names_the_skills_it_needs
-    ["whose When fits", "before planning", "each task of the plan", "subagent"].each { |text| assert_includes load_skills, text }
+    assert_equal "Load every row whose When fits the milestone's work, before planning.", load_skills.strip
     [%q{as [skills.md](skills.md) says, before planning}, "each task names the skills it needs (from the table when the repo has one)"].each do |text|
       assert_includes start_section, text
     end
@@ -526,7 +530,8 @@ class SkillTest < Minitest::Test
   end
 
   def test_the_table_shape_is_exact
-    ["| Skill | When | Install |", "committed in .agents/skills/", "claude plugin install <plugin>@<marketplace>"].each { |text| assert_includes table_shape, text }
+    ["| Skill | When | Install |", "committed in .agents/skills/", "claude plugin install <plugin>@<marketplace>",
+     "When names the work in plain words (`Ash resources or domains`), not a file glob (`lib/**/*.ex`)."].each { |text| assert_includes table_shape, text }
   end
 
   def test_skills_md_names_no_skill_of_its_own
@@ -543,7 +548,8 @@ class SkillTest < Minitest::Test
     ["exits non-zero", "show the person its output and stop", %q{go on to "Check each row"}].each { |text| assert_includes read_table, text }
     assert_includes check_rows, %q{go on to "Load what the work needs"}
     assert_includes no_table, %q{go on to "Load what the work needs"}
-    [%q{go on to "Check each row"}, "the milestone's branch"].each { |text| assert_includes draft_table, text }
+    [%q{go on to "Check each row"}, "the milestone's branch", "commit only those files"].each { |text| assert_includes draft_table, text }
+    refute_includes draft_table, "on their own"
   end
 
   def test_drafting_ends_once_no_row_has_problems
@@ -572,6 +578,8 @@ class SkillTest < Minitest::Test
     end
     assert_includes connect, %q{follow the one section for where it runs: "A Fly app", "A Vercel app", "A mobile app" or "Any other host"}
     refute_match(/^(6|7|8|9|10|11)\. /, connect)
+    assert_includes connect, "Then, by what was asked:\n\n- To connect an app,"
+    refute_match(/^\d\. To /, connect)
     assert_includes connect, "To connect or disconnect a Fly org, a Vercel team or a store's key, follow the section of that name under its platform."
     refute_match(/\bstep \d/, connect)
   end
@@ -579,10 +587,10 @@ class SkillTest < Minitest::Test
   def test_it_shows_sets_and_unsets_a_repos_targets
     ["cadre repo show <repo> --json", "cadre repo set <repo> --fly-app <app> --json", "cadre repo set <repo> --platform <name> --json", "not tracked",
      "cadre repo unset <repo> --platform <name> --json", "any host other than Fly or Vercel"].each { |text| assert_includes connect, text }
-    ["`platform`", "`settings`", "`account`", "`tracked`", "`name`: the app's name in the repo, unique across its platforms",
-     "its `app` and `config` for Fly, its `project` and `dir` for Vercel", "`status_url`: next to `settings`, not inside it", "`last_deploy`",
-     "`live`", '`"live"`', '`"not_live"`', '`"not_checked"`', "`not_live_since`"].each { |text| assert_includes target_fields, text }
-    ["`stores`", "`public_build`", "That is expected"].each { |text| assert_includes target_fields, text }
+    ["reads as its field names say", "`name` is unique across the repo's platforms", "`status_url` sits next to `settings`, not inside it",
+     '`live` is `"live"`, `"not_live"`, `"not_checked"`, or `null` with nothing to check',
+     "`stores` is empty for any app but a mobile one", "That is expected"].each { |text| assert_includes target_fields, text }
+    ["`platform`;", "`not_live_since`", "`last_deploy`", "`tracked`: whether"].each { |text| refute_includes target_fields, text }
     assert_includes connect, %q{"where does it release?" or "which build is public?" from `stores`}
     refute_includes connect, "`null` for Fly"
   end
@@ -591,6 +599,7 @@ class SkillTest < Minitest::Test
     ["a further app or a move", "--name <existing>", "read `cadre repo show <repo> --json` again", "--fly-config <file>",
      "Report the target the JSON body holds"].each { |text| assert_includes fly_app, text }
     refute_includes everything, "To move an app instead"
+    ["umbrella", "Cadre finds the connected", "takes the Fly app's name", "a monorepo has several"].each { |text| refute_includes connect, text }
   end
 
   def test_it_connects_a_fly_org_once_the_person_agrees_and_pipes_its_token
@@ -602,7 +611,8 @@ class SkillTest < Minitest::Test
 
   def test_it_connects_vercel_apps_and_teams
     ["--vercel-project", "--name <app>", "--vercel-dir", "`cadre deploy <repo>` deploys it, as [deploy.md](deploy.md) says",
-     "`status_url_note`"].each { |text| assert_includes vercel_app, text }
+     %q{3. Read the answer's `status_url` as "Status URLs" says for Vercel.}].each { |text| assert_includes vercel_app, text }
+    assert_equal 1, connect.scan("status_url_note").size
     ["cadre vercel team add", "cadre vercel team remove", "Account Settings, then Tokens", "a token scoped to the team",
      "`vercel tokens add` can only make a token for the whole account", "in their own terminal", "team-scoped", "dashboard",
      %q{as "Tokens and keys" says}].each { |text| assert_includes vercel_team, text }
@@ -643,12 +653,13 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_reads_a_mobile_app_s_stores_field_by_field
-    ["has a `label` (`App Store`, `Google Play`)", "the `app` it is there (the Apple ID or the package name)", "the `account` cadre reads it with",
-     "`public_build`, the build that is public there", "its `version` (or `null` when the store gave none)", "its `build_number` and `since`",
-     "`public_build` is `null` until cadre saw one", "A mobile app's own `account` is `null` and its `tracked` is `false`",
+    ["a store's `public_build` is `null` until cadre saw one", "A mobile app's own `account` is `null` and its `tracked` is `false`",
      "It is not a sign that the app isn't connected",
      "cadre reads the build's tag, so it knows the build's commit once the tag is pushed",
-     "the PRs a build holds come with a later release of cadre"].each { |text| assert_includes target_fields, text }
+     "until a build public on every store has its tag", "its card lists the PRs each build holds",
+     "until then its merged PRs stay Merged"].each { |text| assert_includes target_fields, text }
+    refute_includes connect, "later release"
+    ["has a `label`", "its `build_number` and `since`"].each { |text| refute_includes target_fields, text }
     assert_includes connect, %q{Answer "where does it deploy?" from these fields, and "where does it release?" or "which build is public?" from `stores`}
   end
 
@@ -658,15 +669,16 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_says_once_when_cadre_shows_a_store_s_public_build
-    ["Cadre asks each store which build is public and shows it on its Apps page", "each with the key or account that reads it",
-     "within 15 minutes"].each { |text| assert_includes mobile_app, text }
+    ["each with the key or account that reads it",
+     "cadre shows each store's public build on its Apps page within 15 minutes"].each { |text| assert_includes mobile_app, text }
+    refute_includes connect, "Cadre asks each store which build is public"
     assert_equal 1, connect.scan("15 minutes").size
   end
 
   def test_a_store_key_file_is_asked_for_in_the_persons_terminal_and_never_read
     ["which asks for the key's `.p8` file", "which asks for the service account's JSON key file",
      "Once they say it is added, set the app that was waiting for it"].each { |text| assert_includes store_key, text }
-    assert_includes tokens_and_keys, "Never ask the person to send you a token, a key or a key file, and never read one"
+    assert_includes tokens_and_keys, "These two ways are the only ones: you never see or carry a token, a key or a key file."
   end
 
   def test_it_explains_the_no_connected_key_error
@@ -676,7 +688,8 @@ class SkillTest < Minitest::Test
 
   def test_it_explains_the_https_only_refusal
     line = refusal(connect_refusals, "Cadre sends a key or a token over https only. Sign in to an https address first: cadre login --url https://<your cadre>.")
-    ["isn't https, and nothing was sent", "Tell the person what it printed and stop", "they sign in again with an https address"].each { |text| assert_includes line, text }
+    ["isn't https, and nothing was sent", "they sign in again with an https address"].each { |text| assert_includes line, text }
+    refute_match(/(tell|show) the person what (it|fly|vercel) printed|relay/i, connect)
   end
 
   def test_a_new_app_store_key_means_setting_its_apps_again
@@ -686,9 +699,8 @@ class SkillTest < Minitest::Test
 
   def test_a_token_or_key_never_passes_through_claude_code
     ["without passing through Claude Code", "in their own terminal", "for a Fly org only, the pipe",
-     "Never ask the person to send you a token, a key or a key file",
-     "never read one, print it, echo it, pass it as an argument, write it to a file or pipe it any other way"].each { |text| assert_includes tokens_and_keys, text }
-    assert_equal 1, connect.scan(/never ask/i).size
+     "These two ways are the only ones: you never see or carry a token, a key or a key file."].each { |text| assert_includes tokens_and_keys, text }
+    refute_includes connect, "print it, echo it"
   end
 
   def test_it_removes_an_app_by_name
@@ -703,17 +715,18 @@ class SkillTest < Minitest::Test
     [fly_app, vercel_app].each { |text| assert_includes text, %q{as "Status URLs" says} }
     refute_includes everything, "Don't ask for a status URL"
     refute_includes everything, "takes none yet"
+    ["Pass it as `--status-url <url>`", "When `cadre` refuses the URL"].each { |text| refute_includes status_urls, text }
   end
 
   def test_setting_an_app_again_is_said_once_and_carries_every_setting_over
     ["Setting an app again (the same name) replaces its settings", "Read what is there before setting it", "Carry them over",
-     "`--fly-app`, `--fly-config` and `--status-url` each time, and `--name` when the app's name isn't its Fly app's",
-     "A `--status-url` left out removes the URL",
+     "**Fly:** every flag `cadre help repo set` says a set replaces.",
      "A status URL left out is replaced by the production domain when it answers, and removed otherwise",
      "A Vercel target whose `status_url` is `null` keeps none only with `--no-status-url`, so ask the person whether it should stay unmonitored or take the default"].each do |text|
       assert_includes set_again, text
     end
     assert_equal 1, everything.scan(/replaces its settings/).size
+    refute_includes connect, "`--fly-app`, `--fly-config` and `--status-url` each time"
     refute_match(/setting a platform again/i, everything)
   end
 
@@ -721,7 +734,7 @@ class SkillTest < Minitest::Test
     ["Fly isn't connected on <server> yet. Add an org with cadre fly org add <org>.",
      "settings.app: isn't an app of a connected Fly org (", "Fly refused this token for <org>.",
      "Fly has no org <org> that this token can read.", "<org> still reads <repos>. Unset or move those targets first.",
-     "No Fly org <org> on <server>.", "<repo> has no <Platform> target.", "No repo <repo> on <server>.",
+     "No repo <repo> on <server>.",
      %q{as "Change a project" in [project.md](project.md) does}].each { |text| assert_includes connect_refusals, text }
   end
 
@@ -729,19 +742,18 @@ class SkillTest < Minitest::Test
     ["Vercel isn't connected on <server> yet. Add a team with cadre vercel team add <team>.",
      "settings.project: isn't a project of a connected Vercel team (…)",
      "Vercel refused this token for <team>.", "Vercel has no team <team> that this token can read.",
-     "<team> still reads <repos>. Unset or move those targets first.",
-     "No Vercel team <team> on <server>.", "<repo> has no Vercel target <app>."].each { |text| assert_includes connect_refusals, text }
+     "<team> still reads <repos>. Unset or move those targets first."].each { |text| assert_includes connect_refusals, text }
   end
 
   def test_it_relays_the_refusals_of_an_app_by_name
-    ["<name> is already a <Platform> app of <repo>. Unset it first.",
-     "<app> is already the <Platform> app of <other>, an app of <repo>. Set <other> instead, or unset it first.",
-     "<repo> has <n> <Platform> apps: <apps>. Pass --name <app>.",
-     "<repo> has no app <app>.", "there is nothing to remove; check the name with the person"].each { |text| assert_includes connect_refusals, text }
+    assert_includes connect_refusals, "<app> is already the <Platform> app of <other>, an app of <repo>. Set <other> instead, or unset it first."
+    ["<name> is already a <Platform> app of <repo>. Unset it first.", "<repo> has <n> <Platform> apps: <apps>. Pass --name <app>.",
+     "No Fly org <org> on <server>.", "No Vercel team <team> on <server>.", "there is nothing to remove",
+     "`name: isn't used on this platform`"].each { |text| refute_includes connect, text }
   end
 
   def test_it_relays_the_name_format_refusals
-    ["`name: is required`", "`name: must be lowercase letters, digits, - or _`", "`name: isn't used on this platform`"].each { |text| assert_includes connect_refusals, text }
+    ["`name: is required`", "`name: must be lowercase letters, digits, - or _`"].each { |text| assert_includes connect_refusals, text }
   end
 
   # deploy.md
@@ -754,7 +766,8 @@ class SkillTest < Minitest::Test
 
   def test_it_answers_what_can_deploy_and_what_is_next_from_cadre_status
     ["cadre status --json", "cadre status <slug> --json", "`can_deploy`", "`held`", "`blocked_by`", "`nothing_to_ship`", "`not_tracked`",
-     "`next_step.text`", "don't rephrase them", "Don't guess from GitHub", "don't deploy"].each { |text| assert_includes status_section, text }
+     "`next_step.text`", "in cadre's words", "answer from cadre alone: a status question deploys nothing"].each { |text| assert_includes status_section, text }
+    ["rephrase", "Don't guess", "don't deploy"].each { |text| refute_includes status_section, text }
   end
 
   def test_it_looks_a_project_up_by_name_before_asking_for_its_status
@@ -773,10 +786,11 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_deploys_with_cadre_deploy_once_the_person_confirms
-    ["cadre deploy <repo>", "Confirm first", "never run it without the confirmation", "Once the person confirms", "600000", "run_in_background",
-     "last_deploy", "commit unknown", "lists them as `targets`, each with a `name` and a `platform`"].each { |text| assert_includes deploy_steps, text }
+    ["cadre deploy <repo>", "Confirm first: a deploy can't be taken back.", "Once the person confirms", "600000", "run_in_background",
+     "last_deploy", "commit unknown", "lists them as `targets`, each with a `name` and a `platform`",
+     "It is done when the target's `last_deploy.commit` is the commit deployed.", "check once more a minute later"].each { |text| assert_includes deploy_steps, text }
     assert_operator deploy_steps.index("Confirm first"), :<, deploy_steps.index("run the command in a checkout")
-    ["fly deploy", "vercel deploy", "git status --porcelain"].each { |text| refute_includes deploy, text }
+    ["fly deploy", "vercel deploy", "git status --porcelain", "without the confirmation"].each { |text| refute_includes deploy, text }
   end
 
   def test_cadre_deploy_is_the_one_way_to_deploy
@@ -787,7 +801,6 @@ class SkillTest < Minitest::Test
     ["cadre repo show <repo> --json", "--app <name>", "--all", "only when the person asks for every app",
      "the deploy order puts first"].each { |text| assert_includes deploy_steps, text }
     ["<repo> has <n> apps: <apps>. Pass --app <name> or --all.", "<repo> has <n> apps: <apps>. Pass --app <name>, in deploy order.",
-     "<repo> has no app <app>. Its apps: <apps>.",
      "<repo> has apps on more than one platform. Deploy each with --app <name>, in deploy order.",
      "each once the person confirms"].each { |text| assert_includes deploy_stops, text }
     refute_includes deploy, "cadre deploy can't deploy it yet"
@@ -800,14 +813,22 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_deploys_vercel_repos_too
-    ["runs on Fly or Vercel", "vercel isn't installed", "vercel isn't signed in", "has no .vercelignore", "lacks what"].each { |text| assert_includes deploy, text }
+    ["runs on Fly or Vercel", "has no .vercelignore", "lacks what"].each { |text| assert_includes deploy, text }
+  end
+
+  def test_deploy_md_leaves_relaying_cadres_own_lines_to_skill_md
+    assert_includes deploy_steps, %q{It stopped on a check or failed: follow "When a deploy stops" for the line it printed.}
+    refute_match(/(tell|show) the person what (it|fly|vercel) printed|relay/i, deploy)
+    ["isn't installed", "isn't signed in", "Any other failure is fly's own", "doesn't know the project", "has no app <app>. Its apps",
+     "'s build failed:", "built but didn't go live", "cadre stopped while promoting"].each { |text| refute_includes deploy, text }
   end
 
   def test_the_vercel_deploy_keeps_its_safety_rules
-    ["You write no file named `.vercelignore`, anywhere", "You may propose its contents in chat only", "built but didn't go live",
-     "relay the line saying which apps went live and which weren't promoted", "cadre stopped while promoting <app>",
-     "tell the person to check Vercel for that app", "Running `cadre deploy <repo>` again builds and promotes them all, with the same `--app` or `--all`", "the person pushes it, or says to"].each { |text| assert_includes deploy_stops, text }
+    refute_includes deploy_stops, "tell the person the folder has no `.vercelignore`"
+    ["you write no file named `.vercelignore`, anywhere", "You may propose its contents in chat only",
+     "the person pushes it, or says to"].each { |text| assert_includes deploy_stops, text }
     ["Deploy anyway?", "exits 1 and builds nothing", "only once they confirm after seeing them all"].each { |text| assert_includes deploy_anyway, text }
+    refute_includes deploy, "on Vercel as on Fly"
   end
 
   def test_it_passes_yes_only_after_the_person_confirms_the_open_items
@@ -815,7 +836,6 @@ class SkillTest < Minitest::Test
       assert_includes deploy_anyway, text
     end
     assert_operator deploy_anyway.index("Not deployed."), :<, deploy_anyway.index("--yes")
-    assert_includes deploy_stops, "fly auth login"
   end
 
   def test_it_confirms_a_blocked_deploy_before_passing_yes
@@ -833,46 +853,40 @@ class SkillTest < Minitest::Test
                     "Under `--all`, when what should go first is an app the same run deploys first, say so: the run already deploys it first."
   end
 
-  def test_all_on_fly_deploys_in_the_release_queues_order
-    assert_includes deploy, "`--all` on Fly apps deploys them one at a time, in the order Cadre's release queue lists them,"
-    refute_includes deploy, "one at a time, by name"
-  end
-
   def test_it_checks_the_fly_config_name_before_setting_it
     ["isn't in this checkout", "Neither fly.production.toml nor fly.toml is in this checkout.", "--fly-config <file>",
-     "Check the file's name with the person before setting it",
-     "the person confirms again before `cadre deploy <repo>` runs again, with the same `--app` or `--all`"].each { |text| assert_includes deploy_stops, text }
+     "Check the file's name with the person before setting it"].each { |text| assert_includes deploy_stops, text }
   end
 
   def test_setting_an_app_from_a_deploy_carries_its_settings_over
-    pointer = %q{That sets the app again, so read "Set an app again" in [connect.md](connect.md) first and carry its}
-    assert_equal 3, deploy_stops.scan(pointer).size
-    ["carry its config file and status URL over", "carry its name and status URL over",
-     "carry its status URL over, or pass `--no-status-url` when it has none and should stay unmonitored"].each { |text| assert_includes deploy_stops, text }
-    command = deploy_stops.lines.find { |line| line.include?("--vercel-project <id> --name <app> --vercel-dir <folder>") }
-    assert_includes command, "status URL"
+    pointer = %q{A fix below that runs `cadre repo set` sets the app again: read "Set an app again" in [connect.md](connect.md) first and carry every setting over.}
+    assert_equal 1, deploy.scan(%q{"Set an app again"}).size
+    assert_includes deploy_stops, pointer
+    rerun = "Once a fix is made, deploy again when the person confirms: `cadre deploy <repo>` with the same `--app` or `--all`, which on Vercel builds and promotes every app again."
+    assert_includes deploy_stops, rerun
+    assert_equal 1, deploy_stops.scan(/deploy again/i).size - deploy_stops.scan("then deploy again.`").size
   end
 
   def test_it_relays_a_deploy_of_an_app_with_no_fly_app
     ["<name> has no Fly app. Connect it with cadre repo set <repo> --fly-app <app> --name <name>.",
      "<repo> has no Fly app. Connect it with cadre repo set <repo> --fly-app <app>.",
-     "<repo> has no app cadre can deploy.", "Then deploy again once they confirm"].each { |text| assert_includes deploy_stops, text }
+     "<repo> has no app cadre can deploy."].each { |text| assert_includes deploy_stops, text }
   end
 
   def open_deploy_section = section(deploy, "## Open Deploy in the right folder")
 
   def test_it_explains_where_the_deploy_button_opens_and_links_only_when_asked
     ["`cadre link`", "opens Claude Desktop in the folder the person linked", "the folder it used last", "the prompt's last line names the repo",
-     "remembers its main checkout for that person", "even from a linked worktree or a subfolder", "running it again replaces it",
      "Run it only when the person asks"].each { |text| assert_includes open_deploy_section, text }
-    assert_operator deploy.index("## What a deploy does"), :<, deploy.index("## Open Deploy in the right folder")
+    ["even from a linked worktree or a subfolder", "running it again replaces it"].each { |text| refute_includes deploy, text }
+    refute_includes deploy, "## What a deploy does"
     assert_operator deploy.index("## Open Deploy in the right folder"), :<, deploy.index("## When a deploy stops")
   end
 
   def test_it_relays_cadre_links_own_answers
-    assert_includes refusal(open_deploy_section, "Linked <repo> to <path>. Its Deploy button in cadre opens there.`"), "tell the person"
-    unknown_repo = refusal(open_deploy_section, "cadre doesn't know <owner/name>. A project names a repo before cadre knows it.`")
-    ["a project must name the repo first", "Tell the person", "`cadre link` works there once a milestone of a project lists that repo"].each { |text| assert_includes unknown_repo, text }
+    no_table = refusal(open_deploy_section, "No Skills table in <path>/AGENTS.md. Setup shows how to write one: <url>/setup?part=skills`")
+    ["the link is made", %q{offer to draft one, as "No Skills table" in [skills.md](skills.md) says}].each { |text| assert_includes no_table, text }
+    ["Linked <repo> to <path>.", "A project names a repo before cadre knows it."].each { |text| refute_includes deploy, text }
     assert_includes refusal(open_deploy_section, "This folder isn't a checkout with an origin. Run cadre link in one.`"),
                     "ask the person where their checkout of the repo is, and run it there"
     refute_includes deploy, "cadre doesn't know <owner/name>. …"
@@ -880,7 +894,7 @@ class SkillTest < Minitest::Test
 
   def test_it_links_only_when_the_person_asks
     assert_includes open_deploy_section, "Run it only when the person asks."
-    refute_includes open_deploy_section, "offer to"
+    refute_match(/offer to (run|link)/, open_deploy_section)
   end
 
   def test_a_deploy_outside_the_repos_checkout_asks_for_a_new_session_there
@@ -897,9 +911,10 @@ class SkillTest < Minitest::Test
 
   def test_it_ticks_a_before_deploying_item_only_once_told_it_is_done
     ["gh pr view <pr-url> --json body -q .body", "`- [ ]` to `- [x]`", "gh pr edit <pr-url> --body-file <file>",
-     "reads Held", "Tick only what the person said is done", "Items are ticked in GitHub",
+     "reads Held", "When the person says an item is done, or you have just done it at their request:", "Items are ticked in GitHub",
      "In that repo's checkout, `gh pr view <number>` works with the number alone; from anywhere, pass its URL or `--repo <owner>/<repo>`.",
      "When the person's words match more than one item, ask which."].each { |text| assert_includes tick_section, text }
+    refute_includes deploy, "Tick only what"
   end
 
   # Every skill file.
