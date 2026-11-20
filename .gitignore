@@ -4,3 +4,6 @@
 
 # Plan execution scratch
 .superpowers/
+
+# Worktrees (superpowers:using-git-worktrees)
+.worktrees/
