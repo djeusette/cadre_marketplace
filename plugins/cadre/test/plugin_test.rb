@@ -423,6 +423,8 @@ class SkillTest < Minitest::Test
      "The main checkout stays on its branch"].each { |text| assert_includes start_section, text }
     assert_equal 1, start_section.scan("git switch -c").size
     assert_operator start_section.index("superpowers:using-git-worktrees"), :<, start_section.index("git add <path>")
+    assert_operator start_section.index("`git worktree list`"), :<, start_section.index("`superpowers:using-git-worktrees`")
+    ["a native tool makes only new branches", "move into it"].each { |text| assert_includes start_section, text }
     ["git branch --show-current` prints the repo's default branch", "the default branch stays as it was"].each { |text| refute_includes start_section, text }
   end
 
