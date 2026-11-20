@@ -113,7 +113,7 @@ A token or key reaches cadre without passing through Claude Code, in one of two 
 - the person gives it to cadre in their own terminal, where `cadre fly org add`, `cadre vercel team add`, `cadre app-store key add` and `cadre google-play account add` ask for it without showing it;
 - for a Fly org only, the pipe in "Connect a Fly org" carries the token from `fly` to `cadre`.
 
-These two ways are the only ones: you never see or carry a token, a key or a key file.
+Ask the person only for names and IDs. You never see or carry a token, a key or a key file: when the person offers one in chat, leave it unused and send them to its command above, in their own terminal.
 
 ## A target's fields
 
@@ -137,12 +137,13 @@ Nothing is connected, or the wrong thing:
 - `Fly refused this token for <org>.` or `Fly has no org <org> that this token can read.`: the token doesn't read that org. Check the org's name with the person, as `fly orgs list` shows it, and make the token for the right org.
 - `Vercel refused this token for <team>.` or `Vercel has no team <team> that this token can read.`: the token doesn't read that team. Check the team's name with the person, and have them make a team-scoped token for the right team in the dashboard and add it again, as "Connect a Vercel team" says.
 - `App Store: no connected key reads <id> (asked: <key-id>)` or `Google Play: …`: no connected key or account reads that app. The parentheses say what cadre asked. Check the Apple ID or the package name with the person, or have them connect the key or account that owns it, as "Connect a store's key" says.
-- `Cadre sends a key or a token over https only. Sign in to an https address first: cadre login --url https://<your cadre>.`: cadre is signed in to an address that isn't https, and nothing was sent. Once they sign in again with an https address, the add runs again.
+- `Cadre sends a key or a token over https only. Sign in to an https address first: cadre login --url https://<your cadre>.`: cadre is signed in to an address that isn't https, and nothing was sent. Sign in again as "Sign in" in [SKILL.md](SKILL.md) says, with the person's https URL; then the person runs their add again in their own terminal, or you run the Fly pipe again.
 - `No repo <repo> on <server>.`: cadre knows a repo once a project names it. Check the name with the person, or add the repo to a project as "Change a project" in [project.md](project.md) does.
 
 An app's name:
 
 - `name: is required`: a Vercel app needs `--name <app>`. Ask the person for a short name for it.
+- `name: isn't used on this platform`: a host cadre can't read takes no `--name`. Set it with `--platform <name>` alone.
 - `name: must be lowercase letters, digits, - or _`: a name takes lowercase letters, digits, `-` or `_`, starts with a letter or digit, and runs to 63 characters. Pick one that fits with the person.
 - `settings: <app> is already the <Platform> app of <other>, an app of <repo>. Set <other> instead, or unset it first.`: another app of the repo already points at that Fly app or Vercel project, and `cadre deploy --all` would deploy it twice. When the person meant to change `<other>`, set it with `--name <other>`; otherwise check the app with them.
 

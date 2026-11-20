@@ -46,7 +46,7 @@ Run `cadre whoami --json`. It succeeds when the exit code is 0 and the JSON hold
 
 Read the file that holds what the person asked for, and follow it:
 
-- [project.md](project.md): create a project; change or reorder a project or its milestones; archive or bring back a project; show, write or update a milestone's spec; link a milestone to its design. It holds the limits of every field.
+- [project.md](project.md): create a project; change or reorder a project or its milestones; drop (archive) or bring back a project; show, write or update a milestone's spec; link a milestone to its design. It holds the limits of every field.
 - [milestone.md](milestone.md): start a milestone; implement a spec or plan tracked in Cadre; link a pull request to a milestone.
 - [connect.md](connect.md): connect a repo to its Fly app, its Vercel project or its mobile app's stores, or record a host other than Fly or Vercel; remove an app; connect or disconnect a Fly org, a Vercel team or a store's key; say where a repo deploys, or which build of a mobile app is public.
 - [deploy.md](deploy.md): deploy a repo that runs on Fly or Vercel; remember where a repo's checkout is for cadre's Deploy button (`cadre link`); tick a Before deploying item; answer what can deploy and what's next on a project.
@@ -56,4 +56,4 @@ Read the file that holds what the person asked for, and follow it:
 
 For a command's flags, run `cadre help <command>`: these files name a flag only to say when to pass it.
 
-When `cadre` refuses with a line no file names, tell the person what it printed and stop: its message says what to do.
+When `cadre` refuses with a line no file names, tell the person what it printed and stop. When that line lists the valid names, ask the person which one, and run the command again with it.

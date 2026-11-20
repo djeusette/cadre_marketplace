@@ -7,7 +7,7 @@ When the person asks to "start milestone `<slug>/<n>`", or to start work on a mi
 1. Pull the project into a temporary `.json` file: `cadre project pull <slug> -o <tmp>.json --json`. The milestone's `repos` are its steps in deploy order: a repo/app entry is its repo, one step of it per app. Then pull its spec into a temporary `.md` file: `cadre spec pull <slug>/<n> -o <tmp>.md --json`. On `<slug>/<n> has no spec yet.`, write its spec first, as "Update a milestone's spec" in [project.md](project.md) says, then pull it again.
 2. Find this repo's part. Run `gh repo view --json name -q .name`:
    - When this repo is not one of the milestone's repos, name the milestone's repos to the person in deploy order, name the step it starts at, the first step with no pull request found as "The first step with no pull request" says, and stop. Each repo of the milestone is started the same way, in its own session in that repo.
-   - When it is, this repo's part is its steps. When they name this repo's apps, the pull request is for one app: the app the person named, otherwise the first of this repo's app steps with no pull request, found as "The first step with no pull request" says.
+   - When it is, this repo's part is its steps. When those steps name this repo's apps and the work splits by app, the pull request is for one app: the app the person named, otherwise the first of this repo's app steps with no pull request, found as "The first step with no pull request" says. Otherwise one pull request covers every step of this repo, and its `Cadre:` line names no app.
 
    This step is done when you know this repo's part and, for one app's pull request, its app.
 3. When `git branch --show-current` prints the repo's default branch (`gh repo view --json defaultBranchRef -q .defaultBranchRef.name`), switch to the milestone's branch, `<branch>`: `<slug>-<n>`, or `<slug>-<n>-<app>` for one app's pull request. Run `git switch -c <branch>`, or `git switch <branch>` when it already exists. The plan and its pull request start from that branch, so the record lands on it with them and the default branch stays as it was.
@@ -45,7 +45,7 @@ The description of a milestone's pull request holds:
 
 ## The first step with no pull request
 
-Run `cadre status <slug> --json`. Its `milestones` entry whose `number` is `<n>` lists its `steps` in deploy order, each with its `repo`, its `app` (null for a whole-repo step) and the open and merged `pull_requests` that count on it. The first step whose `pull_requests` is empty is the first step with no pull request. When it is unclear, ask the person.
+Run `cadre status <slug> --json`. Its `milestones` entry whose `number` is `<n>` lists its `steps` in deploy order, each with its `repo`, its `app` (null for a whole-repo step) and the open and merged `pull_requests` that count on it. The first step whose `pull_requests` is empty is the first step with no pull request. Ask the person which step is next when every step already has a pull request, or when they say one isn't linked yet: `cadre status` counts only linked pull requests, and one opened before the cadre GitHub App was installed is linked as "Link a pull request by hand" says.
 
 ## When `cadre` refuses
 

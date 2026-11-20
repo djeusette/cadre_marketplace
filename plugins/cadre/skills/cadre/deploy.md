@@ -11,7 +11,7 @@ When the person asks to deploy a repo that runs on Fly or Vercel:
    - It asked `Deploy anyway? [y/N]` and printed `Not deployed.`: follow "Deploy anyway?".
    - It stopped on a check or failed: follow "When a deploy stops" for the line it printed.
    - It deployed: Fly exits 0, and Vercel prints `Deployed <sha7> to <app>, <app>. Cadre shows each on its next check.`
-5. Two minutes after the deploy, read `cadre repo show <repo> --json`. It is done when the target's `last_deploy.commit` is the commit deployed. When it is still the earlier one, cadre was asleep (it reads Fly and Vercel every two minutes while awake, and as soon as it wakes): check once more a minute later. A `commit` of `null` is "commit unknown": that deploy didn't go through `cadre deploy`.
+5. Two minutes after the deploy, read `cadre repo show <repo> --json`. It is done when the target's `last_deploy.commit` is the commit deployed. When it is still the earlier one, cadre was asleep (it reads Fly and Vercel every two minutes while awake, and as soon as it wakes): check once more a minute later. When it still doesn't, tell the person Cadre shows it once it wakes, and stop. A `commit` of `null` is "commit unknown": that deploy didn't go through `cadre deploy`.
 
 Cadre deploys: `cadre deploy` is the one way to deploy here, whatever stops it. Never run a `fly` or `vercel` command to deploy.
 
@@ -59,7 +59,7 @@ Run `cadre link` in a checkout of the repo. Run it only when the person asks. Tw
 
 ## When a deploy stops
 
-A fix below that runs `cadre repo set` sets the app again: read "Set an app again" in [connect.md](connect.md) first and carry every setting over. Once a fix is made, deploy again when the person confirms: `cadre deploy <repo>` with the same `--app` or `--all`, which on Vercel builds and promotes every app again.
+A fix below that runs `cadre repo set` sets the app again: read "Set an app again" in [connect.md](connect.md) first and carry every setting over. Once a fix is made, deploy again when the person confirms: `cadre deploy <repo>` with the flags the fix leaves, the same `--app` or `--all` unless the fix chose another app. On Vercel, it builds and promotes again the apps that run deploys: the one `--app` names, or every app with `--all`.
 
 Wrong folder:
 

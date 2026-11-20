@@ -24,4 +24,4 @@ Or commit them to a repo's `.claude/settings.json` so the whole team gets them a
 LANG=en_US.UTF-8 ruby plugins/cadre/test/plugin_test.rb
 ```
 
-Release a plugin by bumping its version in both `plugins/<name>/.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`.
+To release a plugin, follow "Release" in [AGENTS.md](AGENTS.md).

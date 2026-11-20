@@ -2,7 +2,7 @@
 
 ## Create a project
 
-1. Get the feature's spec, one with an `## End goal` and an `## Increments` section: the spec the person names, or a likely one in `docs/superpowers/specs/` once you ask and the person confirms it is this feature. When there is none, read [brainstorm.md](brainstorm.md) and brainstorm the feature with the person as it says. This step is done when you hold that spec.
+1. Get the feature's spec, one with an `## End goal` and an `## Increments` section: the spec the person names, or a likely one in `docs/superpowers/specs/` once you ask and the person confirms it is this feature. When there is none, or the spec the person names lacks either section, read [brainstorm.md](brainstorm.md) and brainstorm the feature with the person as it says, from that spec when there is one. This step is done when you hold that spec.
 2. Build the project from the spec:
    - `name`: the spec's title without ` — design`.
    - `slug`: the name in kebab case, lowercase letters and digits only.
@@ -120,7 +120,7 @@ A milestone's `repos` are the repositories its increment changes, in deploy orde
 A step can name an app, as `repo/app`. Read `cadre repo show <repo> --json` for each repo: its `targets` are the repo's apps, each with a `name`.
 
 - A repo with one app stays a bare repo, unless the milestone also expects an app of it that isn't connected yet.
-- That repo, and a repo with several apps, gets one `repo/app` entry per app the milestone expects, in deploy order, the API before the frontend, for example `"repos": ["kinfield/kinfield", "kinfield/kinfield-family"]`.
+- A repo with several apps, or a one-app repo with that app still to connect, gets one `repo/app` entry per app the milestone expects, in deploy order, the API before the frontend, for example `"repos": ["kinfield/kinfield", "kinfield/kinfield-family"]`.
 - When the spec doesn't say which apps, ask the person.
 - A milestone lists a repo one way only: bare, or by its apps.
 - `No repo <repo> on <server>.` means Cadre doesn't know the repo yet. It has no app there, so it stays a bare `repo` unless the spec names its apps. That answer is expected: carry on without a question to the person.
