@@ -29,6 +29,7 @@ class ManifestTest < Minitest::Test
     install = "/plugin marketplace add anthropics/claude-plugins-official\n/plugin marketplace add djeusette/cadre_marketplace\n/plugin install cadre@cadre"
     [install, "installs `superpowers` from `claude-plugins-official` with it"].each { |text| assert_includes readme, text }
     refute_includes readme, "needs no other plugin"
+    refute_includes readme, "without it cadre fails to load"
     refute_match(/colette/i, readme.sub("(https://colette-cadre.fly.dev)", ""))
   end
 
@@ -53,41 +54,10 @@ class ManifestTest < Minitest::Test
     assert_match(/^- \*\*cadre\*\* — /, File.read(File.join(ROOT, "README.md")))
   end
 
-  def test_readme_says_it_starts_a_milestone_and_links_a_pull_request
-    readme = File.read(File.join(ROOT, "README.md"))
-    ["start milestone <project>/<n>", "cadre pr link"].each { |text| assert_includes readme, text }
-  end
-
-  def test_readme_says_it_connects_repos_and_fly_orgs
-    readme = File.read(File.join(ROOT, "README.md"))
-    ["cadre repo set", "cadre fly org add"].each { |text| assert_includes readme, text }
-  end
-
-  def test_readme_says_it_answers_what_can_deploy
-    readme = File.read(File.join(ROOT, "README.md"))
-    ["cadre status", "what can deploy"].each { |text| assert_includes readme, text }
-  end
-
-  def test_readme_says_it_deploys_with_the_commit
-    assert_includes File.read(File.join(ROOT, "README.md")), "cadre deploy"
-  end
-
-  def test_readme_says_it_links_a_checkout_for_the_deploy_button
-    assert_includes File.read(File.join(ROOT, "README.md")),
-                    "Asked to remember where a repo's checkout is, it runs `cadre link` there, so cadre's Deploy button opens Claude Desktop in it."
-  end
-
-  def test_readme_says_a_repo_can_have_several_apps
-    readme = File.read(File.join(ROOT, "README.md"))
-    ["several apps", "`--app`", "`--all`", "`cadre repo unset --name`"].each { |text| assert_includes readme, text }
-  end
-
-  def test_readme_says_its_specs_and_plans_are_tracked_in_cadre
-    assert_includes File.read(File.join(ROOT, "README.md")), "say they are tracked in Cadre"
-  end
-
-  def test_readme_says_it_reads_and_drafts_the_skills_table
-    assert_includes File.read(File.join(ROOT, "README.md")), "Skills table"
+  def test_readme_sums_cadre_up_and_links_its_skill
+    bullet = File.read(File.join(ROOT, "README.md"))[/^- \*\*cadre\*\* — .*?(?=^#|\z)/m]
+    assert_includes bullet, "(plugins/cadre/skills/cadre/SKILL.md)"
+    assert_operator bullet.split.size, :<=, 70
   end
 end
 
@@ -442,13 +412,8 @@ class SkillTest < Minitest::Test
     refute_includes milestone, "app: needs a milestone"
   end
 
-  def test_the_readme_and_brainstorm_name_apps
-    assert_includes File.read(File.join(ROOT, "README.md")), "Cadre: <project>/<n> <app>"
+  def test_brainstorm_names_apps
     assert_includes read("brainstorm.md"), "apps of a repo that has several"
-  end
-
-  def test_the_readme_mentions_the_before_deploying_section
-    assert_includes File.read(File.join(ROOT, "README.md")), "## Before deploying"
   end
 
   # skills.md
@@ -648,12 +613,6 @@ class SkillTest < Minitest::Test
   def test_it_explains_the_https_only_refusal
     line = refusal(connect_refusals, "Cadre sends a key or a token over https only. Sign in to an https address first: cadre login --url https://<your cadre>.")
     ["isn't https, and nothing was sent", "Tell the person what it printed and stop", "they sign in again with an https address"].each { |text| assert_includes line, text }
-  end
-
-  def test_the_readme_says_how_a_mobile_app_is_connected
-    bullet = File.read(File.join(ROOT, "README.md"))[/^- \*\*cadre\*\* — .*?(?=^- |\z)/m]
-    ["Asked to connect a mobile app, it sets its App Store app and Google Play package with `cadre repo set`",
-     "`cadre app-store key add` or `cadre google-play account add` in their own terminal", "Claude Code never handles a store's key"].each { |text| assert_includes bullet, text }
   end
 
   def test_a_new_app_store_key_means_setting_its_apps_again
