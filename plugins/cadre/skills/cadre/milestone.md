@@ -10,7 +10,13 @@ When the person asks to "start milestone `<slug>/<n>`", or to start work on a mi
    - When it is, this repo's part is its steps. When those steps name this repo's apps and the work splits by app, the pull request is for one app: the app the person named, otherwise the first of this repo's app steps with no pull request, found as "The first step with no pull request" says. Otherwise one pull request covers every step of this repo, and its `Cadre:` line names no app.
 
    This step is done when you know this repo's part and, for one app's pull request, its app.
-3. When `git branch --show-current` prints the repo's default branch (`gh repo view --json defaultBranchRef -q .defaultBranchRef.name`), switch to the milestone's branch, `<branch>`: `<slug>-<n>`, or `<slug>-<n>-<app>` for one app's pull request. Run `git switch -c <branch>`, or `git switch <branch>` when it already exists. The plan and its pull request start from that branch, so the record lands on it with them and the default branch stays as it was.
+3. Work on the milestone's branch, `<branch>`: `<slug>-<n>`, or `<slug>-<n>-<app>` for one app's pull request, in a worktree. Set it up with `superpowers:using-git-worktrees`, with these rules on top:
+   - The person has agreed to a worktree: make one without asking.
+   - A new worktree is named `<branch>`, starts from the default branch (`gh repo view --json defaultBranchRef -q .defaultBranchRef.name`) and sits in a hidden folder of the main checkout: the native tool's own, such as `.claude/worktrees/<branch>`, otherwise `.worktrees/<branch>`.
+   - When `git worktree list` shows a worktree on `<branch>`, as when a milestone is started again, work in that one. When `<branch>` exists with no worktree, add one for it: `git worktree add .worktrees/<branch> <branch>`.
+   - In the worktree, when `git branch --show-current` prints another branch, as in a worktree the native tool or the session made, run `git switch -c <branch>`, or `git switch <branch>` when it already exists.
+
+   This step is done when `git branch --show-current` prints `<branch>` in a worktree under the main checkout. The main checkout stays on its branch: the record, the plan and the pull request start from the worktree.
 4. Copy the spec into this repo's `docs/superpowers/specs/<slug>-<n>.md` as a record and commit only that file: `git add <path>`, then `git commit -m "docs: spec of <slug>/<n>" -- <path>`. When `<path>` already holds this text, as when a milestone is started again, skip the commit. Cadre's copy stays the original: cadre reads only its own.
 5. Read the repo's Skills table, check its rows and load the skills the work calls for, as [skills.md](skills.md) says, before planning. Then plan this repo's part with `superpowers:writing-plans`, giving it the spec copy's path and these rules on top:
    - plan only this repo's part of milestone `<slug>/<n>`, or the app step 2 chose, as one plan and one pull request;
