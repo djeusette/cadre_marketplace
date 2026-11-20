@@ -29,6 +29,7 @@ class ManifestTest < Minitest::Test
     install = "/plugin marketplace add anthropics/claude-plugins-official\n/plugin marketplace add djeusette/cadre_marketplace\n/plugin install cadre@cadre"
     [install, "installs `superpowers` from `claude-plugins-official` with it"].each { |text| assert_includes readme, text }
     refute_includes readme, "needs no other plugin"
+    refute_includes readme, "without it cadre fails to load"
     refute_match(/colette/i, readme.sub("(https://colette-cadre.fly.dev)", ""))
   end
 
@@ -40,54 +41,53 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.29.0", manifest["version"]
+    assert_equal "0.30.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
   def test_descriptions_match
     refute_empty manifest["description"]
     assert_equal manifest["description"], entry["description"]
+    assert manifest["description"].start_with?("Run Cadre from Claude Code: "), manifest["description"]
+  end
+
+  def test_readme_leaves_the_release_steps_to_agents_md
+    readme = File.read(File.join(ROOT, "README.md"))
+    assert_includes readme, "To release a plugin, follow \"Release\" in [AGENTS.md](AGENTS.md)."
+    refute_includes readme, "bumping its version"
   end
 
   def test_readme_lists_cadre
     assert_match(/^- \*\*cadre\*\* — /, File.read(File.join(ROOT, "README.md")))
   end
 
-  def test_readme_says_it_starts_a_milestone_and_links_a_pull_request
-    readme = File.read(File.join(ROOT, "README.md"))
-    ["start milestone <project>/<n>", "cadre pr link"].each { |text| assert_includes readme, text }
+  def test_readme_sums_cadre_up_and_links_its_skill
+    bullet = File.read(File.join(ROOT, "README.md"))[/^- \*\*cadre\*\* — .*?(?=^#|\z)/m]
+    assert_includes bullet, "(plugins/cadre/skills/cadre/SKILL.md)"
+    assert_operator bullet.split.size, :<=, 70
   end
 
-  def test_readme_says_it_connects_repos_and_fly_orgs
-    readme = File.read(File.join(ROOT, "README.md"))
-    ["cadre repo set", "cadre fly org add"].each { |text| assert_includes readme, text }
+  def agents_md = File.read(File.join(ROOT, "AGENTS.md"))
+
+  def test_agents_md_names_the_checks_the_release_and_which_skill_wins
+    ["`LANG=en_US.UTF-8 ruby plugins/cadre/test/plugin_test.rb`", "invalid byte sequence in US-ASCII",
+     "change the test first, watch it go red, then the text", "`test_marketplace_lists_cadre_last_at_the_plugin_version`",
+     "`mattpocock-skills:writing-for-agents` wins", "starts with `Cadre`",
+     "enable its plugin under `enabledPlugins` in `.claude/settings.json`"].each { |text| assert_includes agents_md, text }
+    assert_includes ManifestTest.public_instance_methods, :test_marketplace_lists_cadre_last_at_the_plugin_version
+    refute_includes agents_md, "Rules for any agent"
+    assert_match(/^The cadre skill's description starts with `Cadre`\.$/, agents_md)
+    refute_includes agents_md, "wins, and the skill's description"
   end
 
-  def test_readme_says_it_answers_what_can_deploy
-    readme = File.read(File.join(ROOT, "README.md"))
-    ["cadre status", "what can deploy"].each { |text| assert_includes readme, text }
-  end
-
-  def test_readme_says_it_deploys_with_the_commit
-    assert_includes File.read(File.join(ROOT, "README.md")), "cadre deploy"
-  end
-
-  def test_readme_says_it_links_a_checkout_for_the_deploy_button
-    assert_includes File.read(File.join(ROOT, "README.md")),
-                    "Asked to remember where a repo's checkout is, it runs `cadre link` there, so cadre's Deploy button opens Claude Desktop in it."
-  end
-
-  def test_readme_says_a_repo_can_have_several_apps
-    readme = File.read(File.join(ROOT, "README.md"))
-    ["several apps", "`--app`", "`--all`", "`cadre repo unset --name`"].each { |text| assert_includes readme, text }
-  end
-
-  def test_readme_says_its_specs_and_plans_are_tracked_in_cadre
-    assert_includes File.read(File.join(ROOT, "README.md")), "say they are tracked in Cadre"
-  end
-
-  def test_readme_says_it_reads_and_drafts_the_skills_table
-    assert_includes File.read(File.join(ROOT, "README.md")), "Skills table"
+  def test_agents_md_skills_table_has_no_problems
+    out, status = Open3.capture2("ruby", File.join(PLUGIN, "skills", "cadre", "skills_table.rb"), ROOT)
+    assert status.success?, out
+    result = JSON.parse(out)
+    assert result["table"]
+    assert result["imports_agents_md"]
+    assert_equal [], result["rows"].flat_map { |row| row["problems"] }
+    assert_equal [], result["unlisted"]
   end
 end
 
@@ -96,6 +96,7 @@ class SkillTest < Minitest::Test
   MILESTONE_LINE = %q{> Tracked in Cadre as `<slug>/<n>`. Implement it with the `cadre:cadre` skill ("start milestone <slug>/<n>"), which plans it and links its pull request to the milestone.}
   PLAN_LINE = %q{> **Tracked in Cadre as `<slug>/<n>`.** REQUIRED SKILL: use `cadre:cadre` while implementing this plan. Its pull request's description has the line `Cadre: <slug>/<n>`.}
   KEY_LINE = "Your key for <url> is no longer valid. Run cadre login --url <url>."
+  TOKEN_GUARDRAIL = "You never see or carry a token, a key or a key file: when the person offers one in chat, leave it unused and send them to its command above, in their own terminal."
   SKILL_DIR = File.join(PLUGIN, "skills", "cadre")
   BRANCHES = %w[project.md milestone.md connect.md deploy.md skills.md]
 
@@ -132,14 +133,31 @@ class SkillTest < Minitest::Test
   end
 
   def test_the_description_has_a_trigger_for_every_branch
-    ["create, change or drop a project or its milestones in Cadre", "read or update a milestone's spec",
-     "start a milestone (\"start milestone <project>/<n>\")", "link a pull request to a milestone",
-     "connect a repo to where it deploys or ask where it does", "connect a mobile app to its stores",
-     "deploy a Fly or Vercel repo or remember its checkout (`cadre link`)", "tick a Before deploying item",
-     "implement a spec or plan tracked in Cadre", "ask what can deploy or what's next", "sign in to Cadre"].each { |text| assert_includes description, text }
+    { "project.md" => "create, read, change or drop a Cadre project, milestone or spec",
+      "milestone.md" => "start a milestone (\"start milestone <project>/<n>\")",
+      "connect.md" => "connect a repo or mobile app to where it deploys or releases",
+      "deploy.md" => "deploy a Fly or Vercel repo",
+      "skills.md" => "write a repo's Skills table",
+      "SKILL.md" => "sign in to Cadre" }.each { |branch, text| assert_includes description, text, branch }
+    assert_includes description, "what's next on a Cadre project"
+  end
+
+  def test_the_opening_says_what_cadre_is_and_nothing_a_branch_says
+    ["You register a project there", "brainstorm it with the person first"].each { |text| refute_includes skill, text }
+  end
+
+  def test_a_skills_table_request_skips_the_cli_steps
+    assert_includes skill[/\A.*?(?=^## Before you start)/m], "To write a repo's Skills table, go straight to [skills.md](skills.md): it runs no `cadre` command."
   end
 
   def router = section(skill, "## What to read next")
+
+  def router_line(name) = router.lines.find { |line| line.include?("[#{name}]") }
+
+  def test_the_router_names_every_branch_a_file_handles
+    ["drop (archive) or bring back a project"].each { |text| assert_includes router_line("project.md"), text }
+    ["remove an app", "record a host other than Fly or Vercel"].each { |text| assert_includes router_line("connect.md"), text }
+  end
 
   def test_the_router_names_every_file_and_every_file_it_names_exists
     linked = router.scan(/\]\(([^)]+)\)/).flatten
@@ -185,7 +203,13 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_runs_the_login_in_the_background_and_relays_the_code
-    ["run_in_background", "600000 ms", "Opening <uri> in your browser.", "Check that the page shows this code: <code>"].each { |text| assert_includes sign_in, text }
+    ["Run `cadre login --url <url>` with it in the background (Bash `run_in_background`)", "waits up to 10 minutes",
+     "Opening <uri> in your browser.", "Check that the page shows this code: <code>"].each { |text| assert_includes sign_in, text }
+    refute_includes sign_in, "600000"
+  end
+
+  def test_any_other_sign_in_output_is_relayed_and_stops
+    assert_includes sign_in, "- Any other output from `cadre whoami` or `cadre login`: tell the person what it printed, and stop."
   end
 
   def test_it_uses_the_cli_copy
@@ -206,6 +230,11 @@ class SkillTest < Minitest::Test
 
   def test_it_points_to_the_clis_help_for_flags
     assert_includes skill, "run `cadre help <command>`"
+  end
+
+  def test_an_unnamed_refusal_is_relayed_once_for_every_branch
+    assert_includes router, "When `cadre` refuses with a line no file names, tell the person what it printed and stop. When that line lists the valid names, ask the person which one, and run the command again with it."
+    refute_includes everything, "its message says what to do"
   end
 
   def test_it_leaves_what_the_clis_own_message_says_to_the_cli
@@ -230,8 +259,10 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_builds_from_a_spec_the_person_names
-    ["already has an `## End goal` and an `## Increments` section", "When a spec in `docs/superpowers/specs/` might be this feature, ask the person whether it is",
-     "a spec is this feature's only once the person says so"].each { |text| assert_includes create_section, text }
+    ["one with an `## End goal` and an `## Increments` section", "the spec the person names",
+     "a likely one in `docs/superpowers/specs/` once you ask and the person confirms it is this feature",
+     "This step is done when you hold that spec.",
+     "When there is none, or the spec the person names lacks either section, read [brainstorm.md](brainstorm.md) and brainstorm the feature with the person as it says, from that spec when there is one."].each { |text| assert_includes create_section, text }
   end
 
   def test_it_writes_a_spec_and_designs_for_every_milestone
@@ -249,16 +280,19 @@ class SkillTest < Minitest::Test
   end
 
   def test_the_feature_spec_says_it_is_tracked_in_cadre
-    [FEATURE_LINE, "Add the line when the spec lacks it"].each { |text| assert_includes create_section, text }
+    [FEATURE_LINE, "When a spec the person named lacks the line, add it and leave the commit to them."].each { |text| assert_includes create_section, text }
     assert_includes project_refusals, "change it on the spec's tracking line too"
   end
 
   def test_a_corrected_spec_is_committed_alone_or_left_to_the_person
-    ['git commit -m "docs: <feature> design" -- <path>', "never push", "leave the commit to them"].each { |text| assert_includes create_section, text }
+    [%q{commit it as "The handoff" in [brainstorm.md](brainstorm.md) commits it}, "leave the commit to them"].each { |text| assert_includes create_section, text }
+    ["git commit", "never push"].each { |text| refute_includes create_section, text }
   end
 
   def test_it_reports_the_json_url_and_explains_zero_based_paths
     assert_includes create_section, "`url` field"
+    assert_includes create_section, %q{On a `422`, fix it as "When `cadre` refuses" says.}
+    refute_includes create_section, "then run the command again"
     ["0-based positions", "milestones.1.repos.0"].each { |text| assert_includes project_refusals, text }
     refute_includes everything, "Report the URL from"
   end
@@ -271,17 +305,25 @@ class SkillTest < Minitest::Test
   def test_it_names_a_milestones_apps
     ["cadre repo show <repo> --json", '"repos": ["kinfield/kinfield", "kinfield/kinfield-family"]', "the API before the frontend",
      "A repo with one app stays a bare repo", "When the spec doesn't say which apps, ask the person",
-     "An app that isn't connected yet can be named", "A milestone lists a repo one way only: bare, or by its apps",
+     "A milestone lists a repo one way only: bare, or by its apps",
      "No repo <repo> on <server>.", "stays a bare `repo` unless the spec names its apps"].each do |text|
       assert_includes repos_section, text
     end
     assert_includes create_section, %q{its `repos` as "A milestone's `repos`" says}
+    ["the API before the frontend", "isn't connected yet"].each { |text| assert_equal 1, repos_section.scan(text).size, text }
+    assert_includes repos_section, "A repo with several apps, or a one-app repo with that app still to connect, gets one `repo/app` entry per app the milestone expects"
+    refute_includes repos_section, "That repo, and"
     assert_includes change_section, %q{name their apps, as "A milestone's `repos`" says}
     assert_includes limits, "| `repos` | 1–10 per milestone, no repeats, each `repo` or `repo/app`"
   end
 
   def test_a_milestones_spec_says_it_is_tracked_in_cadre
     assert_includes write_section, MILESTONE_LINE
+  end
+
+  def test_a_milestones_spec_holds_only_its_part_of_the_feature_spec
+    assert_includes write_section, "It holds only this milestone's part of the feature spec"
+    ["Not shipped", "It has no"].each { |text| refute_includes write_section, text }
   end
 
   def test_it_links_each_milestone_to_its_own_page
@@ -299,6 +341,16 @@ class SkillTest < Minitest::Test
     ["changed since you pulled it. Pull it again.", "tell the person who (`updated_by`)", "No milestone <project>/<n> on <server>."].each do |text|
       assert_includes project_refusals, text
     end
+  end
+
+  def test_a_push_leaves_design_links_to_changing_a_project
+    assert_includes update_section, %q{A push changes only the spec; a design link changes as "Change a project" says.}
+    ["exactly as Cadre stores it", "exactly as written", "a design link is set when the project is created"].each { |text| refute_includes update_section, text }
+  end
+
+  def test_it_shows_a_spec_under_its_own_heading
+    assert_includes section(project, "## Show a milestone's spec"), "`cadre spec pull <project>/<n>`"
+    refute_includes update_section, "To show the person a spec"
   end
 
   def test_it_no_longer_asks_before_replacing_a_spec
@@ -327,7 +379,9 @@ class SkillTest < Minitest::Test
   end
 
   def test_a_new_milestone_gets_its_page_and_its_number_is_reported
-    ["Draw its page in the project's design canvas", "`design_url`", "Report the new number"].each { |text| assert_includes change_section, text }
+    ["Draw its page in the project's design canvas", "`design_url`", "Report the new number",
+     "Once its page exists, pull the project again, set that entry's `design_url`"].each { |text| assert_includes change_section, text }
+    ["Pull once more", "edit that one entry"].each { |text| refute_includes change_section, text }
   end
 
   def test_an_unarchived_project_keeps_its_file
@@ -361,26 +415,50 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_commits_the_spec_copy_on_the_milestones_branch_and_leaves_the_default_branch
-    ["gh repo view --json defaultBranchRef -q .defaultBranchRef.name", "git switch -c <slug>-<n>", "git switch <slug>-<n>",
+    ["gh repo view --json defaultBranchRef -q .defaultBranchRef.name", "`git switch -c <branch>`, or `git switch <branch>` when it already exists",
      "the default branch stays as it was"].each { |text| assert_includes start_section, text }
-    assert_operator start_section.index("git switch -c <slug>-<n>"), :<, start_section.index("git add <path>")
+    assert_equal 1, start_section.scan("git switch -c").size
+    assert_operator start_section.index("git switch -c <branch>"), :<, start_section.index("git add <path>")
   end
 
   def test_it_skips_the_commit_when_the_spec_copy_is_unchanged
-    assert_includes start_section, "already holds this text, as when a milestone is started again, skip the commit"
+    assert_includes start_section, "already holds this text, as when a milestone is started again, skip the commit."
+    ["creating the folder", "there is nothing to commit"].each { |text| refute_includes start_section, text }
+  end
+
+  def test_step_two_ends_knowing_this_repos_part_and_its_app
+    ["This step is done when you know this repo's part and, for one app's pull request, its app.",
+     "the app the person named, otherwise the first of this repo's app steps with no pull request",
+     "name the step it starts at, the first step with no pull request", "in its own session in that repo"].each { |text| assert_includes start_section, text }
+    assert_operator start_section.index("for one app's pull request, its app"), :<, start_section.index("git switch -c <branch>")
+  end
+
+  def test_one_pull_request_covers_the_whole_repo_unless_the_work_splits_by_app
+    ["When those steps name this repo's apps and the work splits by app, the pull request is for one app",
+     "Otherwise one pull request covers every step of this repo, and its `Cadre:` line names no app."].each { |text| assert_includes start_section, text }
+    refute_includes start_section, "When they name this repo's apps"
+  end
+
+  def test_each_task_names_its_skills_for_the_subagent_that_executes_it
+    assert_includes start_section, "each task names the skills it needs (from the table when the repo has one), since a subagent executing it loads only those"
   end
 
   def test_it_starts_a_milestone_from_its_app_steps
-    ["a repo/app entry is its repo", "one plan and one pull request per repo, or per app", "the first step with no pull request",
-     %q{found as "The first step with no pull request" says}, "the branch is `<slug>-<n>-<app>` instead",
-     "the header's last line names it", "Its pull request's description has the line `Cadre: <slug>/<n> <app>`.\n     ```"].each { |text| assert_includes start_section, text }
-    ["gh pr list --repo <owner>/<repo> --state all --search", "A closed, unmerged pull request holds nothing",
-     "`gh repo view --json owner -q .owner.login`", "also matches `<slug>/20`", "names exactly `<slug>/<n>`, optionally followed by an app",
-     "When the first step none holds is unclear, ask the person."].each { |text| assert_includes first_step, text }
+    ["a repo/app entry is its repo", "one plan and one pull request", "the first step with no pull request",
+     %q{found as "The first step with no pull request" says}, "`<slug>-<n>-<app>` for one app's pull request"].each { |text| assert_includes start_section, text }
+    ["cadre status <slug> --json", "`number`", "`steps` in deploy order", "`app` (null for a whole-repo step)",
+     "the open and merged `pull_requests` that count on it", "The first step whose `pull_requests` is empty",
+     "Ask the person which step is next when every step already has a pull request, or when they say one isn't linked yet",
+     "`cadre status` counts only linked pull requests",
+     %q{one opened before the cadre GitHub App was installed is linked as "Link a pull request by hand" says}].each { |text| assert_includes first_step, text }
+    refute_includes first_step, "When it is unclear"
+    ["gh pr list", "<slug>/20", "owner.login"].each { |text| refute_includes milestone, text }
   end
 
   def test_the_plan_says_it_is_tracked_in_cadre
     assert_includes start_section, PLAN_LINE
+    assert_includes start_section, "For one app's plan, the line ends with ` <app>`: `Cadre: <slug>/<n> <app>`."
+    assert_equal 1, start_section.scan("REQUIRED SKILL").size
   end
 
   def test_the_cadre_line_links_a_pull_request_and_names_its_app
@@ -389,9 +467,11 @@ class SkillTest < Minitest::Test
   end
 
   def test_the_pull_request_lists_what_a_deploy_needs_first
-    ["a heading line `## Before deploying`", "- [ ]", "env var", "another repo", "manual step", "A change that needs nothing has no section"].each do |text|
+    ["a heading line `## Before deploying`", "- [ ]", "env var", "another repo", "manual step", "A change that needs nothing has no section",
+     %q{Its items are ticked as "Tick a Before deploying item" in [deploy.md](deploy.md) says.}].each do |text|
       assert_includes pr_description, text
     end
+    refute_includes milestone, "ticks an item in GitHub"
     assert_equal 1, everything.scan("a heading line `## Before deploying`").size
     assert_includes start_section, %q{the two rules of "The pull request's description", given in full: its `Cadre:` line and its `## Before deploying` section}
     assert_includes track_section, %q{Its pull request's description is as "The pull request's description" says}
@@ -403,25 +483,23 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_links_a_pull_request_by_hand_and_relays_the_cli_errors
-    ["cadre pr link <pr-url> <slug>/<n> --json", "cadre pr link <pr-url> --none --json", "wins at its next sync", "`project_url`"].each { |text| assert_includes link_section, text }
+    ["`cadre pr link <pr-url> <slug>/<n> --json`", "`--none` in place of `<slug>/<n>` to unlink it", "`project_url`",
+     "A `Cadre:` line in the description overrides this link, so edit that line."].each { |text| assert_includes link_section, text }
+    refute_includes link_section, "wins at its next sync"
     ["No milestone <slug>/<n> on <server>.", "GitHub has no pull request at <url>.", "GitHub isn't connected on <server> yet.",
      "tell the person, and stop", %q{as "Change a project" in [project.md](project.md) adds it},
      "url: is in a repo no project names"].each { |text| assert_includes milestone_refusals, text }
   end
 
   def test_it_links_a_pull_request_to_an_app
-    assert_includes link_section, "cadre pr link <pr-url> <slug>/<n> --app <app> --json"
+    assert_includes link_section, "with `--app <app>` for one app"
     assert_includes milestone_refusals, "app: must be lowercase letters, digits, - or _"
+    assert_equal 1, milestone.scan("as `cadre repo show` lists it").size
     refute_includes milestone, "app: needs a milestone"
   end
 
-  def test_the_readme_and_brainstorm_name_apps
-    assert_includes File.read(File.join(ROOT, "README.md")), "Cadre: <project>/<n> <app>"
+  def test_brainstorm_names_apps
     assert_includes read("brainstorm.md"), "apps of a repo that has several"
-  end
-
-  def test_the_readme_mentions_the_before_deploying_section
-    assert_includes File.read(File.join(ROOT, "README.md")), "## Before deploying"
   end
 
   # skills.md
@@ -442,16 +520,20 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_reads_the_table_with_the_script
-    ["ruby <this skill's folder>/skills_table.rb <repo root>", "git rev-parse --show-toplevel"].each { |text| assert_includes read_table, text }
+    assert_includes read_table, %q{ruby <this skill's folder>/skills_table.rb "$(git rev-parse --show-toplevel)"}
+    ["<repo root>", "It prints JSON"].each { |text| refute_includes read_table, text }
   end
 
   def test_it_stops_on_a_missing_plugin_and_names_its_install_command
-    ["among the skills this session can load", "stop", "its Install command", "a new session",
-     "tell the person what the script names", "no row lists", "`@AGENTS.md`"].each { |text| assert_includes check_rows, text }
+    ["among the skills this session can load", "its Install command", "a new session",
+     "what the script names", "no row lists", "`@AGENTS.md`", "Check every row before answering",
+     "name every such row to the person in one answer, and stop"].each { |text| assert_includes check_rows, text }
+    refute_includes check_rows, "Then stop"
+    assert_equal 1, check_rows.scan(/\bstop\b/).size
   end
 
   def test_each_plan_task_names_the_skills_it_needs
-    ["whose When fits", "before planning", "each task of the plan", "subagent"].each { |text| assert_includes load_skills, text }
+    assert_equal "Load every row whose When fits the milestone's work, before planning.", load_skills.strip
     [%q{as [skills.md](skills.md) says, before planning}, "each task names the skills it needs (from the table when the repo has one)"].each do |text|
       assert_includes start_section, text
     end
@@ -470,7 +552,8 @@ class SkillTest < Minitest::Test
   end
 
   def test_the_table_shape_is_exact
-    ["| Skill | When | Install |", "committed in .agents/skills/", "claude plugin install <plugin>@<marketplace>"].each { |text| assert_includes table_shape, text }
+    ["| Skill | When | Install |", "committed in .agents/skills/", "claude plugin install <plugin>@<marketplace>",
+     "When names the work in plain words (`Ash resources or domains`), not a file glob (`lib/**/*.ex`)."].each { |text| assert_includes table_shape, text }
   end
 
   def test_skills_md_names_no_skill_of_its_own
@@ -487,7 +570,8 @@ class SkillTest < Minitest::Test
     ["exits non-zero", "show the person its output and stop", %q{go on to "Check each row"}].each { |text| assert_includes read_table, text }
     assert_includes check_rows, %q{go on to "Load what the work needs"}
     assert_includes no_table, %q{go on to "Load what the work needs"}
-    [%q{go on to "Check each row"}, "the milestone's branch"].each { |text| assert_includes draft_table, text }
+    [%q{go on to "Check each row"}, "the milestone's branch", "commit only those files"].each { |text| assert_includes draft_table, text }
+    refute_includes draft_table, "on their own"
   end
 
   def test_drafting_ends_once_no_row_has_problems
@@ -516,6 +600,8 @@ class SkillTest < Minitest::Test
     end
     assert_includes connect, %q{follow the one section for where it runs: "A Fly app", "A Vercel app", "A mobile app" or "Any other host"}
     refute_match(/^(6|7|8|9|10|11)\. /, connect)
+    assert_includes connect, "Then, by what was asked:\n\n- To connect an app,"
+    refute_match(/^\d\. To /, connect)
     assert_includes connect, "To connect or disconnect a Fly org, a Vercel team or a store's key, follow the section of that name under its platform."
     refute_match(/\bstep \d/, connect)
   end
@@ -523,10 +609,10 @@ class SkillTest < Minitest::Test
   def test_it_shows_sets_and_unsets_a_repos_targets
     ["cadre repo show <repo> --json", "cadre repo set <repo> --fly-app <app> --json", "cadre repo set <repo> --platform <name> --json", "not tracked",
      "cadre repo unset <repo> --platform <name> --json", "any host other than Fly or Vercel"].each { |text| assert_includes connect, text }
-    ["`platform`", "`settings`", "`account`", "`tracked`", "`name`: the app's name in the repo, unique across its platforms",
-     "its `app` and `config` for Fly, its `project` and `dir` for Vercel", "`status_url`: next to `settings`, not inside it", "`last_deploy`",
-     "`live`", '`"live"`', '`"not_live"`', '`"not_checked"`', "`not_live_since`"].each { |text| assert_includes target_fields, text }
-    ["`stores`", "`public_build`", "That is expected"].each { |text| assert_includes target_fields, text }
+    ["reads as its field names say", "`name` is unique across the repo's platforms", "`status_url` sits next to `settings`, not inside it",
+     '`live` is `"live"`, `"not_live"`, `"not_checked"`, or `null` with nothing to check',
+     "`stores` is empty for any app but a mobile one", "That is expected"].each { |text| assert_includes target_fields, text }
+    ["`platform`;", "`not_live_since`", "`last_deploy`", "`tracked`: whether"].each { |text| refute_includes target_fields, text }
     assert_includes connect, %q{"where does it release?" or "which build is public?" from `stores`}
     refute_includes connect, "`null` for Fly"
   end
@@ -535,6 +621,7 @@ class SkillTest < Minitest::Test
     ["a further app or a move", "--name <existing>", "read `cadre repo show <repo> --json` again", "--fly-config <file>",
      "Report the target the JSON body holds"].each { |text| assert_includes fly_app, text }
     refute_includes everything, "To move an app instead"
+    ["umbrella", "Cadre finds the connected", "takes the Fly app's name", "a monorepo has several"].each { |text| refute_includes connect, text }
   end
 
   def test_it_connects_a_fly_org_once_the_person_agrees_and_pipes_its_token
@@ -546,7 +633,8 @@ class SkillTest < Minitest::Test
 
   def test_it_connects_vercel_apps_and_teams
     ["--vercel-project", "--name <app>", "--vercel-dir", "`cadre deploy <repo>` deploys it, as [deploy.md](deploy.md) says",
-     "`status_url_note`"].each { |text| assert_includes vercel_app, text }
+     %q{3. Read the answer's `status_url` as "Status URLs" says for Vercel.}].each { |text| assert_includes vercel_app, text }
+    assert_equal 1, connect.scan("status_url_note").size
     ["cadre vercel team add", "cadre vercel team remove", "Account Settings, then Tokens", "a token scoped to the team",
      "`vercel tokens add` can only make a token for the whole account", "in their own terminal", "team-scoped", "dashboard",
      %q{as "Tokens and keys" says}].each { |text| assert_includes vercel_team, text }
@@ -587,12 +675,13 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_reads_a_mobile_app_s_stores_field_by_field
-    ["has a `label` (`App Store`, `Google Play`)", "the `app` it is there (the Apple ID or the package name)", "the `account` cadre reads it with",
-     "`public_build`, the build that is public there", "its `version` (or `null` when the store gave none)", "its `build_number` and `since`",
-     "`public_build` is `null` until cadre saw one", "A mobile app's own `account` is `null` and its `tracked` is `false`",
+    ["a store's `public_build` is `null` until cadre saw one", "A mobile app's own `account` is `null` and its `tracked` is `false`",
      "It is not a sign that the app isn't connected",
      "cadre reads the build's tag, so it knows the build's commit once the tag is pushed",
-     "the PRs a build holds come with a later release of cadre"].each { |text| assert_includes target_fields, text }
+     "until a build public on every store has its tag", "its card lists the PRs each build holds",
+     "until then its merged PRs stay Merged"].each { |text| assert_includes target_fields, text }
+    refute_includes connect, "later release"
+    ["has a `label`", "its `build_number` and `since`"].each { |text| refute_includes target_fields, text }
     assert_includes connect, %q{Answer "where does it deploy?" from these fields, and "where does it release?" or "which build is public?" from `stores`}
   end
 
@@ -602,15 +691,16 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_says_once_when_cadre_shows_a_store_s_public_build
-    ["Cadre asks each store which build is public and shows it on its Apps page", "each with the key or account that reads it",
-     "within 15 minutes"].each { |text| assert_includes mobile_app, text }
+    ["each with the key or account that reads it",
+     "cadre shows each store's public build on its Apps page within 15 minutes"].each { |text| assert_includes mobile_app, text }
+    refute_includes connect, "Cadre asks each store which build is public"
     assert_equal 1, connect.scan("15 minutes").size
   end
 
   def test_a_store_key_file_is_asked_for_in_the_persons_terminal_and_never_read
     ["which asks for the key's `.p8` file", "which asks for the service account's JSON key file",
      "Once they say it is added, set the app that was waiting for it"].each { |text| assert_includes store_key, text }
-    assert_includes tokens_and_keys, "Never ask the person to send you a token, a key or a key file, and never read one"
+    assert_includes tokens_and_keys, TOKEN_GUARDRAIL
   end
 
   def test_it_explains_the_no_connected_key_error
@@ -620,13 +710,10 @@ class SkillTest < Minitest::Test
 
   def test_it_explains_the_https_only_refusal
     line = refusal(connect_refusals, "Cadre sends a key or a token over https only. Sign in to an https address first: cadre login --url https://<your cadre>.")
-    ["isn't https, and nothing was sent", "Tell the person what it printed and stop", "they sign in again with an https address"].each { |text| assert_includes line, text }
-  end
-
-  def test_the_readme_says_how_a_mobile_app_is_connected
-    bullet = File.read(File.join(ROOT, "README.md"))[/^- \*\*cadre\*\* — .*?(?=^- |\z)/m]
-    ["Asked to connect a mobile app, it sets its App Store app and Google Play package with `cadre repo set`",
-     "`cadre app-store key add` or `cadre google-play account add` in their own terminal", "Claude Code never handles a store's key"].each { |text| assert_includes bullet, text }
+    ["isn't https, and nothing was sent", %q{Sign in again as "Sign in" in [SKILL.md](SKILL.md) says, with the person's https URL},
+     "then the person runs their add again in their own terminal, or you run the Fly pipe again."].each { |text| assert_includes line, text }
+    refute_includes line, "the add runs again"
+    refute_match(/(tell|show) the person what (it|fly|vercel) printed|relay/i, connect)
   end
 
   def test_a_new_app_store_key_means_setting_its_apps_again
@@ -636,9 +723,9 @@ class SkillTest < Minitest::Test
 
   def test_a_token_or_key_never_passes_through_claude_code
     ["without passing through Claude Code", "in their own terminal", "for a Fly org only, the pipe",
-     "Never ask the person to send you a token, a key or a key file",
-     "never read one, print it, echo it, pass it as an argument, write it to a file or pipe it any other way"].each { |text| assert_includes tokens_and_keys, text }
-    assert_equal 1, connect.scan(/never ask/i).size
+     "Ask the person only for names and IDs.", TOKEN_GUARDRAIL].each { |text| assert_includes tokens_and_keys, text }
+    refute_includes connect, "print it, echo it"
+    refute_includes connect, "These two ways are the only ones"
   end
 
   def test_it_removes_an_app_by_name
@@ -653,17 +740,18 @@ class SkillTest < Minitest::Test
     [fly_app, vercel_app].each { |text| assert_includes text, %q{as "Status URLs" says} }
     refute_includes everything, "Don't ask for a status URL"
     refute_includes everything, "takes none yet"
+    ["Pass it as `--status-url <url>`", "When `cadre` refuses the URL"].each { |text| refute_includes status_urls, text }
   end
 
   def test_setting_an_app_again_is_said_once_and_carries_every_setting_over
     ["Setting an app again (the same name) replaces its settings", "Read what is there before setting it", "Carry them over",
-     "`--fly-app`, `--fly-config` and `--status-url` each time, and `--name` when the app's name isn't its Fly app's",
-     "A `--status-url` left out removes the URL",
+     "**Fly:** every flag `cadre help repo set` says a set replaces.",
      "A status URL left out is replaced by the production domain when it answers, and removed otherwise",
      "A Vercel target whose `status_url` is `null` keeps none only with `--no-status-url`, so ask the person whether it should stay unmonitored or take the default"].each do |text|
       assert_includes set_again, text
     end
     assert_equal 1, everything.scan(/replaces its settings/).size
+    refute_includes connect, "`--fly-app`, `--fly-config` and `--status-url` each time"
     refute_match(/setting a platform again/i, everything)
   end
 
@@ -671,7 +759,7 @@ class SkillTest < Minitest::Test
     ["Fly isn't connected on <server> yet. Add an org with cadre fly org add <org>.",
      "settings.app: isn't an app of a connected Fly org (", "Fly refused this token for <org>.",
      "Fly has no org <org> that this token can read.", "<org> still reads <repos>. Unset or move those targets first.",
-     "No Fly org <org> on <server>.", "<repo> has no <Platform> target.", "No repo <repo> on <server>.",
+     "No repo <repo> on <server>.",
      %q{as "Change a project" in [project.md](project.md) does}].each { |text| assert_includes connect_refusals, text }
   end
 
@@ -679,19 +767,22 @@ class SkillTest < Minitest::Test
     ["Vercel isn't connected on <server> yet. Add a team with cadre vercel team add <team>.",
      "settings.project: isn't a project of a connected Vercel team (…)",
      "Vercel refused this token for <team>.", "Vercel has no team <team> that this token can read.",
-     "<team> still reads <repos>. Unset or move those targets first.",
-     "No Vercel team <team> on <server>.", "<repo> has no Vercel target <app>."].each { |text| assert_includes connect_refusals, text }
+     "<team> still reads <repos>. Unset or move those targets first."].each { |text| assert_includes connect_refusals, text }
   end
 
   def test_it_relays_the_refusals_of_an_app_by_name
-    ["<name> is already a <Platform> app of <repo>. Unset it first.",
-     "<app> is already the <Platform> app of <other>, an app of <repo>. Set <other> instead, or unset it first.",
-     "<repo> has <n> <Platform> apps: <apps>. Pass --name <app>.",
-     "<repo> has no app <app>.", "there is nothing to remove; check the name with the person"].each { |text| assert_includes connect_refusals, text }
+    assert_includes connect_refusals, "<app> is already the <Platform> app of <other>, an app of <repo>. Set <other> instead, or unset it first."
+    ["<name> is already a <Platform> app of <repo>. Unset it first.", "<repo> has <n> <Platform> apps: <apps>. Pass --name <app>.",
+     "No Fly org <org> on <server>.", "No Vercel team <team> on <server>.", "there is nothing to remove"].each { |text| refute_includes connect, text }
+  end
+
+  def test_a_name_on_a_host_cadre_cant_read_is_set_again_without_it
+    assert_includes refusal(connect_refusals, "name: isn't used on this platform`"),
+                    "a host cadre can't read takes no `--name`. Set it with `--platform <name>` alone."
   end
 
   def test_it_relays_the_name_format_refusals
-    ["`name: is required`", "`name: must be lowercase letters, digits, - or _`", "`name: isn't used on this platform`"].each { |text| assert_includes connect_refusals, text }
+    ["`name: is required`", "`name: must be lowercase letters, digits, - or _`"].each { |text| assert_includes connect_refusals, text }
   end
 
   # deploy.md
@@ -704,7 +795,8 @@ class SkillTest < Minitest::Test
 
   def test_it_answers_what_can_deploy_and_what_is_next_from_cadre_status
     ["cadre status --json", "cadre status <slug> --json", "`can_deploy`", "`held`", "`blocked_by`", "`nothing_to_ship`", "`not_tracked`",
-     "`next_step.text`", "don't rephrase them", "Don't guess from GitHub", "don't deploy"].each { |text| assert_includes status_section, text }
+     "`next_step.text`", "in cadre's words", "answer from cadre alone: a status question deploys nothing"].each { |text| assert_includes status_section, text }
+    ["rephrase", "Don't guess", "don't deploy"].each { |text| refute_includes status_section, text }
   end
 
   def test_it_looks_a_project_up_by_name_before_asking_for_its_status
@@ -723,10 +815,12 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_deploys_with_cadre_deploy_once_the_person_confirms
-    ["cadre deploy <repo>", "Confirm first", "never run it without the confirmation", "Once the person confirms", "600000", "run_in_background",
-     "last_deploy", "commit unknown", "lists them as `targets`, each with a `name` and a `platform`"].each { |text| assert_includes deploy_steps, text }
+    ["cadre deploy <repo>", "Confirm first: a deploy can't be taken back.", "Once the person confirms", "600000", "run_in_background",
+     "last_deploy", "commit unknown", "lists them as `targets`, each with a `name` and a `platform`",
+     "It is done when the target's `last_deploy.commit` is the commit deployed.",
+     "check once more a minute later. When it still doesn't, tell the person Cadre shows it once it wakes, and stop."].each { |text| assert_includes deploy_steps, text }
     assert_operator deploy_steps.index("Confirm first"), :<, deploy_steps.index("run the command in a checkout")
-    ["fly deploy", "vercel deploy", "git status --porcelain"].each { |text| refute_includes deploy, text }
+    ["fly deploy", "vercel deploy", "git status --porcelain", "without the confirmation"].each { |text| refute_includes deploy, text }
   end
 
   def test_cadre_deploy_is_the_one_way_to_deploy
@@ -737,7 +831,6 @@ class SkillTest < Minitest::Test
     ["cadre repo show <repo> --json", "--app <name>", "--all", "only when the person asks for every app",
      "the deploy order puts first"].each { |text| assert_includes deploy_steps, text }
     ["<repo> has <n> apps: <apps>. Pass --app <name> or --all.", "<repo> has <n> apps: <apps>. Pass --app <name>, in deploy order.",
-     "<repo> has no app <app>. Its apps: <apps>.",
      "<repo> has apps on more than one platform. Deploy each with --app <name>, in deploy order.",
      "each once the person confirms"].each { |text| assert_includes deploy_stops, text }
     refute_includes deploy, "cadre deploy can't deploy it yet"
@@ -750,14 +843,22 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_deploys_vercel_repos_too
-    ["runs on Fly or Vercel", "vercel isn't installed", "vercel isn't signed in", "has no .vercelignore", "lacks what"].each { |text| assert_includes deploy, text }
+    ["runs on Fly or Vercel", "has no .vercelignore", "lacks what"].each { |text| assert_includes deploy, text }
+  end
+
+  def test_deploy_md_leaves_relaying_cadres_own_lines_to_skill_md
+    assert_includes deploy_steps, %q{It stopped on a check or failed: follow "When a deploy stops" for the line it printed.}
+    refute_match(/(tell|show) the person what (it|fly|vercel) printed|relay/i, deploy)
+    ["isn't installed", "isn't signed in", "Any other failure is fly's own", "doesn't know the project", "has no app <app>. Its apps",
+     "'s build failed:", "built but didn't go live", "cadre stopped while promoting"].each { |text| refute_includes deploy, text }
   end
 
   def test_the_vercel_deploy_keeps_its_safety_rules
-    ["You write no file named `.vercelignore`, anywhere", "You may propose its contents in chat only", "built but didn't go live",
-     "relay the line saying which apps went live and which weren't promoted", "cadre stopped while promoting <app>",
-     "tell the person to check Vercel for that app", "Running `cadre deploy <repo>` again builds and promotes them all, with the same `--app` or `--all`", "the person pushes it, or says to"].each { |text| assert_includes deploy_stops, text }
+    refute_includes deploy_stops, "tell the person the folder has no `.vercelignore`"
+    ["you write no file named `.vercelignore`, anywhere", "You may propose its contents in chat only",
+     "the person pushes it, or says to"].each { |text| assert_includes deploy_stops, text }
     ["Deploy anyway?", "exits 1 and builds nothing", "only once they confirm after seeing them all"].each { |text| assert_includes deploy_anyway, text }
+    refute_includes deploy, "on Vercel as on Fly"
   end
 
   def test_it_passes_yes_only_after_the_person_confirms_the_open_items
@@ -765,7 +866,6 @@ class SkillTest < Minitest::Test
       assert_includes deploy_anyway, text
     end
     assert_operator deploy_anyway.index("Not deployed."), :<, deploy_anyway.index("--yes")
-    assert_includes deploy_stops, "fly auth login"
   end
 
   def test_it_confirms_a_blocked_deploy_before_passing_yes
@@ -783,46 +883,41 @@ class SkillTest < Minitest::Test
                     "Under `--all`, when what should go first is an app the same run deploys first, say so: the run already deploys it first."
   end
 
-  def test_all_on_fly_deploys_in_the_release_queues_order
-    assert_includes deploy, "`--all` on Fly apps deploys them one at a time, in the order Cadre's release queue lists them,"
-    refute_includes deploy, "one at a time, by name"
-  end
-
   def test_it_checks_the_fly_config_name_before_setting_it
     ["isn't in this checkout", "Neither fly.production.toml nor fly.toml is in this checkout.", "--fly-config <file>",
-     "Check the file's name with the person before setting it",
-     "the person confirms again before `cadre deploy <repo>` runs again, with the same `--app` or `--all`"].each { |text| assert_includes deploy_stops, text }
+     "Check the file's name with the person before setting it"].each { |text| assert_includes deploy_stops, text }
   end
 
   def test_setting_an_app_from_a_deploy_carries_its_settings_over
-    pointer = %q{That sets the app again, so read "Set an app again" in [connect.md](connect.md) first and carry its}
-    assert_equal 3, deploy_stops.scan(pointer).size
-    ["carry its config file and status URL over", "carry its name and status URL over",
-     "carry its status URL over, or pass `--no-status-url` when it has none and should stay unmonitored"].each { |text| assert_includes deploy_stops, text }
-    command = deploy_stops.lines.find { |line| line.include?("--vercel-project <id> --name <app> --vercel-dir <folder>") }
-    assert_includes command, "status URL"
+    pointer = %q{A fix below that runs `cadre repo set` sets the app again: read "Set an app again" in [connect.md](connect.md) first and carry every setting over.}
+    assert_equal 1, deploy.scan(%q{"Set an app again"}).size
+    assert_includes deploy_stops, pointer
+    rerun = "Once a fix is made, deploy again when the person confirms: `cadre deploy <repo>` with the flags the fix leaves, the same `--app` or `--all` unless the fix chose another app. On Vercel, it builds and promotes again the apps that run deploys: the one `--app` names, or every app with `--all`."
+    assert_includes deploy_stops, rerun
+    refute_includes deploy, "builds and promotes every app again"
+    assert_equal 1, deploy_stops.scan(/deploy again/i).size - deploy_stops.scan("then deploy again.`").size
   end
 
   def test_it_relays_a_deploy_of_an_app_with_no_fly_app
     ["<name> has no Fly app. Connect it with cadre repo set <repo> --fly-app <app> --name <name>.",
      "<repo> has no Fly app. Connect it with cadre repo set <repo> --fly-app <app>.",
-     "<repo> has no app cadre can deploy.", "Then deploy again once they confirm"].each { |text| assert_includes deploy_stops, text }
+     "<repo> has no app cadre can deploy."].each { |text| assert_includes deploy_stops, text }
   end
 
   def open_deploy_section = section(deploy, "## Open Deploy in the right folder")
 
   def test_it_explains_where_the_deploy_button_opens_and_links_only_when_asked
     ["`cadre link`", "opens Claude Desktop in the folder the person linked", "the folder it used last", "the prompt's last line names the repo",
-     "remembers its main checkout for that person", "even from a linked worktree or a subfolder", "running it again replaces it",
      "Run it only when the person asks"].each { |text| assert_includes open_deploy_section, text }
-    assert_operator deploy.index("## What a deploy does"), :<, deploy.index("## Open Deploy in the right folder")
+    ["even from a linked worktree or a subfolder", "running it again replaces it"].each { |text| refute_includes deploy, text }
+    refute_includes deploy, "## What a deploy does"
     assert_operator deploy.index("## Open Deploy in the right folder"), :<, deploy.index("## When a deploy stops")
   end
 
   def test_it_relays_cadre_links_own_answers
-    assert_includes refusal(open_deploy_section, "Linked <repo> to <path>. Its Deploy button in cadre opens there.`"), "tell the person"
-    unknown_repo = refusal(open_deploy_section, "cadre doesn't know <owner/name>. A project names a repo before cadre knows it.`")
-    ["a project must name the repo first", "Tell the person", "`cadre link` works there once a milestone of a project lists that repo"].each { |text| assert_includes unknown_repo, text }
+    no_table = refusal(open_deploy_section, "No Skills table in <path>/AGENTS.md. Setup shows how to write one: <url>/setup?part=skills`")
+    ["the link is made", %q{offer to draft one, as "No Skills table" in [skills.md](skills.md) says}].each { |text| assert_includes no_table, text }
+    ["Linked <repo> to <path>.", "A project names a repo before cadre knows it."].each { |text| refute_includes deploy, text }
     assert_includes refusal(open_deploy_section, "This folder isn't a checkout with an origin. Run cadre link in one.`"),
                     "ask the person where their checkout of the repo is, and run it there"
     refute_includes deploy, "cadre doesn't know <owner/name>. …"
@@ -830,7 +925,7 @@ class SkillTest < Minitest::Test
 
   def test_it_links_only_when_the_person_asks
     assert_includes open_deploy_section, "Run it only when the person asks."
-    refute_includes open_deploy_section, "offer to"
+    refute_match(/offer to (run|link)/, open_deploy_section)
   end
 
   def test_a_deploy_outside_the_repos_checkout_asks_for_a_new_session_there
@@ -847,9 +942,10 @@ class SkillTest < Minitest::Test
 
   def test_it_ticks_a_before_deploying_item_only_once_told_it_is_done
     ["gh pr view <pr-url> --json body -q .body", "`- [ ]` to `- [x]`", "gh pr edit <pr-url> --body-file <file>",
-     "reads Held", "Tick only what the person said is done", "Items are ticked in GitHub",
+     "reads Held", "When the person says an item is done, or you have just done it at their request:", "Items are ticked in GitHub",
      "In that repo's checkout, `gh pr view <number>` works with the number alone; from anywhere, pass its URL or `--repo <owner>/<repo>`.",
      "When the person's words match more than one item, ask which."].each { |text| assert_includes tick_section, text }
+    refute_includes deploy, "Tick only what"
   end
 
   # Every skill file.
@@ -1078,6 +1174,16 @@ class BrainstormTest < Minitest::Test
      "two smaller", "never invent a split"].each { |text| assert_includes brainstorm, text }
   end
 
+  def test_a_milestone_is_a_vertical_slice_and_contracts_change_by_expand_contract
+    ["a *vertical slice*", "thin and end to end", "by *expand–contract*: add the new, move every consumer"].each { |text| assert_includes brainstorm, text }
+    assert_equal 1, brainstorm.scan("out of users' reach").size
+  end
+
+  def test_a_large_milestone_says_why_on_its_code_files_line
+    assert_includes brainstorm, "its **Code files** line says why it can't be smaller"
+    ["This is a preference, not a limit", "Don't ask the person this"].each { |text| refute_includes brainstorm, text }
+  end
+
   def test_skipping_the_questions_leaves_one_approval_before_the_commit
     skip_path = brainstorm[/When the person says to skip the questions(.*?)$/, 1]
     ["still ends with the spec", "mark every open point as your call", "approve the spec"].each { |text| assert_includes skip_path, text }
@@ -1102,7 +1208,7 @@ class BrainstormTest < Minitest::Test
   def test_it_writes_and_commits_the_feature_spec
     ["docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md", "`-2`", "## End goal", "## Increments", "### Increment <i> — ",
      "**Delivers:**", "**Deployable alone:**", "**Consumers:**", "**Code files:**",
-     "plans increment 1", "until the person approves", "commit only the spec file", "never push"].each { |text| assert_includes brainstorm, text }
+     "plans increment 1", "Once the person approves the spec", "commit only the spec file", "leave the push to the person"].each { |text| assert_includes brainstorm, text }
     refute_includes brainstorm, "Not shipped"
   end
 end

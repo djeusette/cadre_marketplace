@@ -2,10 +2,7 @@
 
 ## Create a project
 
-1. Get the feature's spec:
-   - When the person names a spec that already has an `## End goal` and an `## Increments` section, build from it, without the questions.
-   - When a spec in `docs/superpowers/specs/` might be this feature, ask the person whether it is: a spec is this feature's only once the person says so.
-   - Otherwise, read [brainstorm.md](brainstorm.md) and brainstorm the feature with the person as it says. It ends with the spec committed.
+1. Get the feature's spec, one with an `## End goal` and an `## Increments` section: the spec the person names, or a likely one in `docs/superpowers/specs/` once you ask and the person confirms it is this feature. When there is none, or the spec the person names lacks either section, read [brainstorm.md](brainstorm.md) and brainstorm the feature with the person as it says, from that spec when there is one. This step is done when you hold that spec.
 2. Build the project from the spec:
    - `name`: the spec's title without ` — design`.
    - `slug`: the name in kebab case, lowercase letters and digits only.
@@ -17,14 +14,12 @@
    > Tracked in Cadre as `<slug>`. Implement each increment with the `cadre:cadre` skill ("start milestone <slug>/<i>"), which plans it and links its pull request to its milestone.
    ```
 
-   Add the line when the spec lacks it, and commit it as step 6 commits a correction.
+   When a spec the person named lacks the line, add it and leave the commit to them.
 4. Design every milestone: create one Claude Design canvas for the project, with one page per milestone. A milestone without a screen gets a diagram as its page instead: its data flow or its API contract. Keep the canvas link and each milestone's design link, built as "Link a milestone to its design" says.
 5. Write one spec per milestone, as "Write a milestone's spec" says.
-6. Play every milestone back one last time, as it will be registered: its title, its repos in deploy order, its consumers, what it delivers and its design link. Register nothing until the person approves them. Fix what they correct first. When a correction changes the feature spec, update the spec, then:
-   - if the brainstorm committed it, commit only that file again with `git commit -m "docs: <feature> design" -- <path>`. Pushing stays with the person: never push;
-   - if the person named it, leave the commit to them.
+6. Play every milestone back one last time, as it will be registered: its title, its repos in deploy order, its consumers, what it delivers and its design link. Register nothing until the person approves them. Fix what they correct first. When a correction changes the feature spec, update the spec. When the brainstorm wrote it, commit it as "The handoff" in [brainstorm.md](brainstorm.md) commits it; when the person named it, leave the commit to them.
 7. Add them to the project: `canvas_url` is the canvas link and, per milestone, `spec` is its markdown and `design_url` its design link.
-8. Write the JSON to a temporary file and run `cadre project create <file> --json`. On a `422`, fix it as "When `cadre` refuses" says, then run the command again.
+8. Write the JSON to a temporary file and run `cadre project create <file> --json`. On a `422`, fix it as "When `cadre` refuses" says.
 9. Report the `url` field of the JSON body the command printed, and remind the person to share the canvas with the team: you can't change its sharing.
 
 ```json
@@ -58,7 +53,7 @@ A milestone's spec is markdown that starts with `# <name> <n>: <title>`, for exa
 > Tracked in Cadre as `<slug>/<n>`. Implement it with the `cadre:cadre` skill ("start milestone <slug>/<n>"), which plans it and links its pull request to the milestone.
 ```
 
-Then it gives that increment's Delivers, Deployable alone, Consumers and Code files from the feature spec, and whatever the feature spec's other sections say about this milestone: its screens, data, API, rules and errors. It has no `## Increments` section and no `- [ ] Not shipped` line.
+It holds only this milestone's part of the feature spec: that increment's Delivers, Deployable alone, Consumers and Code files, and whatever its other sections say about this milestone: its screens, data, API, rules and errors.
 
 ## Link a milestone to its design
 
@@ -73,19 +68,21 @@ ruby <this skill's folder>/design_link.rb <canvas_url> --page <id>
 - The link holds a hash of the page's `id` or the board's file name. When one of them changes, the link opens the canvas's default view, so build it again.
 - When `ruby` is missing, ask the person to open the page in the canvas and send you what their address bar shows: it is the same link.
 
+## Show a milestone's spec
+
+Run `cadre spec pull <project>/<n>` and show the person what it prints.
+
 ## Update a milestone's spec
 
 When the person asks to "update the spec of `<project>/<n>`", for example because a card in Cadre says "No spec or designs yet", or because an earlier milestone taught something:
 
-1. Pull the spec into a temporary `.md` file: `cadre spec pull <project>/<n> -o <file> --json`. Keep the JSON's `version` and `updated_by`. The file holds the spec exactly as Cadre stores it.
+1. Pull the spec into a temporary `.md` file: `cadre spec pull <project>/<n> -o <file> --json`. Keep the JSON's `version` and `updated_by`.
 2. On `<project>/<n> has no spec yet.`, nothing is written: write the milestone's spec into the file as "Write a milestone's spec" says, then push it without a base, `cadre spec push <project>/<n> <file> --json`, and go to step 5.
-3. Otherwise edit the pulled file with the person: what they asked for, and what earlier milestones taught. Keep its title line and its sections. A push changes only the spec: a design link is set when the project is created.
-4. Push it with the version you pulled as its base: `cadre spec push <project>/<n> <file> --base <version> --json`. Cadre keeps the file exactly as written, as the milestone's newest spec.
+3. Otherwise edit the pulled file with the person: what they asked for, and what earlier milestones taught. Keep its title line and its sections. A push changes only the spec; a design link changes as "Change a project" says.
+4. Push it with the version you pulled as its base: `cadre spec push <project>/<n> <file> --base <version> --json`.
 5. Report the `url` field of the JSON body and the change in one or two lines. The milestone's card in Cadre now offers the text the push replaced as its previous version.
 
 For a further change after a push, pull again first: each push needs the newest `version` as its base.
-
-To show the person a spec, run `cadre spec pull <project>/<n>` and show what it prints.
 
 ## Change a project
 
@@ -105,7 +102,7 @@ When the person asks to change a project in Cadre, for example to rename it, reo
 5. For each milestone you added, once the update has succeeded:
    - Pull the project again: `cadre project pull <slug> -o <file> --json`. The new milestone is the entry whose `number` was not in the file you sent. Its number follows the highest one the project ever used, archived milestones included, so you could not know it before.
    - Write its spec as "Write a milestone's spec" says, with that number, and push it without a base, as it has no spec yet: `cadre spec push <slug>/<n> <spec-file> --json`.
-   - Draw its page in the project's design canvas, as "Create a project" does for every milestone, then put its design link, built as "Link a milestone to its design" says, in the pulled file as its `design_url`. Pull once more for the new `version`, edit that one entry, and run `cadre project update <file> --json`.
+   - Draw its page in the project's design canvas, as "Create a project" does for every milestone. Once its page exists, pull the project again, set that entry's `design_url` to its design link, built as "Link a milestone to its design" says, and run `cadre project update <file> --json`.
    - Report the new number to the person, with the `url`.
 
 ### Drop a project
@@ -122,9 +119,9 @@ A milestone's `repos` are the repositories its increment changes, in deploy orde
 
 A step can name an app, as `repo/app`. Read `cadre repo show <repo> --json` for each repo: its `targets` are the repo's apps, each with a `name`.
 
-- A repo with one app stays a bare repo, unless the milestone also expects an app of it that isn't connected yet: then name each app the milestone expects as `repo/app`, the API before the frontend.
-- A repo with several apps gets one `repo/app` entry per app the milestone expects, in deploy order, the API before the frontend, for example `"repos": ["kinfield/kinfield", "kinfield/kinfield-family"]`.
-- When the spec doesn't say which apps, ask the person. An app that isn't connected yet can be named.
+- A repo with one app stays a bare repo, unless the milestone also expects an app of it that isn't connected yet.
+- A repo with several apps, or a one-app repo with that app still to connect, gets one `repo/app` entry per app the milestone expects, in deploy order, the API before the frontend, for example `"repos": ["kinfield/kinfield", "kinfield/kinfield-family"]`.
+- When the spec doesn't say which apps, ask the person.
 - A milestone lists a repo one way only: bare, or by its apps.
 - `No repo <repo> on <server>.` means Cadre doesn't know the repo yet. It has no app there, so it stays a bare `repo` unless the spec names its apps. That answer is expected: carry on without a question to the person.
 

@@ -7,10 +7,8 @@ A repo names the skills its work needs in a `## Skills` table in its root `AGENT
 Run, from the repo:
 
 ```bash
-ruby <this skill's folder>/skills_table.rb <repo root>
+ruby <this skill's folder>/skills_table.rb "$(git rev-parse --show-toplevel)"
 ```
-
-`<repo root>` is what `git rev-parse --show-toplevel` prints. It prints JSON: `table` (whether there is one), `rows` (each with `skill`, `when`, `install`, `committed` and `problems`), `unlisted` (committed folders no row names) and `imports_agents_md`.
 
 - When the script exits non-zero, show the person its output and stop.
 - When `table` is false, go to "No Skills table".
@@ -18,16 +16,21 @@ ruby <this skill's folder>/skills_table.rb <repo root>
 
 ## Check each row
 
-- A row with `problems`: tell the person what the script names, and that the fix is the layout in "The table's shape". Then stop: a review or a plan on a broken row would miss that skill.
-- A row that isn't `committed` names a plugin skill. When its Skill is not among the skills this session can load, stop and give the person its Install command. The plugin loads in a new session, after it is installed and enabled in `.claude/settings.json`.
-- `unlisted`: tell the person no row lists those folders, and go on.
-- `imports_agents_md` false: tell the person `CLAUDE.md` lacks the line `@AGENTS.md`, so Claude Code doesn't read the table on its own, and go on.
+Check every row before answering. A row stops the work when it has `problems`, or when it isn't `committed` (it names a plugin skill) and its Skill is not among the skills this session can load: a review or a plan without that skill would miss it. When any row stops the work, name every such row to the person in one answer, and stop:
 
-With no row stopping you, go on to "Load what the work needs".
+- a row with `problems`: what the script names, and that the fix is the layout in "The table's shape";
+- a plugin this session can't load: its Install command. The plugin loads in a new session, after it is installed and enabled in `.claude/settings.json`.
+
+Whether or not a row stops the work, also tell the person:
+
+- with `unlisted` folders: no row lists them;
+- with `imports_agents_md` false: `CLAUDE.md` lacks the line `@AGENTS.md`, so Claude Code doesn't read the table on its own.
+
+With no row stopping the work, go on to "Load what the work needs".
 
 ## Load what the work needs
 
-Load every row whose When fits the milestone's work, before planning. Then name, in each task of the plan, the skills that task needs: execution runs each task in a subagent, which loads only the skills its brief names.
+Load every row whose When fits the milestone's work, before planning.
 
 ## No Skills table
 
@@ -47,7 +50,7 @@ Tell the person the repo has no Skills table, and ask whether to draft it now or
    - enable each plugin in `.claude/settings.json` under `enabledPlugins`, and add its marketplace under `extraKnownMarketplaces` when it isn't `claude-plugins-official`;
    - add the line `@AGENTS.md` to `CLAUDE.md`, creating it when the repo has none.
 5. Read the table again, fixing what it names, until the script reports no `problems`, then name any `unlisted` folders to the person and show them the diff.
-6. When the person says, commit those files on their own, on the current branch: while starting a milestone that is the milestone's branch, so the table ships with its pull request. Then, while starting a milestone, go on to "Check each row".
+6. When the person says, commit only those files, on the current branch: while starting a milestone that is the milestone's branch, so the table ships with its pull request. Then, while starting a milestone, go on to "Check each row".
 
 ## The table's shape
 
@@ -61,5 +64,5 @@ Under the heading `## Skills`, before the next `## ` heading:
 ```
 
 - Skill is the name a session loads it by: a plugin's skill is `<plugin>:<skill>`.
-- When is plain words, not a glob: "Ash resources" can't be one.
+- When names the work in plain words (`Ash resources or domains`), not a file glob (`lib/**/*.ex`).
 - Install is `committed in .agents/skills/` for a skill in `.agents/skills/<name>/SKILL.md`, linked from `.claude/skills/<name>` to `../../.agents/skills/<name>`; otherwise `claude plugin install <plugin>@<marketplace>`.
