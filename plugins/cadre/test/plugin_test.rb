@@ -132,14 +132,31 @@ class SkillTest < Minitest::Test
   end
 
   def test_the_description_has_a_trigger_for_every_branch
-    ["create, change or drop a project or its milestones in Cadre", "read or update a milestone's spec",
-     "start a milestone (\"start milestone <project>/<n>\")", "link a pull request to a milestone",
-     "connect a repo to where it deploys or ask where it does", "connect a mobile app to its stores",
-     "deploy a Fly or Vercel repo or remember its checkout (`cadre link`)", "tick a Before deploying item",
-     "implement a spec or plan tracked in Cadre", "ask what can deploy or what's next", "sign in to Cadre"].each { |text| assert_includes description, text }
+    { "project.md" => "create, read, change or drop a Cadre project, milestone or spec",
+      "milestone.md" => "start a milestone (\"start milestone <project>/<n>\")",
+      "connect.md" => "connect a repo or mobile app to where it deploys or releases",
+      "deploy.md" => "deploy a Fly or Vercel repo",
+      "skills.md" => "write a repo's Skills table",
+      "SKILL.md" => "sign in to Cadre" }.each { |branch, text| assert_includes description, text, branch }
+    assert_includes description, "what's next on a Cadre project"
+  end
+
+  def test_the_opening_says_what_cadre_is_and_nothing_a_branch_says
+    ["You register a project there", "brainstorm it with the person first"].each { |text| refute_includes skill, text }
+  end
+
+  def test_a_skills_table_request_skips_the_cli_steps
+    assert_includes skill[/\A.*?(?=^## Before you start)/m], "To write a repo's Skills table, go straight to [skills.md](skills.md): it runs no `cadre` command."
   end
 
   def router = section(skill, "## What to read next")
+
+  def router_line(name) = router.lines.find { |line| line.include?("[#{name}]") }
+
+  def test_the_router_names_every_branch_a_file_handles
+    ["archive or bring back a project"].each { |text| assert_includes router_line("project.md"), text }
+    ["remove an app", "record a host other than Fly or Vercel"].each { |text| assert_includes router_line("connect.md"), text }
+  end
 
   def test_the_router_names_every_file_and_every_file_it_names_exists
     linked = router.scan(/\]\(([^)]+)\)/).flatten
@@ -185,7 +202,13 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_runs_the_login_in_the_background_and_relays_the_code
-    ["run_in_background", "600000 ms", "Opening <uri> in your browser.", "Check that the page shows this code: <code>"].each { |text| assert_includes sign_in, text }
+    ["Run `cadre login --url <url>` with it in the background (Bash `run_in_background`)", "waits up to 10 minutes",
+     "Opening <uri> in your browser.", "Check that the page shows this code: <code>"].each { |text| assert_includes sign_in, text }
+    refute_includes sign_in, "600000"
+  end
+
+  def test_any_other_sign_in_output_is_relayed_and_stops
+    assert_includes sign_in, "- Any other output from `cadre whoami` or `cadre login`: tell the person what it printed, and stop."
   end
 
   def test_it_uses_the_cli_copy
@@ -206,6 +229,10 @@ class SkillTest < Minitest::Test
 
   def test_it_points_to_the_clis_help_for_flags
     assert_includes skill, "run `cadre help <command>`"
+  end
+
+  def test_an_unnamed_refusal_is_relayed_once_for_every_branch
+    assert_includes router, "When `cadre` refuses with a line no file names, tell the person what it printed and stop: its message says what to do."
   end
 
   def test_it_leaves_what_the_clis_own_message_says_to_the_cli
