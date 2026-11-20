@@ -230,8 +230,9 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_builds_from_a_spec_the_person_names
-    ["already has an `## End goal` and an `## Increments` section", "When a spec in `docs/superpowers/specs/` might be this feature, ask the person whether it is",
-     "a spec is this feature's only once the person says so"].each { |text| assert_includes create_section, text }
+    ["one with an `## End goal` and an `## Increments` section", "the spec the person names",
+     "a likely one in `docs/superpowers/specs/` once you ask and the person confirms it is this feature",
+     "This step is done when you hold that spec."].each { |text| assert_includes create_section, text }
   end
 
   def test_it_writes_a_spec_and_designs_for_every_milestone
@@ -249,16 +250,19 @@ class SkillTest < Minitest::Test
   end
 
   def test_the_feature_spec_says_it_is_tracked_in_cadre
-    [FEATURE_LINE, "Add the line when the spec lacks it"].each { |text| assert_includes create_section, text }
+    [FEATURE_LINE, "When a spec the person named lacks the line, add it and leave the commit to them."].each { |text| assert_includes create_section, text }
     assert_includes project_refusals, "change it on the spec's tracking line too"
   end
 
   def test_a_corrected_spec_is_committed_alone_or_left_to_the_person
-    ['git commit -m "docs: <feature> design" -- <path>', "never push", "leave the commit to them"].each { |text| assert_includes create_section, text }
+    [%q{commit it as "The handoff" in [brainstorm.md](brainstorm.md) commits it}, "leave the commit to them"].each { |text| assert_includes create_section, text }
+    ["git commit", "never push"].each { |text| refute_includes create_section, text }
   end
 
   def test_it_reports_the_json_url_and_explains_zero_based_paths
     assert_includes create_section, "`url` field"
+    assert_includes create_section, %q{On a `422`, fix it as "When `cadre` refuses" says.}
+    refute_includes create_section, "then run the command again"
     ["0-based positions", "milestones.1.repos.0"].each { |text| assert_includes project_refusals, text }
     refute_includes everything, "Report the URL from"
   end
@@ -271,17 +275,23 @@ class SkillTest < Minitest::Test
   def test_it_names_a_milestones_apps
     ["cadre repo show <repo> --json", '"repos": ["kinfield/kinfield", "kinfield/kinfield-family"]', "the API before the frontend",
      "A repo with one app stays a bare repo", "When the spec doesn't say which apps, ask the person",
-     "An app that isn't connected yet can be named", "A milestone lists a repo one way only: bare, or by its apps",
+     "A milestone lists a repo one way only: bare, or by its apps",
      "No repo <repo> on <server>.", "stays a bare `repo` unless the spec names its apps"].each do |text|
       assert_includes repos_section, text
     end
     assert_includes create_section, %q{its `repos` as "A milestone's `repos`" says}
+    ["the API before the frontend", "isn't connected yet"].each { |text| assert_equal 1, repos_section.scan(text).size, text }
     assert_includes change_section, %q{name their apps, as "A milestone's `repos`" says}
     assert_includes limits, "| `repos` | 1–10 per milestone, no repeats, each `repo` or `repo/app`"
   end
 
   def test_a_milestones_spec_says_it_is_tracked_in_cadre
     assert_includes write_section, MILESTONE_LINE
+  end
+
+  def test_a_milestones_spec_holds_only_its_part_of_the_feature_spec
+    assert_includes write_section, "It holds only this milestone's part of the feature spec"
+    ["Not shipped", "It has no"].each { |text| refute_includes write_section, text }
   end
 
   def test_it_links_each_milestone_to_its_own_page
@@ -299,6 +309,16 @@ class SkillTest < Minitest::Test
     ["changed since you pulled it. Pull it again.", "tell the person who (`updated_by`)", "No milestone <project>/<n> on <server>."].each do |text|
       assert_includes project_refusals, text
     end
+  end
+
+  def test_a_push_leaves_design_links_to_changing_a_project
+    assert_includes update_section, %q{A push changes only the spec; a design link changes as "Change a project" says.}
+    ["exactly as Cadre stores it", "exactly as written", "a design link is set when the project is created"].each { |text| refute_includes update_section, text }
+  end
+
+  def test_it_shows_a_spec_under_its_own_heading
+    assert_includes section(project, "## Show a milestone's spec"), "`cadre spec pull <project>/<n>`"
+    refute_includes update_section, "To show the person a spec"
   end
 
   def test_it_no_longer_asks_before_replacing_a_spec
@@ -327,7 +347,9 @@ class SkillTest < Minitest::Test
   end
 
   def test_a_new_milestone_gets_its_page_and_its_number_is_reported
-    ["Draw its page in the project's design canvas", "`design_url`", "Report the new number"].each { |text| assert_includes change_section, text }
+    ["Draw its page in the project's design canvas", "`design_url`", "Report the new number",
+     "Once its page exists, pull the project again, set that entry's `design_url`"].each { |text| assert_includes change_section, text }
+    ["Pull once more", "edit that one entry"].each { |text| refute_includes change_section, text }
   end
 
   def test_an_unarchived_project_keeps_its_file
