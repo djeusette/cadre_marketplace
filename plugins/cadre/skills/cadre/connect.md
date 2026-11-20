@@ -2,18 +2,19 @@
 
 When the person asks to connect a repo to where it deploys ("connect `<repo>` to its Fly app"), or where a repo deploys ("where does `<repo>` deploy?"), with `<repo>` a bare repo name as in a project:
 
-1. Read the repo's targets: `cadre repo show <repo> --json`. "A target's fields" says what each holds. Answer "where does it deploy?" from these fields, and "where does it release?" or "which build is public?" from `stores`.
-2. To connect an app, follow the one section for where it runs: "A Fly app", "A Vercel app", "A mobile app" or "Any other host". When the repo already has that app, "Set an app again" applies too.
-3. To take an app off, whatever its platform, follow "Remove an app".
-4. To connect or disconnect a Fly org, a Vercel team or a store's key, follow the section of that name under its platform.
+1. Read the repo's targets: `cadre repo show <repo> --json`, as "A target's fields" says. Answer "where does it deploy?" from these fields, and "where does it release?" or "which build is public?" from `stores`.
+
+Then, by what was asked:
+
+- To connect an app, follow the one section for where it runs: "A Fly app", "A Vercel app", "A mobile app" or "Any other host". When the repo already has that app, "Set an app again" applies too.
+- To take an app off, whatever its platform, follow "Remove an app".
+- To connect or disconnect a Fly org, a Vercel team or a store's key, follow the section of that name under its platform.
 
 ## A Fly app
 
-A repo can have several Fly apps, such as an umbrella with two.
-
 1. Each app has its own config file and status URL, so ask the person for both for each app, the status URL as "Status URLs" says. A config file other than `fly.production.toml` or `fly.toml` is passed as `--fly-config <file>`.
 2. When the repo already has an app and the person names another Fly app, ask whether that is a further app or a move: `--fly-app` alone adds a further app, and a move passes `--name <existing>`, the name of the app that moves, with its new `--fly-app`.
-3. Run `cadre repo set <repo> --fly-app <app> --json`, with `--fly-config <file>` and `--status-url <url>` when the app has them. Cadre finds the connected Fly org that lists the app, and keeps it as the target's `account`. The app takes the Fly app's name unless `--name <app>` gives another.
+3. Run `cadre repo set <repo> --fly-app <app> --json`, with `--fly-config <file>` and `--status-url <url>` when the app has them.
 4. After a set without `--name`, read `cadre repo show <repo> --json` again: when the repo now has two or more Fly apps, name them to the person, so an app added by mistake can be unset and the move made with `--name <existing>`.
 5. Report the target the JSON body holds.
 
@@ -37,11 +38,11 @@ When `fly` is missing or not signed in, it makes no token and cadre prints `No t
 
 ## A Vercel app
 
-Once for each app of the repo (a monorepo has several):
+Once for each app of the repo:
 
 1. Ask the person for the app's Vercel project ID, a short name for it, its folder in the repo and its status URL, as "Status URLs" says.
-2. Run `cadre repo set <repo> --vercel-project <id> --name <app> --vercel-dir <folder> --json`, with `--status-url <url>`, no status flag or `--no-status-url`, as "Status URLs" says for Vercel. Cadre finds the connected Vercel team that lists the project, and keeps it as the target's `account`.
-3. Read the answer's `status_url`, and relay its `status_url_note` when it kept none.
+2. Run `cadre repo set <repo> --vercel-project <id> --name <app> --vercel-dir <folder> --json`, with `--status-url <url>`, no status flag or `--no-status-url`, as "Status URLs" says for Vercel.
+3. Read the answer's `status_url` as "Status URLs" says for Vercel.
 
 `cadre deploy <repo>` deploys it, as [deploy.md](deploy.md) says.
 
@@ -60,10 +61,8 @@ A mobile app is connected to one store or both.
 
 1. Ask the person for the App Store app's Apple ID, the number in its App Store Connect address (`6443635924`), and for the Google Play package name (`com.example.app`).
 2. Run `cadre repo set <repo> --app-store-app <id> --play-package <name> --json`, with one store's flag alone when the app has only that store, and with `--name <app>` when the repo has more than one app.
-3. Report the stores the JSON body holds, each with the key or account that reads it, and that cadre shows each store's public build within 15 minutes.
+3. Report the stores the JSON body holds, each with the key or account that reads it, and that cadre shows each store's public build on its Apps page within 15 minutes.
 4. Once the app is connected, tell the person that cadre reads the git tag of each build: each production build needs `prod-v<version>-<build>` on the commit it was built from, and each staging build `stg-v<version>-<build>`, with the version and build as in the app's `pubspec.yaml` (`prod-v1.8.15-6188`). Then run "Tag each build".
-
-Cadre asks each store which build is public and shows it on its Apps page.
 
 ### Tag each build
 
@@ -95,16 +94,16 @@ Setting an app again (the same name) replaces its settings, so every one of them
 
 1. Read what is there before setting it: the target's `settings` and its `status_url`, in `cadre repo show <repo> --json`.
 2. Carry them over, passing each again with what changes:
-   - **Fly:** `--fly-app`, `--fly-config` and `--status-url` each time, and `--name` when the app's name isn't its Fly app's. A `--status-url` left out removes the URL.
+   - **Fly:** every flag `cadre help repo set` says a set replaces.
    - **Vercel:** `--vercel-dir` and `--status-url` again. A status URL left out is replaced by the production domain when it answers, and removed otherwise. A Vercel target whose `status_url` is `null` keeps none only with `--no-status-url`, so ask the person whether it should stay unmonitored or take the default.
    - **Mobile:** setting the app again replaces its stores. Pass both each time for an app on both stores, and the one it has for an app on one. A store left out is taken off.
 
 ## Status URLs
 
-Every app with a server takes a status URL, on Fly and on Vercel. Ask the person for it: a full `https` address that answers 2xx when the app really runs, such as `https://api.example.com/status`. Pass it as `--status-url <url>`. Cadre checks it every 2 minutes, and a PR goes Live once it answers. When `cadre` refuses the URL, tell the person what it printed.
+Every app with a server takes a status URL, on Fly and on Vercel. Ask the person for it: a full `https` address that answers 2xx when the app really runs, such as `https://api.example.com/status`. Cadre checks it every 2 minutes, and a PR goes Live once it answers.
 
 - **Fly.** A Fly app with health checks in its `fly.toml` goes Live without one, but a status URL can check what matters, such as the database. With neither, the app isn't monitored and its PRs stop at Deployed. An app that stops when idle should leave it out.
-- **Vercel.** The address answers 2xx without redirecting, with a health path when the app has one. When the person has none, leave both status flags out: cadre takes the project's production domain when `https://<domain>/` answers. The answer's `status_url` says which URL it kept (or `null`), and when it kept none `status_url_note` says why, such as `app.example.com answers 302, so pass --status-url`. Relay the note and ask for a URL that answers, such as the login page a home page redirects to. Pass `--no-status-url` only when the person wants the app not monitored.
+- **Vercel.** The address answers 2xx without redirecting, with a health path when the app has one. When the person has none, leave both status flags out: cadre takes the project's production domain when `https://<domain>/` answers. The answer's `status_url` says which URL it kept (or `null`), and when it kept none `status_url_note` says why, such as `app.example.com answers 302, so pass --status-url`. Give the person the note and ask for a URL that answers, such as the login page a home page redirects to. Pass `--no-status-url` only when the person wants the app not monitored.
 - **Mobile.** A mobile app has no server and takes no status URL: cadre refuses `--status-url` for it.
 
 ## Tokens and keys
@@ -114,24 +113,18 @@ A token or key reaches cadre without passing through Claude Code, in one of two 
 - the person gives it to cadre in their own terminal, where `cadre fly org add`, `cadre vercel team add`, `cadre app-store key add` and `cadre google-play account add` ask for it without showing it;
 - for a Fly org only, the pipe in "Connect a Fly org" carries the token from `fly` to `cadre`.
 
-Never ask the person to send you a token, a key or a key file, and never read one, print it, echo it, pass it as an argument, write it to a file or pipe it any other way.
+These two ways are the only ones: you never see or carry a token, a key or a key file.
 
 ## A target's fields
 
-Each of the `targets` in `cadre repo show <repo> --json` has:
+In `cadre repo show <repo> --json`, each of the `targets` reads as its field names say, apart from these:
 
-- `platform`;
-- `name`: the app's name in the repo, unique across its platforms;
-- `settings`: its `app` and `config` for Fly, its `project` and `dir` for Vercel;
-- `status_url`: next to `settings`, not inside it;
-- `account`: the Fly org or Vercel team cadre reads it through;
-- `tracked`: whether cadre reads its deploys;
-- `live`: whether the app answers, `"live"`, `"not_live"`, `"not_checked"`, or `null` with nothing to check;
-- `not_live_since`: the time of a `"not_live"` warning, or `null`;
-- `last_deploy`: the `commit` and `deployed_at` of the latest deploy cadre saw, or `null`;
-- `stores`: a mobile app's stores, empty for any other app. Each has a `label` (`App Store`, `Google Play`), the `app` it is there (the Apple ID or the package name), the `account` cadre reads it with (the key's ID or the service account's email), and `public_build`, the build that is public there: its `version` (or `null` when the store gave none), its `build_number` and `since`, when cadre first saw it. `public_build` is `null` until cadre saw one.
+- `name` is unique across the repo's platforms;
+- `status_url` sits next to `settings`, not inside it;
+- `live` is `"live"`, `"not_live"`, `"not_checked"`, or `null` with nothing to check;
+- `stores` is empty for any app but a mobile one, and a store's `public_build` is `null` until cadre saw one.
 
-A mobile app's own `account` is `null` and its `tracked` is `false`. That is expected: cadre reads the build's tag, so it knows the build's commit once the tag is pushed, but the PRs a build holds come with a later release of cadre, so the app's merged PRs stay Merged until then. It is not a sign that the app isn't connected.
+A mobile app's own `account` is `null` and its `tracked` is `false` until a build public on every store has its tag. That is expected: cadre reads the build's tag, so it knows the build's commit once the tag is pushed. From then on the app is tracked and its card lists the PRs each build holds; until then its merged PRs stay Merged. It is not a sign that the app isn't connected.
 
 ## When `cadre` refuses
 
@@ -144,20 +137,16 @@ Nothing is connected, or the wrong thing:
 - `Fly refused this token for <org>.` or `Fly has no org <org> that this token can read.`: the token doesn't read that org. Check the org's name with the person, as `fly orgs list` shows it, and make the token for the right org.
 - `Vercel refused this token for <team>.` or `Vercel has no team <team> that this token can read.`: the token doesn't read that team. Check the team's name with the person, and have them make a team-scoped token for the right team in the dashboard and add it again, as "Connect a Vercel team" says.
 - `App Store: no connected key reads <id> (asked: <key-id>)` or `Google Play: …`: no connected key or account reads that app. The parentheses say what cadre asked. Check the Apple ID or the package name with the person, or have them connect the key or account that owns it, as "Connect a store's key" says.
-- `Cadre sends a key or a token over https only. Sign in to an https address first: cadre login --url https://<your cadre>.`: cadre is signed in to an address that isn't https, and nothing was sent. Tell the person what it printed and stop: they sign in again with an https address, then the add runs again.
+- `Cadre sends a key or a token over https only. Sign in to an https address first: cadre login --url https://<your cadre>.`: cadre is signed in to an address that isn't https, and nothing was sent. Once they sign in again with an https address, the add runs again.
 - `No repo <repo> on <server>.`: cadre knows a repo once a project names it. Check the name with the person, or add the repo to a project as "Change a project" in [project.md](project.md) does.
 
 An app's name:
 
 - `name: is required`: a Vercel app needs `--name <app>`. Ask the person for a short name for it.
 - `name: must be lowercase letters, digits, - or _`: a name takes lowercase letters, digits, `-` or `_`, starts with a letter or digit, and runs to 63 characters. Pick one that fits with the person.
-- `name: isn't used on this platform`: a host cadre can't read takes no `--name`. Set it with `--platform <name>` alone.
-- `name: <name> is already a <Platform> app of <repo>. Unset it first.`: another platform's app of the repo has that name. Pick another name with the person, or unset that app once they agree.
 - `settings: <app> is already the <Platform> app of <other>, an app of <repo>. Set <other> instead, or unset it first.`: another app of the repo already points at that Fly app or Vercel project, and `cadre deploy --all` would deploy it twice. When the person meant to change `<other>`, set it with `--name <other>`; otherwise check the app with them.
 
 Removing:
 
 - `<org> still reads <repos>. Unset or move those targets first.` or `<team> still reads <repos>. Unset or move those targets first.`: those repos' apps are read through that Fly org or Vercel team. Name them to the person; unset or move their targets only once they agree.
 - `<key-id> still reads <repos>. Add the key that replaces it, set each of those apps again with cadre repo set, then remove this one.`: cadre refuses while an app uses the key or account. Do that in that order with the person, then remove it.
-- `name: <repo> has <n> <Platform> apps: <apps>. Pass --name <app>.`: `--platform` alone can't tell which app to remove. Ask the person which one, then run `cadre repo unset <repo> --name <app> --json`.
-- `No Fly org <org> on <server>.`, `No Vercel team <team> on <server>.`, `<repo> has no <Platform> target.`, `<repo> has no Vercel target <app>.` or `<repo> has no app <app>.`: there is nothing to remove; check the name with the person.
