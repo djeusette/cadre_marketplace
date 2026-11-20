@@ -59,6 +59,27 @@ class ManifestTest < Minitest::Test
     assert_includes bullet, "(plugins/cadre/skills/cadre/SKILL.md)"
     assert_operator bullet.split.size, :<=, 70
   end
+
+  def agents_md = File.read(File.join(ROOT, "AGENTS.md"))
+
+  def test_agents_md_names_the_checks_the_release_and_which_skill_wins
+    ["`LANG=en_US.UTF-8 ruby plugins/cadre/test/plugin_test.rb`", "invalid byte sequence in US-ASCII",
+     "change the test first, watch it go red, then the text", "`test_marketplace_lists_cadre_last_at_the_plugin_version`",
+     "`mattpocock-skills:writing-for-agents` wins", "starts with `Cadre`",
+     "enable its plugin under `enabledPlugins` in `.claude/settings.json`"].each { |text| assert_includes agents_md, text }
+    assert_includes ManifestTest.public_instance_methods, :test_marketplace_lists_cadre_last_at_the_plugin_version
+    refute_includes agents_md, "Rules for any agent"
+  end
+
+  def test_agents_md_skills_table_has_no_problems
+    out, status = Open3.capture2("ruby", File.join(PLUGIN, "skills", "cadre", "skills_table.rb"), ROOT)
+    assert status.success?, out
+    result = JSON.parse(out)
+    assert result["table"]
+    assert result["imports_agents_md"]
+    assert_equal [], result["rows"].flat_map { |row| row["problems"] }
+    assert_equal [], result["unlisted"]
+  end
 end
 
 class SkillTest < Minitest::Test
