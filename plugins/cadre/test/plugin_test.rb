@@ -265,9 +265,51 @@ class SkillTest < Minitest::Test
      "When there is none, or the spec the person names lacks either section, read [brainstorm.md](brainstorm.md) and brainstorm the feature with the person as it says, from that spec when there is one."].each { |text| assert_includes create_section, text }
   end
 
-  def test_it_writes_a_spec_and_designs_for_every_milestone
+  def test_it_writes_a_spec_and_draws_the_canvas_through_canvas_md
     ["\"canvas_url\"", "\"design_url\"", "\"spec\""].each { |key| assert_includes example, key }
-    ["one Claude Design canvas", "one page per milestone", "diagram", "share the canvas"].each { |text| assert_includes create_section, text }
+    assert_includes create_section, "[canvas.md](canvas.md)"
+    ["one page per milestone", "remind the person to share", "Claude Design", "diagram"].each { |text| refute_includes create_section, text }
+  end
+
+  def test_sharing_is_confirmed_before_registering_a_canvas_the_run_created
+    ["When this run created the canvas", "confirm the canvas is shared with the team"].each { |text| assert_includes create_section, text }
+    assert_operator create_section.index("confirm the canvas is shared with the team"), :<, create_section.index("cadre project create <file> --json")
+  end
+
+  def test_a_milestone_links_the_first_board_of_its_first_row
+    ["[design_link.rb](design_link.rb)", "--board <file>", "--page review", "project/canvas.json", "first board of its first row",
+     "earliest part page in `pages`", "select the board", "address bar"].each { |text| assert_includes design_section, text }
+    [create_section, change_section].each { |text| assert_includes text, 'as "Link a milestone to its design" says' }
+    assert_includes example, "\"design_url\": \"https://claude.ai/artifact/…#artboard-…\""
+    assert_includes example, "\"canvas_url\": \"https://claude.ai/artifact/…#page-…\""
+    refute_includes example, "\"design_url\": \"https://claude.ai/artifact/…#page-…\""
+    ["keeps the canvas link", "page it shares"].each { |text| refute_includes everything, text }
+    ["?page=", "claude.ai/design/p/"].each { |text| refute_includes everything + canvas, text }
+  end
+
+  def test_older_canvases_keep_page_links
+    ["When `pages` has no `review` page", "--page <id>"].each { |text| assert_includes design_section, text }
+  end
+
+  def test_changing_a_project_keeps_the_canvas_link_as_pulled
+    ["keep the canvas link exactly as pulled", "clears its design approvals"].each { |text| assert_includes change_section, text }
+  end
+
+  def test_a_new_milestone_gets_its_rows_and_its_number_is_reported
+    ["[canvas.md](canvas.md)", "`design_url`", "Report the new number", "its spec and designs come after the update",
+     "pull the project again, set that entry's `design_url`"].each { |text| assert_includes change_section, text }
+    ["Draw its page in the project's design canvas", "its spec and page come after", "Pull once more", "edit that one entry"].each { |text| refute_includes change_section, text }
+  end
+
+  def test_step_9_reports_a_project_without_a_design
+    assert_includes create_section, "has no design yet"
+  end
+
+  def test_a_project_without_a_canvas_gets_one_later
+    later = section(project, "### Draw a canvas for a project without one")
+    ["[canvas.md](canvas.md)", "`canvas_url`", "`design_url`", "confirm the canvas is shared with the team",
+     "cadre project update <file> --json"].each { |text| assert_includes later, text }
+    assert_includes router_line("project.md"), "draw a project's canvas"
   end
 
   def test_its_example_milestones_are_usable_slices_not_layers
@@ -326,15 +368,6 @@ class SkillTest < Minitest::Test
     ["Not shipped", "It has no"].each { |text| refute_includes write_section, text }
   end
 
-  def test_it_links_each_milestone_to_its_own_page
-    ["[design_link.rb](design_link.rb)", "--page <id>", "--board <file>", "project/canvas.json", "keeps the canvas link", "address bar"].each do |text|
-      assert_includes design_section, text
-    end
-    [create_section, change_section].each { |text| assert_includes text, 'as "Link a milestone to its design" says' }
-    assert_includes example, "https://claude.ai/artifact/…#page-…"
-    ["?page=", "claude.ai/design/p/"].each { |text| refute_includes everything, text }
-  end
-
   def test_it_pulls_a_spec_edits_it_and_pushes_it_with_its_base
     ["update the spec of", "cadre spec pull <project>/<n> -o <file> --json", "cadre spec push <project>/<n> <file> --json", "--base <version>",
      "has no spec yet.", "previous version", "pull again first"].each { |text| assert_includes update_section, text }
@@ -376,12 +409,6 @@ class SkillTest < Minitest::Test
     refute_match(/with its spec written as/, change_section)
     assert_operator change_section.index("cadre project update <file> --json"), :<, change_section.index("cadre spec push <slug>/<n>")
     refute_includes change_section, "spec push <slug>/<n> <spec-file> --base"
-  end
-
-  def test_a_new_milestone_gets_its_page_and_its_number_is_reported
-    ["Draw its page in the project's design canvas", "`design_url`", "Report the new number",
-     "Once its page exists, pull the project again, set that entry's `design_url`"].each { |text| assert_includes change_section, text }
-    ["Pull once more", "edit that one entry"].each { |text| refute_includes change_section, text }
   end
 
   def test_an_unarchived_project_keeps_its_file

@@ -15,12 +15,12 @@
    ```
 
    When a spec the person named lacks the line, add it and leave the commit to them.
-4. Design every milestone: create one Claude Design canvas for the project, with one page per milestone. A milestone without a screen gets a diagram as its page instead: its data flow or its API contract. Keep the canvas link and each milestone's design link, built as "Link a milestone to its design" says.
+4. Draw the project's canvas as [canvas.md](canvas.md) says. Keep the canvas link and each milestone's design link, built as "Link a milestone to its design" says.
 5. Write one spec per milestone, as "Write a milestone's spec" says.
-6. Play every milestone back one last time, as it will be registered: its title, its repos in deploy order, its consumers, what it delivers and its design link. Register nothing until the person approves them. Fix what they correct first. When a correction changes the feature spec, update the spec. When the brainstorm wrote it, commit it as "The handoff" in [brainstorm.md](brainstorm.md) commits it; when the person named it, leave the commit to them.
+6. Play every milestone back one last time, as it will be registered: its title, its repos in deploy order, its consumers, what it delivers and its design link. When this run created the canvas, ask the person to confirm the canvas is shared with the team: you can't change its sharing, and every link must open for the team. Register nothing until the person approves them and, for a new canvas, confirms it is shared. Fix what they correct first. When a correction changes the feature spec, update the spec. When the brainstorm wrote it, commit it as "The handoff" in [brainstorm.md](brainstorm.md) commits it; when the person named it, leave the commit to them.
 7. Add them to the project: `canvas_url` is the canvas link and, per milestone, `spec` is its markdown and `design_url` its design link.
 8. Write the JSON to a temporary file and run `cadre project create <file> --json`. On a `422`, fix it as "When `cadre` refuses" says.
-9. Report the `url` field of the JSON body the command printed, and remind the person to share the canvas with the team: you can't change its sharing.
+9. Report the `url` field of the JSON body the command printed. When you registered the project without a canvas, say it has no design yet.
 
 ```json
 {
@@ -32,16 +32,16 @@
       "title": "Members get a reminder before a wish expires",
       "repos": ["shop-api"],
       "spec": "# Wish reminders 1: Members get a reminder before a wish expires\n\n...",
-      "design_url": "https://claude.ai/artifact/…#page-…"
+      "design_url": "https://claude.ai/artifact/…#artboard-…"
     },
     {
       "title": "Members choose when they are reminded",
       "repos": ["shop-api", "shop-mobile"],
       "spec": "# Wish reminders 2: Members choose when they are reminded\n\n...",
-      "design_url": "https://claude.ai/artifact/…#page-…"
+      "design_url": "https://claude.ai/artifact/…#artboard-…"
     }
   ],
-  "canvas_url": "https://claude.ai/artifact/…"
+  "canvas_url": "https://claude.ai/artifact/…#page-…"
 }
 ```
 
@@ -57,16 +57,18 @@ It holds only this milestone's part of the feature spec: that increment's Delive
 
 ## Link a milestone to its design
 
-A milestone's design link opens the canvas on that milestone's page. Read the page's `id` from the `pages` list of the canvas's `project/canvas.json`, then build the link with [design_link.rb](design_link.rb), in this skill's folder:
+A milestone's design link opens the canvas on that milestone's designs, and the project's canvas link opens its review page. Read a board's key in `boards` and a page's `id` in `pages` of the canvas's `project/canvas.json`, then build each link with [design_link.rb](design_link.rb), in this skill's folder:
 
 ```bash
-ruby <this skill's folder>/design_link.rb <canvas_url> --page <id>
+ruby <this skill's folder>/design_link.rb <canvas_url> --board <file>
+ruby <this skill's folder>/design_link.rb <canvas_url> --page review
 ```
 
-- A milestone whose designs are one board on a page it shares links that board: `--board <file>`, with the board's key in `boards`, such as `M3.dc.html`.
-- A milestone with no page or board of its own keeps the canvas link.
+- A milestone's `design_url` links the first board of its first row, `--board <file>`: its row on the earliest part page in `pages`, and that row's 1440 board, or its phone board for a screen only the mobile app has. A milestone with no screen has no `design_url`.
+- The project's `canvas_url` links the review page: `--page review`.
+- When `pages` has no `review` page, the canvas predates [canvas.md](canvas.md): a milestone links its own page with `--page <id>`, and the canvas link stays as it is.
 - The link holds a hash of the page's `id` or the board's file name. When one of them changes, the link opens the canvas's default view, so build it again.
-- When `ruby` is missing, ask the person to open the page in the canvas and send you what their address bar shows: it is the same link.
+- When `ruby` is missing, ask the person to select the board, or open the page, in the canvas and send you what their address bar shows: it is the same link.
 
 ## Show a milestone's spec
 
@@ -90,11 +92,11 @@ When the person asks to change a project in Cadre, for example to rename it, reo
 
 1. Pull the project into a temporary `.json` file: `cadre project pull <slug> -o <file> --json`. Keep the JSON's `version`. When `archived` is true, ask the person whether to bring the project back first. When they agree, run `cadre project unarchive <slug>` and continue with the same file: unarchiving doesn't change the version.
 2. Edit the file with the person:
-   - the name, end goal, home repo (one of the milestones' repos) and canvas link;
+   - the name, end goal, home repo (one of the milestones' repos) and canvas link; keep the canvas link exactly as pulled unless the person asks to change it, since any change to its text clears its design approvals in Cadre;
    - reorder milestones by moving their entries;
    - rename them, and change their design links, repos and deploy order;
    - name their apps, as "A milestone's `repos`" says;
-   - add one as an entry with no `number`, no `spec` and no `design_url`: Cadre numbers it, and its spec and page come after the update (step 5).
+   - add one as an entry with no `number`, no `spec` and no `design_url`: Cadre numbers it, and its spec and designs come after the update (step 5).
 
    Keep every `number`, the `slug` and the `version` as pulled. A milestone that has a `number` takes its spec through "Update a milestone's spec" only: leave `spec` out of its entry.
 3. Leaving a milestone out archives it, and its number is retired for good: say so, and leave one out only once the person agrees.
@@ -102,12 +104,21 @@ When the person asks to change a project in Cadre, for example to rename it, reo
 5. For each milestone you added, once the update has succeeded:
    - Pull the project again: `cadre project pull <slug> -o <file> --json`. The new milestone is the entry whose `number` was not in the file you sent. Its number follows the highest one the project ever used, archived milestones included, so you could not know it before.
    - Write its spec as "Write a milestone's spec" says, with that number, and push it without a base, as it has no spec yet: `cadre spec push <slug>/<n> <spec-file> --json`.
-   - Draw its page in the project's design canvas, as "Create a project" does for every milestone. Once its page exists, pull the project again, set that entry's `design_url` to its design link, built as "Link a milestone to its design" says, and run `cadre project update <file> --json`.
+   - Draw its designs as "Add a milestone to a canvas" in [canvas.md](canvas.md) says; when the project has no canvas, draw one as "Draw a canvas for a project without one" says instead. Once its designs exist, pull the project again, set that entry's `design_url` to its design link, built as "Link a milestone to its design" says, and run `cadre project update <file> --json`.
    - Report the new number to the person, with the `url`.
 
 ### Drop a project
 
 To drop a project ("drop gift-wrapping"): confirm with the person, run `cadre project archive <slug>`, and say it hides the project from the Overview, and that `cadre project unarchive <slug>` brings it back.
+
+### Draw a canvas for a project without one
+
+When the person asks for the designs of a project that has no `canvas_url`:
+
+1. Pull the project into a temporary `.json` file, `cadre project pull <slug> -o <file> --json`, and each milestone's spec with `cadre spec pull <slug>/<n>`.
+2. Draw the canvas from those specs, as [canvas.md](canvas.md) says.
+3. Ask the person to confirm the canvas is shared with the team: you can't change its sharing.
+4. Set `canvas_url` and each milestone's `design_url` as "Link a milestone to its design" says, play the change back, and apply it once the person approves: `cadre project update <file> --json`. Report the `url`.
 
 ## A milestone's `repos`
 
