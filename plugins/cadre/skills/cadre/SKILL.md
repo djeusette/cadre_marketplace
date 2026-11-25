@@ -1,6 +1,6 @@
 ---
 name: cadre
-description: Cadre CLI. Use when asked to create, read, change or drop a Cadre project, milestone or spec; start a milestone ("start milestone <project>/<n>"), implement a spec or plan tracked in Cadre or link its pull request; connect a repo or mobile app to where it deploys or releases, or ask where; deploy a Fly or Vercel repo, `cadre link` its checkout, tick a Before deploying item, or ask what can deploy or what's next on a Cadre project; write a repo's Skills table; or sign in to Cadre.
+description: Cadre CLI. Use when asked to create, read, change or drop a Cadre project, milestone or spec, or draw a project's design canvas; start a milestone ("start milestone <project>/<n>"), implement a spec or plan tracked in Cadre or link its pull request; connect a repo or mobile app to where it deploys or releases, or ask where; deploy a Fly or Vercel repo, `cadre link` its checkout, tick a Before deploying item, or ask what can deploy or what's next on a Cadre project; write a repo's Skills table; or sign in to Cadre.
 ---
 
 # Cadre
