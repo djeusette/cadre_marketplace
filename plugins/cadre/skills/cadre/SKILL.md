@@ -1,6 +1,6 @@
 ---
 name: cadre
-description: Cadre CLI. Use when asked to create, read, change or drop a Cadre project, milestone or spec; start a milestone ("start milestone <project>/<n>"), implement a spec or plan tracked in Cadre or link its pull request; connect a repo or mobile app to where it deploys or releases, or ask where; deploy a Fly or Vercel repo, `cadre link` its checkout, tick a Before deploying item, or ask what can deploy or what's next on a Cadre project; write a repo's Skills table; or sign in to Cadre.
+description: Cadre CLI. Use when asked to create, read, change or drop a Cadre project, milestone or spec, or draw a project's design canvas; start a milestone ("start milestone <project>/<n>"), implement a spec or plan tracked in Cadre or link its pull request; connect a repo or mobile app to where it deploys or releases, or ask where; deploy a Fly or Vercel repo, `cadre link` its checkout, tick a Before deploying item, or ask what can deploy or what's next on a Cadre project; write a repo's Skills table; or sign in to Cadre.
 ---
 
 # Cadre
@@ -46,13 +46,13 @@ Run `cadre whoami --json`. It succeeds when the exit code is 0 and the JSON hold
 
 Read the file that holds what the person asked for, and follow it:
 
-- [project.md](project.md): create a project; change or reorder a project or its milestones; drop (archive) or bring back a project; show, write or update a milestone's spec; link a milestone to its design. It holds the limits of every field.
+- [project.md](project.md): create a project; change or reorder a project or its milestones; drop (archive) or bring back a project; show, write or update a milestone's spec; link a milestone to its design; draw a project's canvas. It holds the limits of every field.
 - [milestone.md](milestone.md): start a milestone; implement a spec or plan tracked in Cadre; link a pull request to a milestone.
 - [connect.md](connect.md): connect a repo to its Fly app, its Vercel project or its mobile app's stores, or record a host other than Fly or Vercel; remove an app; connect or disconnect a Fly org, a Vercel team or a store's key; say where a repo deploys, or which build of a mobile app is public.
 - [deploy.md](deploy.md): deploy a repo that runs on Fly or Vercel; remember where a repo's checkout is for cadre's Deploy button (`cadre link`); tick a Before deploying item; answer what can deploy and what's next on a project.
 - [skills.md](skills.md): read and check a repo's Skills table when starting a milestone; "Write this repo's Skills table", or draft one when the repo has none.
 
-`brainstorm.md` and `design_link.rb` belong to project.md, which says when it needs each; `skills_table.rb` belongs to skills.md.
+`brainstorm.md`, `canvas.md` and `design_link.rb` belong to project.md, which says when it needs each; `skills_table.rb` belongs to skills.md.
 
 For a command's flags, run `cadre help <command>`: these files name a flag only to say when to pass it.
 
