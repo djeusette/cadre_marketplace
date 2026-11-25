@@ -41,7 +41,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.31.0", manifest["version"]
+    assert_equal "0.32.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -471,6 +471,10 @@ class SkillTest < Minitest::Test
 
   def test_without_the_artifact_tool_the_project_has_no_design_yet
     ["no Artifact tool", "without `canvas_url` and `design_url`"].each { |text| assert_includes section(canvas, "## Before you start"), text }
+  end
+
+  def test_no_skill_file_says_claude_design
+    skill_files.each { |path| refute_includes File.read(path), "Claude Design", File.basename(path) }
   end
 
   # milestone.md

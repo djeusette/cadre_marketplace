@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Prints the link that opens a Claude Design canvas on one page or board.
+# Prints the link that opens a Design canvas on one page or board.
 #
 #   ruby design_link.rb <canvas_url> --page <page id>
 #   ruby design_link.rb <canvas_url> --board <board file>
