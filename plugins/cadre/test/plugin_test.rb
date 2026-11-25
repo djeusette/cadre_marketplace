@@ -392,6 +392,60 @@ class SkillTest < Minitest::Test
     ["100 000", "not blank", "https://", "2 000"].each { |text| assert_includes limits, text }
   end
 
+  # canvas.md
+
+  def canvas = read("canvas.md")
+
+  def test_canvas_md_belongs_to_project_md
+    assert_includes skill, "`brainstorm.md`, `canvas.md` and `design_link.rb` belong to project.md"
+    ["# Draw a project's canvas", "## Before you start", "## Create the canvas", "## Styles from the code", "## The part pages",
+     "## The review page", "## Check the canvas", "## Add a milestone to a canvas"].each { |heading| assert_match(/^#{Regexp.escape(heading)}$/, canvas) }
+  end
+
+  def test_the_canvas_is_one_per_project_from_the_design_type
+    ["one canvas per project", "Design artifact type", "follow the instructions its create result carries"].each { |text| assert_includes canvas, text }
+  end
+
+  def test_the_canvas_builds_without_a_design_system
+    styles = section(canvas, "## Styles from the code")
+    ["the app's own code", "the files its styles were read from", "Ask before reading a repo other than the current one",
+     "ask the person where its styles come from"].each { |text| assert_includes styles, text }
+    assert_includes section(canvas, "## Create the canvas"), "build without one"
+  end
+
+  def test_part_pages_hold_a_row_per_milestone_in_full_context
+    parts = section(canvas, "## The part pages")
+    ["one page per part", "the spec's sections", "one row per milestone", "labelled with the milestone's number and title",
+     "a row on each page", "`M<n>-<part>-<size>.dc.html`", "1440, 1024 and 390", "393 × 852", "the phone size alone",
+     "header and navigation", "full height", "no board and no `design_url`", "its pull request"].each { |text| assert_includes parts, text }
+    refute_includes canvas, "diagram"
+  end
+
+  def test_the_review_page_shows_every_final_state
+    review = section(canvas, "## The review page")
+    ["page id `review`", "final state", "`review-<part>-<screen>-<size>.dc.html`", "at the same sizes", "Approve the design"].each { |text| assert_includes review, text }
+  end
+
+  def test_the_canvas_check_reads_its_criteria_from_canvas_json
+    check = section(canvas, "## Check the canvas")
+    ["`boards` in `project/canvas.json`", "every part it changes", "1440, 1024 and 390", "every screen the project changes",
+     "header and navigation"].each { |text| assert_includes check, text }
+  end
+
+  def test_links_are_left_to_project_md
+    assert_includes canvas, %q{as "Link a milestone to its design" in [project.md](project.md) says}
+    ["--board", "--page", "#artboard-"].each { |text| refute_includes canvas, text }
+  end
+
+  def test_an_older_canvas_gets_a_page_per_new_milestone
+    add = section(canvas, "## Add a milestone to a canvas")
+    ["When `pages` has a `review` page", "update the review page", "When `pages` has no `review` page", "its own page"].each { |text| assert_includes add, text }
+  end
+
+  def test_without_the_artifact_tool_the_project_has_no_design_yet
+    ["no Artifact tool", "without `canvas_url` and `design_url`"].each { |text| assert_includes section(canvas, "## Before you start"), text }
+  end
+
   # milestone.md
 
   def start_section = section(milestone, "## Start a milestone")
