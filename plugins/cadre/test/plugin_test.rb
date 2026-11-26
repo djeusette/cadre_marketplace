@@ -1066,8 +1066,48 @@ class SkillTest < Minitest::Test
   end
 
   def test_no_skill_file_pushes_or_commits_everything
-    # the person runs the tag push, never the agent (EP-I3)
-    skill_files.each { |path| refute_match(/git (push(?! origin <tag>`)|commit -a|add (\.|-A))/, File.read(path), path) }
+    # the person runs the tag push, never the agent (EP-I3). The one push an agent makes is a PR's pictures, to an
+    # assets branch of their own, never to the PR's branch: GitHub has no API that attaches an image to a description.
+    assets_push = 'git push origin "${sha}:refs/heads/assets/pr-<n>"'
+    skill_files.each do |path|
+      text = File.read(path)
+      text = text.sub(assets_push, "") if path.end_with?("pr-description/SKILL.md")
+      refute_match(/git (push(?! origin <tag>`)|commit -a|add (\.|-A))/, text, path)
+    end
+  end
+end
+
+class PrDescriptionTest < Minitest::Test
+  SKILL_PATH = File.join(PLUGIN, "skills", "pr-description", "SKILL.md")
+
+  def skill = File.read(SKILL_PATH)
+  def frontmatter = skill[/\A---\n(.*?)\n---\n/m, 1]
+  def section(heading) = skill[/^#{Regexp.escape(heading)}\n(.*?)(?=^## |\z)/m, 1] || flunk("no section #{heading}")
+  def parts = section("## The parts")
+  def part(number) = parts[/^#{number}\. (.*?)(?=^\d\. |^The check judges|\z)/m, 1] || flunk("no part #{number}")
+
+  def test_frontmatter_names_the_skill_and_when_to_use_it
+    assert_equal %w[description name], frontmatter.scan(/^([a-z-]+):/).flatten.sort
+    assert_includes frontmatter, "name: pr-description"
+    assert_includes frontmatter, "description: The standard for a pull request's title and description. Use when writing, checking or rewriting a PR title or description."
+  end
+
+  def test_it_says_what_the_standard_is_for_without_naming_other_plugins
+    opening = skill[/^# PR description\n\n(.*?)\n\n## /m, 1]
+    assert_includes opening, "whoever writes a PR follows it, and a review checks every PR against it"
+    ["engineering-principles", "review-companion"].each { |text| refute_includes opening, text }
+  end
+
+  def test_the_title_example_gives_a_place_without_a_rule_id
+    assert_includes section("## The title"), "for example `Wish reminders (2/3): members choose when they are reminded`"
+  end
+
+  def test_behind_the_scenes_states_its_rules_in_words
+    behind = part(4)
+    ["the frontends and apps that depend on the change, whether each must change to keep working, and the order they deploy in — or that none does. This line is always there",
+     "the change works while the previous version still runs during the rollout, what is unfinished stays out of users' reach, and a rollback loses no data",
+     "the reason for each lint, test or CI check the change turns off or weakens: a check is never loosened without one"].each { |text| assert_includes behind, text }
+    refute_match(/\(EP-|elixir #/, skill)
   end
 end
 
