@@ -105,7 +105,7 @@ It runs when it is named, or when the `cadre` skill starts a milestone. Its mode
 - **A spec that is not tracked in Cadre** goes to "Create a project" in the `cadre` skill, which registers it. That skill brainstorms the missing End goal and Increments through `cadre:brainstorming` when they are missing. Then the first milestone is planned. A spec tracked in Cadre that also has colette's status lines is planned as a Cadre milestone.
 - There is no status-lines mode. David chose this over keeping one: the two live specs that still use colette's status lines are registered in Cadre in increment 6. They are cadre's `2026-10-22-cadre-design.md` and colette-app's `2026-10-22-english-pages-design.md`.
 - **Requirements with no spec.** As colette does: one increment planned directly, or a spec first through `cadre:brainstorming`.
-- Every plan's PR step names `cadre:pr-description`. The call-list test gains it in increment 3.
+- Every plan's PR step names `cadre:pr-description`. `milestone.md` step 5 already names it from increment 1, where the call-list test gains it.
 - It never cites an EP ID. It states the increment rules it applies: one feature per PR, the smallest deployable step, code files counted without tests and docs, and consumers named.
 
 ### `cadre:pr-description`
@@ -211,7 +211,7 @@ The cadre marketplace holds `cadre` (CLI, brainstorming, planning, PR descriptio
 ### Increment 3 — `cadre:writing-plans` (cadre marketplace)
 
 - **Delivers:** a milestone is planned by one skill, and so are requirements with no spec. A spec not tracked in Cadre is registered first.
-- **Deployable alone:** `milestone.md` step 5 hands over to it, and the call-list test gains `cadre:writing-plans` and `cadre:pr-description`. `colette:writing-plans` keeps working for anyone who still has `colette`. colette's planning behaviours that apply to milestones and requirements move here, as wording tests and dry runs.
+- **Deployable alone:** `milestone.md` step 5 hands over to it, and the call-list test gains `cadre:writing-plans`. `colette:writing-plans` keeps working for anyone who still has `colette`. colette's planning behaviours that apply to milestones and requirements move here, as wording tests and dry runs.
 - **Consumers:** none.
 - **Code files:** 2 — `.claude-plugin/marketplace.json`, `plugins/cadre/.claude-plugin/plugin.json`
 - [ ] Not shipped
