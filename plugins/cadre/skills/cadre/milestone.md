@@ -22,7 +22,7 @@ When the person asks to "start milestone `<slug>/<n>`", or to start work on a mi
 5. Read the repo's Skills table, check its rows and load the skills the work calls for, as [skills.md](skills.md) says, before planning. Then plan this repo's part with `superpowers:writing-plans`, giving it the spec copy's path and these rules on top:
    - plan only this repo's part of milestone `<slug>/<n>`, or the app step 2 chose, as one plan and one pull request;
    - each task names the skills it needs (from the table when the repo has one), since a subagent executing it loads only those;
-   - the plan's pull request task names `cadre:pr-description` among the skills it loads: it holds the rules for the `Cadre:` line and the `## Before deploying` section;
+   - the plan ends with a pull request task, which names `cadre:pr-description` among the skills it loads: it holds the rules for the `Cadre:` line and the `## Before deploying` section;
    - the plan's header says it is tracked in Cadre, on the line under its title, so whoever executes it uses this skill:
 
      ```markdown
@@ -36,8 +36,8 @@ When the person asks to "start milestone `<slug>/<n>`", or to start work on a mi
 
 A spec or plan tracked in Cadre says so on the line under its title. When you implement one, for example while executing such a plan:
 
-- Its pull request's description follows `cadre:pr-description`. When the pull request is already open without its `Cadre:` line, add it: write `gh pr view <pr-url> --json body -q .body` to a temporary file, add the line, then run `gh pr edit <pr-url> --body-file <file>`.
-- A feature spec names only its project, `<slug>`: its increment `<i>` is milestone `<slug>/<i>`. Start it as "Start a milestone" says, so its plan says it is tracked too.
+- Load `cadre:pr-description` before writing or editing its pull request's description. When the pull request is already open without its `Cadre:` line, add it: write `gh pr view <pr-url> --json body -q .body` to a temporary file, add the line, then run `gh pr edit <pr-url> --body-file <file>`.
+- A feature spec names only its project, `<slug>`: start each of its increments as "Start a milestone" says, so its plan says it is tracked too.
 
 ## Link a pull request by hand
 

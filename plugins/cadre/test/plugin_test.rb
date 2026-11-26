@@ -8,6 +8,14 @@ ROOT =File.expand_path("../../..", __dir__)
 PLUGIN = File.join(ROOT, "plugins", "cadre")
 INSTALL = 'gh release download -R djeusette/cadre_cli --pattern "cadre_$(uname -s)_$(uname -m).tar.gz" -O - | tar -xz -C ~/.local/bin cadre'
 
+module Sections
+  # The text under a heading, up to the next heading of the same level or above.
+  def section(text, heading)
+    level = heading[/\A#+/].length
+    text[/^#{Regexp.escape(heading)}\n(.*?)(?=^\#{1,#{level}} |\z)/m, 1] or flunk("no section #{heading}")
+  end
+end
+
 class ManifestTest < Minitest::Test
   def manifest = JSON.parse(File.read(File.join(PLUGIN, ".claude-plugin", "plugin.json")))
   def marketplace = JSON.parse(File.read(File.join(ROOT, ".claude-plugin", "marketplace.json")))
@@ -64,7 +72,7 @@ class ManifestTest < Minitest::Test
   def test_readme_sums_cadre_up_and_links_its_skill
     bullet = File.read(File.join(ROOT, "README.md"))[/^- \*\*cadre\*\* — .*?(?=^#|\z)/m]
     assert_includes bullet, "(plugins/cadre/skills/cadre/SKILL.md)"
-    assert_includes bullet, "`cadre:pr-description` sets the standard for PR descriptions."
+    assert_includes bullet, "[`cadre:pr-description`](plugins/cadre/skills/pr-description/SKILL.md) sets the standard for PR descriptions."
     assert_operator bullet.split.size, :<=, 70
   end
 
@@ -110,11 +118,7 @@ class SkillTest < Minitest::Test
   def everything = ["SKILL.md", *BRANCHES].map { |name| read(name) }.join("\n")
   def skill_files = Dir[File.join(PLUGIN, "skills", "**", "*")].select { |path| File.file?(path) }
 
-  # The text under a heading, up to the next heading of the same level or above.
-  def section(text, heading)
-    level = heading[/\A#+/].length
-    text[/^#{Regexp.escape(heading)}\n(.*?)(?=^\#{1,#{level}} |\z)/m, 1] or flunk("no section #{heading}")
-  end
+  include Sections
 
   def frontmatter = skill[/\A---\n(.*?)\n---\n/m, 1]
   def description = frontmatter[/^description: (.*)$/, 1]
@@ -569,20 +573,20 @@ class SkillTest < Minitest::Test
   def test_the_pull_request_description_follows_cadre_pr_description
     refute_includes milestone, "## The pull request's description"
     ["reads exactly `Cadre:", "- [ ]"].each { |text| refute_includes milestone, text }
-    assert_includes router, "A pull request's title and description follow `cadre:pr-description`, which holds the `Cadre:` line and `## Before deploying` rules."
+    assert_includes router, "Before writing, checking or editing a pull request's title or description, load `cadre:pr-description`: it holds the `Cadre:` line and `## Before deploying` rules."
   end
 
   def test_the_pull_request_lists_what_a_deploy_needs_first
     refute_includes milestone, "ticks an item in GitHub"
-    assert_equal 0, everything.scan("a heading line `## Before deploying`").size
-    assert_includes start_section, "the plan's pull request task names `cadre:pr-description` among the skills it loads: it holds the rules for the `Cadre:` line and the `## Before deploying` section"
+    assert_includes start_section, "the plan ends with a pull request task, which names `cadre:pr-description` among the skills it loads: it holds the rules for the `Cadre:` line and the `## Before deploying` section"
     refute_includes start_section, "given in full"
-    assert_includes track_section, "Its pull request's description follows `cadre:pr-description`."
+    assert_includes track_section, "Load `cadre:pr-description` before writing or editing its pull request's description."
   end
 
   def test_it_tracks_the_implementation_of_a_spec_or_plan
     ["`Cadre:` line", "gh pr view <pr-url> --json body -q .body", "gh pr edit <pr-url> --body-file <file>",
-     "milestone `<slug>/<i>`", "as \"Start a milestone\" says"].each { |text| assert_includes track_section, text }
+     "start each of its increments as \"Start a milestone\" says"].each { |text| assert_includes track_section, text }
+    refute_includes milestone, "milestone `<slug>/<i>`"
   end
 
   def test_it_links_a_pull_request_by_hand_and_relays_the_cli_errors
@@ -1081,8 +1085,9 @@ class PrDescriptionTest < Minitest::Test
 
   def skill = File.read(SKILL_PATH)
   def frontmatter = skill[/\A---\n(.*?)\n---\n/m, 1]
-  def section(heading) = skill[/^#{Regexp.escape(heading)}\n(.*?)(?=^## |\z)/m, 1] || flunk("no section #{heading}")
-  def parts = section("## The parts")
+  include Sections
+
+  def parts = section(skill, "## The parts")
   def part(number) = parts[/^#{number}\. (.*?)(?=^\d\. |^The check judges|\z)/m, 1] || flunk("no part #{number}")
 
   def test_frontmatter_names_the_skill_and_when_to_use_it
@@ -1097,17 +1102,34 @@ class PrDescriptionTest < Minitest::Test
     ["engineering-principles", "review-companion"].each { |text| refute_includes opening, text }
   end
 
+  def test_its_sections_and_parts_come_in_order
+    headings = ["## The title", "## The parts", "## Template", "## Not essential", "## Marked spots", "## Pictures", "## Rewriting a description", "## A repository's own template"]
+    outside_fences = skill.gsub(/^````markdown\n.*?^````\n/m, "")
+    assert_equal headings, outside_fences.scan(/^## .*$/)
+    names = ["What it does.", "Before deploying,", "How it works,", "Behind the scenes.", "Screenshots and videos,", "Break checks,", "The Cadre line,"]
+    assert_equal names.each_with_index.map { |name, i| "#{i + 1}. **#{name}**" }, parts.scan(/^\d\. \*\*[^*]+\*\*/)
+  end
+
+  def test_the_title_gives_the_feature_and_its_place_in_a_sequence
+    title = section(skill, "## The title")
+    ["in a sequence: `<feature> (<i>/<n>): <what it delivers>`", "otherwise: `<feature>: <what it delivers>`",
+     "the change edits a spec's `### Increment` status line;", "the description links a spec that has an `## Increments` section;",
+     "the description says it is one step of a sequence", "the title already claims a place.",
+     "A title whose number disagrees with the spec gives the wrong place."].each { |text| assert_includes title, text }
+  end
+
   def test_the_title_example_gives_a_place_without_a_rule_id
-    assert_includes section("## The title"), "for example `Wish reminders (2/3): members choose when they are reminded`"
+    assert_includes section(skill, "## The title"), "for example `Wish reminders (2/3): members choose when they are reminded`"
   end
 
   def test_behind_the_scenes_states_its_rules_in_words
     behind = part(4)
     ["the frontends and apps that depend on the change, whether each must change to keep working, and the order they deploy in — or that none does.", "This line is always there",
      "A contract other apps use changes by adding the new first; the old goes only once no deployed consumer uses it, installed mobile app versions included",
-     "the change works while the previous version still runs during the rollout (no column dropped or renamed that the previous version reads or writes), what is unfinished stays out of users' reach, and a rollback loses no data",
-     "the reason for each lint, test or CI check the change turns off or weakens: a check is never loosened without one"].each { |text| assert_includes behind, text }
+     "The line also shows the change meets three conditions: it works while the previous version still runs during the rollout, with every column the previous version reads or writes still in place; what is unfinished is out of users' reach; and a rollback loses no data.",
+     "the reason for each lint, test or CI check the change turns off or weakens."].each { |text| assert_includes behind, text }
     refute_includes skill, "elixir #"
+    refute_includes skill, "never loosened"
   end
 
   def test_the_cadre_line_links_a_pull_request_and_names_its_app
@@ -1126,24 +1148,24 @@ class PrDescriptionTest < Minitest::Test
      "Cadre reads this section by name and shows the pull request as held until its items are ticked", "A change that needs nothing has no section.",
      %q{Its items are ticked as "Tick a Before deploying item" in the `cadre:cadre` skill says.}].each { |text| assert_includes before, text }
     assert_includes parts, "`## Before deploying` is the exception: its heading is exact."
-    assert_includes section("## A repository's own template"), "It still holds `## Before deploying` as its own section, under that heading, and the Cadre line on a line of its own."
+    assert_includes section(skill, "## A repository's own template"), "It still holds `## Before deploying` as its own section, under that heading, and the Cadre line on a line of its own."
   end
 
   def test_a_draft_is_done_only_when_every_part_is_there_and_nothing_is_invented
     assert_includes parts, %q{A draft is done when each part is there or left out by its own "only when", and every fact the writer does not know is a marked spot.}
-    marked = section("## Marked spots")
+    marked = section(skill, "## Marked spots")
     ["It is never invented.", "`> **Picture to add:** <screen> — <state>, <before | after>`", "`> **Video to add:** <flow>`",
      "`> **Break checks to add:** <runner> --table`"].each { |text| assert_includes marked, text }
   end
 
   def test_pictures_are_captured_hosted_embedded_and_cleaned_up
-    pictures = section("## Pictures")
+    pictures = section(skill, "## Pictures")
     ["1. **Capture**", "2. **Host**", "3. **Embed**", "4. **Clean up**", "The braces in `${sha}` matter: zsh reads `$sha:r` as a modifier.",
      "never by the branch name"].each { |text| assert_includes pictures, text }
   end
 
   def test_a_rewrite_keeps_what_is_already_there
-    rewrite = section("## Rewriting a description")
+    rewrite = section(skill, "## Rewriting a description")
     ["keeps every image and video link already in the description",
      "keeps every `## Before deploying` item and its tick as it is, so a redraft never reopens a ticked one",
      "keeps the Break checks table byte for byte beyond part 6's dropped rows",
@@ -1158,6 +1180,7 @@ class PrDescriptionTest < Minitest::Test
   def test_break_checks_say_which_rows_belong_to_the_change_without_another_skill
     break_checks = part(6)
     ["A row belongs to this change when the code left of its Swap arrow spans a line the change adds or changes, or sits on the line just above or below a line it deletes.",
+     "In the runner's table, each row has a Branch (`<file>:<line>`), a Swap (`` `<from>` → `<to>` ``) and the tests that caught it.",
      "the `break-check` skill, for a repo whose Skills table lists it"].each { |text| assert_includes break_checks, text }
     ["(`break-check`)", "as `break-check` defines it"].each { |text| refute_includes break_checks, text }
     template = skill[/^## Template\n(.*?)^## Not essential\n/m, 1]

@@ -16,7 +16,7 @@ Or commit them to a repo's `.claude/settings.json` so the whole team gets them a
 
 ## Plugins
 
-- **cadre** — runs Cadre from Claude Code: it brainstorms a feature into milestones and registers them; starts a milestone and links its pull request; connects a repo to Fly, Vercel or the app stores and deploys it; and writes a repo's Skills table. `cadre:pr-description` sets the standard for PR descriptions. It installs the `cadre` CLI and signs you in; installing cadre installs `superpowers` from `claude-plugins-official` with it. [The skill](plugins/cadre/skills/cadre/SKILL.md).
+- **cadre** — runs Cadre from Claude Code: it brainstorms a feature into milestones and registers them; starts a milestone and links its pull request; connects a repo to Fly, Vercel or the app stores and deploys it; and writes a repo's Skills table. [`cadre:pr-description`](plugins/cadre/skills/pr-description/SKILL.md) sets the standard for PR descriptions. It installs the `cadre` CLI and signs you in; installing cadre installs `superpowers` from `claude-plugins-official` with it. [The skill](plugins/cadre/skills/cadre/SKILL.md).
 
 ## Development
 

@@ -31,7 +31,7 @@ In `plugins/cadre/test/plugin_test.rb`:
      - a feature spec's increment `<i>` is milestone `<slug>/<i>`;
    - **Break checks:**
      - names the `break-check` skill for a repo whose Skills table lists it;
-     - states the belonging rule itself: a row belongs to the change when its `from` spans a line the change adds or changes, or sits next to a line it deletes;
+     - states the belonging rule itself: a row belongs to the change when the code left of its Swap arrow spans a line the change adds or changes, or sits on the line just above or below a line it deletes;
      - the marker `> **Break checks to add:** <runner> --table`;
    - the two picture markers, and the zsh `${sha}` note;
    - the rewrite rules: keeps every picture link, keeps each `## Before deploying` item and its tick, keeps the Break checks table byte for byte beyond dropped rows, keeps the Cadre line.
