@@ -1152,6 +1152,15 @@ class PrDescriptionTest < Minitest::Test
   def test_a_table_with_no_row_of_this_change_is_not_done
     assert_includes part(6), "When no row is left, the break checks are not done"
   end
+
+  def test_break_checks_say_which_rows_belong_to_the_change_without_another_skill
+    break_checks = part(6)
+    ["A row belongs to this change when the code left of its Swap arrow spans a line the change adds or changes, or sits next to a line it deletes.",
+     "the `break-check` skill, for a repo whose Skills table lists it"].each { |text| assert_includes break_checks, text }
+    ["(`break-check`)", "as `break-check` defines it"].each { |text| refute_includes break_checks, text }
+    template = skill[/^## Template\n(.*?)^## Not essential\n/m, 1]
+    assert_includes template, "<The output of `<runner> --table`, its `<details>` block as the runner prints it.>"
+  end
 end
 
 class DesignLinkTest < Minitest::Test
