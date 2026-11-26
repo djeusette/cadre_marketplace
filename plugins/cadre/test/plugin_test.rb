@@ -1134,7 +1134,8 @@ class PrDescriptionTest < Minitest::Test
     ["a line of its own that reads exactly `Cadre: <slug>/<n>`", "or `Cadre: <slug>/<n> <app>` for a pull request for one app",
      "Cadre reads this line and links the pull request to that milestone", "a PR without it shows as not linked",
      "The app is its name in Cadre, as `cadre repo show` lists it (a target's `name`): lowercase letters, digits, `-` or `_`.",
-     "A line whose app isn't such a name links nothing.",      "A spec that names only its project `<slug>` maps its increment to a milestone as \"Track a milestone's implementation\" in the `cadre:cadre` skill says.",
+     "A line whose app isn't such a name links nothing.",
+     "A spec that names only its project `<slug>` maps its increment to a milestone as \"Track a milestone's implementation\" in the `cadre:cadre` skill says.",
      "A PR that Cadre does not track has no such line."].each { |text| assert_includes cadre_line, text }
     ["Follow the `cadre:cadre` skill", "milestone `<slug>/<i>`"].each { |text| refute_includes cadre_line, text }
   end
