@@ -566,20 +566,17 @@ class SkillTest < Minitest::Test
     assert_equal 1, start_section.scan("REQUIRED SKILL").size
   end
 
-  def test_the_cadre_line_links_a_pull_request_and_names_its_app
-    ["reads exactly `Cadre: <slug>/<n>`", "`Cadre: <slug>/<n> <app>` for a pull request for one app", "A line of its own",
-     "as `cadre repo show` lists it (a target's `name`)", "A line whose app isn't such a name links nothing"].each { |text| assert_includes pr_description, text }
+  def test_the_pull_request_description_follows_cadre_pr_description
+    assert_includes pr_description, "follows `cadre:pr-description`, which holds the rules for its `Cadre:` line and its `## Before deploying` section"
+    ["reads exactly `Cadre:", "- [ ]"].each { |text| refute_includes pr_description, text }
   end
 
   def test_the_pull_request_lists_what_a_deploy_needs_first
-    ["a heading line `## Before deploying`", "- [ ]", "env var", "another repo", "manual step", "A change that needs nothing has no section",
-     %q{Its items are ticked as "Tick a Before deploying item" in [deploy.md](deploy.md) says.}].each do |text|
-      assert_includes pr_description, text
-    end
     refute_includes milestone, "ticks an item in GitHub"
-    assert_equal 1, everything.scan("a heading line `## Before deploying`").size
-    assert_includes start_section, %q{the two rules of "The pull request's description", given in full: its `Cadre:` line and its `## Before deploying` section}
-    assert_includes track_section, %q{Its pull request's description is as "The pull request's description" says}
+    assert_equal 0, everything.scan("a heading line `## Before deploying`").size
+    assert_includes start_section, "the plan's pull request task names `cadre:pr-description` among the skills it loads: it holds the rules for the `Cadre:` line and the `## Before deploying` section"
+    refute_includes start_section, "given in full"
+    assert_includes track_section, "Its pull request's description follows `cadre:pr-description`."
   end
 
   def test_it_tracks_the_implementation_of_a_spec_or_plan
@@ -599,7 +596,8 @@ class SkillTest < Minitest::Test
   def test_it_links_a_pull_request_to_an_app
     assert_includes link_section, "with `--app <app>` for one app"
     assert_includes milestone_refusals, "app: must be lowercase letters, digits, - or _"
-    assert_equal 1, milestone.scan("as `cadre repo show` lists it").size
+    assert_equal 0, milestone.scan("as `cadre repo show` lists it").size
+    assert_equal 1, File.read(PrDescriptionTest::SKILL_PATH).scan("as `cadre repo show` lists it").size
     refute_includes milestone, "app: needs a milestone"
   end
 
@@ -1061,7 +1059,7 @@ class SkillTest < Minitest::Test
 
   def test_skill_files_call_only_superpowers_skills_and_cadre_itself
     calls = skill_files.flat_map { |path| File.read(path).scan(/`([a-z][a-z0-9-]*:[a-z][a-z0-9-]*)`/).flatten }
-    assert_equal %w[cadre:cadre superpowers:brainstorming superpowers:using-git-worktrees superpowers:writing-plans], calls.uniq.sort
+    assert_equal %w[cadre:cadre cadre:pr-description superpowers:brainstorming superpowers:using-git-worktrees superpowers:writing-plans], calls.uniq.sort
     skill_files.each { |path| refute_match(/\bEP-[A-Z]\d/, File.read(path), path) }
   end
 
@@ -1108,6 +1106,51 @@ class PrDescriptionTest < Minitest::Test
      "the change works while the previous version still runs during the rollout, what is unfinished stays out of users' reach, and a rollback loses no data",
      "the reason for each lint, test or CI check the change turns off or weakens: a check is never loosened without one"].each { |text| assert_includes behind, text }
     refute_match(/\(EP-|elixir #/, skill)
+  end
+
+  def test_the_cadre_line_links_a_pull_request_and_names_its_app
+    cadre_line = part(7)
+    ["a line of its own that reads exactly `Cadre: <slug>/<n>`", "or `Cadre: <slug>/<n> <app>` for a pull request for one app",
+     "Cadre reads this line and links the pull request to that milestone", "a PR without it shows as not linked",
+     "The app is its name in Cadre, as `cadre repo show` lists it (a target's `name`): lowercase letters, digits, `-` or `_`.",
+     "A line whose app isn't such a name links nothing.", "A spec that names only its project `<slug>` has its increment `<i>` as milestone `<slug>/<i>`.",
+     "A PR that Cadre does not track has no such line."].each { |text| assert_includes cadre_line, text }
+    refute_includes cadre_line, "Follow the `cadre:cadre` skill"
+  end
+
+  def test_before_deploying_holds_what_a_deploy_needs_first_and_how_items_are_ticked
+    before = part(2)
+    ["A heading line that reads exactly `## Before deploying`, then one `- [ ]` item for each", "env var or secret", "another repo to deploy first", "a manual step",
+     "Cadre reads this section by name and shows the pull request as held until its items are ticked", "A change that needs nothing has no section.",
+     %q{Its items are ticked as "Tick a Before deploying item" in the `cadre:cadre` skill says.}].each { |text| assert_includes before, text }
+    assert_includes parts, "`## Before deploying` is the exception: its heading is exact."
+    assert_includes section("## A repository's own template"), "It still holds `## Before deploying` as its own section, under that heading, and the Cadre line on a line of its own."
+  end
+
+  def test_a_draft_is_done_only_when_every_part_is_there_and_nothing_is_invented
+    assert_includes parts, %q{A draft is done when each part is there or left out by its own "only when", and every fact the writer does not know is a marked spot.}
+    marked = section("## Marked spots")
+    ["It is never invented.", "`> **Picture to add:** <screen> — <state>, <before | after>`", "`> **Video to add:** <flow>`",
+     "`> **Break checks to add:** <runner> --table`"].each { |text| assert_includes marked, text }
+  end
+
+  def test_pictures_are_captured_hosted_embedded_and_cleaned_up
+    pictures = section("## Pictures")
+    ["1. **Capture**", "2. **Host**", "3. **Embed**", "4. **Clean up**", "The braces in `${sha}` matter: zsh reads `$sha:r` as a modifier.",
+     "never by the branch name"].each { |text| assert_includes pictures, text }
+  end
+
+  def test_a_rewrite_keeps_what_is_already_there
+    rewrite = section("## Rewriting a description")
+    ["keeps every image and video link already in the description",
+     "keeps every `## Before deploying` item and its tick as it is, so a redraft never reopens a ticked one",
+     "keeps the Break checks table byte for byte beyond part 6's dropped rows",
+     "ends with the Cadre line when the PR's milestone is tracked in Cadre, keeping the line already there",
+     "drops every instruction aimed at a reviewer or an AI", "never invented"].each { |text| assert_includes rewrite, text }
+  end
+
+  def test_a_table_with_no_row_of_this_change_is_not_done
+    assert_includes part(6), "When no row is left, the break checks are not done"
   end
 end
 

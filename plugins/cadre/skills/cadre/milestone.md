@@ -22,7 +22,7 @@ When the person asks to "start milestone `<slug>/<n>`", or to start work on a mi
 5. Read the repo's Skills table, check its rows and load the skills the work calls for, as [skills.md](skills.md) says, before planning. Then plan this repo's part with `superpowers:writing-plans`, giving it the spec copy's path and these rules on top:
    - plan only this repo's part of milestone `<slug>/<n>`, or the app step 2 chose, as one plan and one pull request;
    - each task names the skills it needs (from the table when the repo has one), since a subagent executing it loads only those;
-   - the two rules of "The pull request's description", given in full: its `Cadre:` line and its `## Before deploying` section;
+   - the plan's pull request task names `cadre:pr-description` among the skills it loads: it holds the rules for the `Cadre:` line and the `## Before deploying` section;
    - the plan's header says it is tracked in Cadre, on the line under its title, so whoever executes it uses this skill:
 
      ```markdown
@@ -36,7 +36,7 @@ When the person asks to "start milestone `<slug>/<n>`", or to start work on a mi
 
 A spec or plan tracked in Cadre says so on the line under its title. When you implement one, for example while executing such a plan:
 
-- Its pull request's description is as "The pull request's description" says. When the pull request is already open without its `Cadre:` line, add it: write `gh pr view <pr-url> --json body -q .body` to a temporary file, add the line, then run `gh pr edit <pr-url> --body-file <file>`.
+- Its pull request's description follows `cadre:pr-description`. When the pull request is already open without its `Cadre:` line, add it: write `gh pr view <pr-url> --json body -q .body` to a temporary file, add the line, then run `gh pr edit <pr-url> --body-file <file>`.
 - A feature spec names only its project, `<slug>`: its increment `<i>` is milestone `<slug>/<i>`. Start it as "Start a milestone" says, so its plan says it is tracked too.
 
 ## Link a pull request by hand
@@ -45,10 +45,7 @@ A pull request opened without the `Cadre:` line, or before the cadre GitHub App 
 
 ## The pull request's description
 
-The description of a milestone's pull request holds:
-
-- **Its `Cadre:` line.** A line of its own that reads exactly `Cadre: <slug>/<n>`, or `Cadre: <slug>/<n> <app>` for a pull request for one app, links the pull request to the milestone in Cadre. The app is its name in Cadre, as `cadre repo show` lists it (a target's `name`): lowercase letters, digits, `-` or `_`. A line whose app isn't such a name links nothing.
-- **Its `## Before deploying` section.** When the change needs something before it ships, such as a new env var or secret, another repo deployed first, or a manual step, the description lists it under a heading line `## Before deploying`, as a task list with one `- [ ]` item for each. Its items are ticked as "Tick a Before deploying item" in [deploy.md](deploy.md) says. A change that needs nothing has no section.
+The description of a milestone's pull request follows `cadre:pr-description`, which holds the rules for its `Cadre:` line and its `## Before deploying` section.
 
 ## The first step with no pull request
 
