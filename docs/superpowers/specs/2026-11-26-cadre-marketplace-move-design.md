@@ -110,7 +110,7 @@ It runs when it is named, or when the `cadre` skill starts a milestone. Its mode
 
 ### `cadre:pr-description`
 
-- A copy of `engineering-review:pr-description`, with every EP ID replaced by the rule in words. Its own Cadre line rules are unchanged.
+- A copy of `engineering-review:pr-description`, with every EP ID replaced by the rule in words. The Cadre line and Before deploying rules that `milestone.md` held move into it.
 - **Break checks:** it keeps the part and names the `break-check` skill for repos whose Skills table lists it. It states the rule for which rows belong to the change itself *(my call: a PR's description must not depend on a skill the repo may not have)*.
 - It becomes the one source for the `Cadre:` line and the `## Before deploying` rules. `milestone.md`'s "The pull request's description" points to it instead of restating them (increment 1).
 

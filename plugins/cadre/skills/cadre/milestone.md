@@ -43,10 +43,6 @@ A spec or plan tracked in Cadre says so on the line under its title. When you im
 
 A pull request opened without the `Cadre:` line, or before the cadre GitHub App was installed, is linked by hand with `cadre pr link <pr-url> <slug>/<n> --json`, with `--app <app>` for one app, or `--none` in place of `<slug>/<n>` to unlink it. Report the `project_url` field of the JSON body. A `Cadre:` line in the description overrides this link, so edit that line.
 
-## The pull request's description
-
-The description of a milestone's pull request follows `cadre:pr-description`, which holds the rules for its `Cadre:` line and its `## Before deploying` section.
-
 ## The first step with no pull request
 
 Run `cadre status <slug> --json`. Its `milestones` entry whose `number` is `<n>` lists its `steps` in deploy order, each with its `repo`, its `app` (null for a whole-repo step) and the open and merged `pull_requests` that count on it. The first step whose `pull_requests` is empty is the first step with no pull request. Ask the person which step is next when every step already has a pull request, or when they say one isn't linked yet: `cadre status` counts only linked pull requests, and one opened before the cadre GitHub App was installed is linked as "Link a pull request by hand" says.

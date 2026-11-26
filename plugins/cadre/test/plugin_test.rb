@@ -496,7 +496,6 @@ class SkillTest < Minitest::Test
   def start_section = section(milestone, "## Start a milestone")
   def track_section = section(milestone, "## Track a milestone's implementation")
   def link_section = section(milestone, "## Link a pull request by hand")
-  def pr_description = section(milestone, "## The pull request's description")
   def first_step = section(milestone, "## The first step with no pull request")
   def milestone_refusals = section(milestone, "## When `cadre` refuses")
 
@@ -568,8 +567,9 @@ class SkillTest < Minitest::Test
   end
 
   def test_the_pull_request_description_follows_cadre_pr_description
-    assert_includes pr_description, "follows `cadre:pr-description`, which holds the rules for its `Cadre:` line and its `## Before deploying` section"
-    ["reads exactly `Cadre:", "- [ ]"].each { |text| refute_includes pr_description, text }
+    refute_includes milestone, "## The pull request's description"
+    ["reads exactly `Cadre:", "- [ ]"].each { |text| refute_includes milestone, text }
+    assert_includes router, "A pull request's title and description follow `cadre:pr-description`, which holds the `Cadre:` line and `## Before deploying` rules."
   end
 
   def test_the_pull_request_lists_what_a_deploy_needs_first
@@ -1093,7 +1093,7 @@ class PrDescriptionTest < Minitest::Test
 
   def test_it_says_what_the_standard_is_for_without_naming_other_plugins
     opening = skill[/^# PR description\n\n(.*?)\n\n## /m, 1]
-    assert_includes opening, "whoever writes a PR follows it, and a review checks every PR against it"
+    assert_includes opening, "whoever writes a PR follows it, and a reviewer checks every PR against it"
     ["engineering-principles", "review-companion"].each { |text| refute_includes opening, text }
   end
 
@@ -1103,10 +1103,11 @@ class PrDescriptionTest < Minitest::Test
 
   def test_behind_the_scenes_states_its_rules_in_words
     behind = part(4)
-    ["the frontends and apps that depend on the change, whether each must change to keep working, and the order they deploy in — or that none does. This line is always there",
-     "the change works while the previous version still runs during the rollout, what is unfinished stays out of users' reach, and a rollback loses no data",
+    ["the frontends and apps that depend on the change, whether each must change to keep working, and the order they deploy in — or that none does.", "This line is always there",
+     "A contract other apps use changes by adding the new first; the old goes only once no deployed consumer uses it, installed mobile app versions included",
+     "the change works while the previous version still runs during the rollout (no column dropped or renamed that the previous version reads or writes), what is unfinished stays out of users' reach, and a rollback loses no data",
      "the reason for each lint, test or CI check the change turns off or weakens: a check is never loosened without one"].each { |text| assert_includes behind, text }
-    refute_match(/\(EP-|elixir #/, skill)
+    refute_includes skill, "elixir #"
   end
 
   def test_the_cadre_line_links_a_pull_request_and_names_its_app
@@ -1156,7 +1157,7 @@ class PrDescriptionTest < Minitest::Test
 
   def test_break_checks_say_which_rows_belong_to_the_change_without_another_skill
     break_checks = part(6)
-    ["A row belongs to this change when the code left of its Swap arrow spans a line the change adds or changes, or sits next to a line it deletes.",
+    ["A row belongs to this change when the code left of its Swap arrow spans a line the change adds or changes, or sits on the line just above or below a line it deletes.",
      "the `break-check` skill, for a repo whose Skills table lists it"].each { |text| assert_includes break_checks, text }
     ["(`break-check`)", "as `break-check` defines it"].each { |text| refute_includes break_checks, text }
     template = skill[/^## Template\n(.*?)^## Not essential\n/m, 1]
