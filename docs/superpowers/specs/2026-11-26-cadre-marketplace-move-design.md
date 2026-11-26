@@ -197,7 +197,7 @@ The cadre marketplace holds `cadre` (CLI, brainstorming, planning, PR descriptio
 - **Delivers:** a cadre user can write and check a PR's title and description to the standard without `engineering-review`.
 - **Deployable alone:** a new skill. `engineering-review:pr-description` stays as it is.
 - **Consumers:** none.
-- **Code files:** 2 — `.claude-plugin/marketplace.json`, `plugins/cadre/.claude-plugin/plugin.json` (the version; the skill, its tests, README and AGENTS.md are docs and tests)
+- **Code files:** 2 — `.claude-plugin/marketplace.json`, `plugins/cadre/.claude-plugin/plugin.json` (the version; the skill, its tests and README are docs and tests)
 - [ ] Not shipped
 
 ### Increment 2 — `cadre:brainstorming` (cadre marketplace)
