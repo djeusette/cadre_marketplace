@@ -198,7 +198,7 @@ The cadre marketplace holds `cadre` (CLI, brainstorming, planning, PR descriptio
 - **Deployable alone:** a new skill. `engineering-review:pr-description` stays as it is.
 - **Consumers:** none.
 - **Code files:** 2 — `.claude-plugin/marketplace.json`, `plugins/cadre/.claude-plugin/plugin.json` (the version; the skill, its tests and README are docs and tests)
-- [ ] Not shipped
+- [x] PR #34
 
 ### Increment 2 — `cadre:brainstorming` (cadre marketplace)
 
