@@ -41,7 +41,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.32.0", manifest["version"]
+    assert_equal "0.33.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -64,6 +64,7 @@ class ManifestTest < Minitest::Test
   def test_readme_sums_cadre_up_and_links_its_skill
     bullet = File.read(File.join(ROOT, "README.md"))[/^- \*\*cadre\*\* — .*?(?=^#|\z)/m]
     assert_includes bullet, "(plugins/cadre/skills/cadre/SKILL.md)"
+    assert_includes bullet, "`cadre:pr-description` sets the standard for PR descriptions."
     assert_operator bullet.split.size, :<=, 70
   end
 
