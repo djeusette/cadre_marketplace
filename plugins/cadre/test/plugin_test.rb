@@ -579,14 +579,12 @@ class SkillTest < Minitest::Test
   def test_the_pull_request_lists_what_a_deploy_needs_first
     refute_includes milestone, "ticks an item in GitHub"
     assert_includes start_section, "the plan ends with a pull request task, which names `cadre:pr-description` among the skills it loads: it holds the rules for the `Cadre:` line and the `## Before deploying` section"
-    refute_includes start_section, "given in full"
     assert_includes track_section, "Load `cadre:pr-description` before writing or editing its pull request's description."
   end
 
   def test_it_tracks_the_implementation_of_a_spec_or_plan
     ["`Cadre:` line", "gh pr view <pr-url> --json body -q .body", "gh pr edit <pr-url> --body-file <file>",
-     "start each of its increments as \"Start a milestone\" says"].each { |text| assert_includes track_section, text }
-    refute_includes milestone, "milestone `<slug>/<i>`"
+     "its increment `<i>` is milestone `<slug>/<i>`", "as \"Start a milestone\" says"].each { |text| assert_includes track_section, text }
   end
 
   def test_it_links_a_pull_request_by_hand_and_relays_the_cli_errors
@@ -601,8 +599,7 @@ class SkillTest < Minitest::Test
   def test_it_links_a_pull_request_to_an_app
     assert_includes link_section, "with `--app <app>` for one app"
     assert_includes milestone_refusals, "app: must be lowercase letters, digits, - or _"
-    assert_equal 0, milestone.scan("as `cadre repo show` lists it").size
-    assert_equal 1, File.read(PrDescriptionTest::SKILL_PATH).scan("as `cadre repo show` lists it").size
+    refute_includes milestone, "as `cadre repo show` lists it"
     refute_includes milestone, "app: needs a milestone"
   end
 
@@ -1118,16 +1115,16 @@ class PrDescriptionTest < Minitest::Test
      "A title whose number disagrees with the spec gives the wrong place."].each { |text| assert_includes title, text }
   end
 
-  def test_the_title_example_gives_a_place_without_a_rule_id
+  def test_the_title_example_is_a_feature_and_its_place
     assert_includes section(skill, "## The title"), "for example `Wish reminders (2/3): members choose when they are reminded`"
   end
 
   def test_behind_the_scenes_states_its_rules_in_words
     behind = part(4)
-    ["the frontends and apps that depend on the change, whether each must change to keep working, and the order they deploy in — or that none does.", "This line is always there",
-     "A contract other apps use changes by adding the new first; the old goes only once no deployed consumer uses it, installed mobile app versions included",
+    ["the frontends and apps that depend on the change, whether each must change to keep working, and the order they deploy in — or that none must change.", "This line is always there",
+     "A contract other apps use changes by adding the new first, moving every consumer, and removing the old only once no deployed consumer uses it, installed mobile app versions included",
      "The line also shows the change meets three conditions: it works while the previous version still runs during the rollout, with every column the previous version reads or writes still in place; what is unfinished is out of users' reach; and a rollback loses no data.",
-     "the reason for each lint, test or CI check the change turns off or weakens."].each { |text| assert_includes behind, text }
+     "the reason for each check the change turns off or weakens: a disabled lint, a new ignore, skip or baseline entry, a skipped test, a loosened threshold, or a pre-commit or CI step removed or made non-blocking."].each { |text| assert_includes behind, text }
     refute_includes skill, "elixir #"
     refute_includes skill, "never loosened"
   end
@@ -1137,9 +1134,8 @@ class PrDescriptionTest < Minitest::Test
     ["a line of its own that reads exactly `Cadre: <slug>/<n>`", "or `Cadre: <slug>/<n> <app>` for a pull request for one app",
      "Cadre reads this line and links the pull request to that milestone", "a PR without it shows as not linked",
      "The app is its name in Cadre, as `cadre repo show` lists it (a target's `name`): lowercase letters, digits, `-` or `_`.",
-     "A line whose app isn't such a name links nothing.", "A spec that names only its project `<slug>` has its increment `<i>` as milestone `<slug>/<i>`.",
-     "A PR that Cadre does not track has no such line."].each { |text| assert_includes cadre_line, text }
-    refute_includes cadre_line, "Follow the `cadre:cadre` skill"
+     "A line whose app isn't such a name links nothing.",      "A PR that Cadre does not track has no such line."].each { |text| assert_includes cadre_line, text }
+    ["Follow the `cadre:cadre` skill", "milestone `<slug>/<i>`"].each { |text| refute_includes cadre_line, text }
   end
 
   def test_before_deploying_holds_what_a_deploy_needs_first_and_how_items_are_ticked
@@ -1179,12 +1175,20 @@ class PrDescriptionTest < Minitest::Test
 
   def test_break_checks_say_which_rows_belong_to_the_change_without_another_skill
     break_checks = part(6)
-    ["A row belongs to this change when the code left of its Swap arrow spans a line the change adds or changes, or sits on the line just above or below a line it deletes.",
+    [
      "In the runner's table, each row has a Branch (`<file>:<line>`), a Swap (`` `<from>` → `<to>` ``) and the tests that caught it.",
+     "A row belongs to this change when its Branch is in a file the change touches and its `<from>` spans a line the change adds or changes there, or sits on the line just above or below a line it deletes.",
      "the `break-check` skill, for a repo whose Skills table lists it"].each { |text| assert_includes break_checks, text }
     ["(`break-check`)", "as `break-check` defines it"].each { |text| refute_includes break_checks, text }
     template = skill[/^## Template\n(.*?)^## Not essential\n/m, 1]
     assert_includes template, "<The output of `<runner> --table`, its `<details>` block as the runner prints it.>"
+  end
+
+  def test_the_template_holds_the_parts_cadre_reads_by_name
+    template = skill[/^## Template\n(.*?)^## Not essential\n/m, 1]
+    ["\n## Before deploying\n\n- [ ] ", "\n\nCadre: <slug>/<n>\n````\n",
+     "- Consumers: <each frontend and app, whether it must change, and the order they deploy in, or \"none\">",
+     "- Deploy: <the order when this change goes first or that it doesn't matter, what stays behind a flag, what comes after the deploy, and that the change works while the previous version runs, keeps unfinished work out of users' reach and loses no data on rollback>"].each { |text| assert_includes template, text }
   end
 end
 

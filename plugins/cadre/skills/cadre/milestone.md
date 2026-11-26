@@ -37,7 +37,7 @@ When the person asks to "start milestone `<slug>/<n>`", or to start work on a mi
 A spec or plan tracked in Cadre says so on the line under its title. When you implement one, for example while executing such a plan:
 
 - Load `cadre:pr-description` before writing or editing its pull request's description. When the pull request is already open without its `Cadre:` line, add it: write `gh pr view <pr-url> --json body -q .body` to a temporary file, add the line, then run `gh pr edit <pr-url> --body-file <file>`.
-- A feature spec names only its project, `<slug>`: start each of its increments as "Start a milestone" says, so its plan says it is tracked too.
+- A feature spec names only its project, `<slug>`: its increment `<i>` is milestone `<slug>/<i>`. Start it as "Start a milestone" says, so its plan says it is tracked too.
 
 ## Link a pull request by hand
 
