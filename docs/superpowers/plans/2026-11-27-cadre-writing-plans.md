@@ -197,3 +197,10 @@ engineering-principles (1 Important, 2 Minor) and writing-for-agents (1 Importan
 - The size rule skips its stop when the person kept the part whole at step 4, and that plan says the person kept it whole: the declined split no longer comes round again.
 - Step 4's re-run is "only steps 1, 2 and 4 … and come back here", and a stop in it stops the planning; one sentence makes either spec change through "Update a milestone's spec".
 - The test's stray `].each` is back on its last element.
+
+### Round 4: `862caeb..70e794d`
+
+engineering-principles: clean. writing-for-agents (1 Important, 2 Minor), all fixed:
+
+- The size rule opens on the kept-whole case, where the plan says the person kept it whole; otherwise the plan says why it can't be smaller, or the rule stops. Step 4 is named with its section on first mention.
+- "Either spec edit, the narrowing or the spec change" goes through "Update a milestone's spec"; the split's new milestone stays with "Change a project".
