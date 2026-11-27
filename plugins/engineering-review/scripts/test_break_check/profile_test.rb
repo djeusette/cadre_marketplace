@@ -53,6 +53,13 @@ class ProfileTest < Minitest::Test
     end
   end
 
+  def test_the_partition_goes_to_the_chosen_profile_only
+    files = {"lib/a.ex" => "", "script/break_check.rb" => "", "script/break_check/x.rb" => ""}
+    with_repo(files.merge(".break-check.json" => settings({"app" => EXUNIT, "scripts" => MINITEST}, default: "app"))) do |root|
+      assert_equal({"MIX_TEST_PARTITION" => "2"}, load_profile(root, partition: 2).command.call(["t.exs"]).first)
+    end
+  end
+
   def test_two_profiles_without_a_default_refuse
     with_repo(".break-check.json" => settings({"a" => MINITEST, "b" => MINITEST}), "script/break_check.rb" => "") do |root|
       error = assert_raises(BreakCheck::Usage) { load_profile(root, name: "a") }
