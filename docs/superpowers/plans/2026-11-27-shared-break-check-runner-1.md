@@ -110,7 +110,7 @@ The rules, each its own red → green slice in `profile_test.rb`, in this order:
 
 ### Task 5: break checks, reviews and the PR
 
-Recipes, run from the worktree root (one profile, so `--profile` is left out):
+Recipes, run from the worktree root (one profile, so `--profile` is left out). The port base is `8e6fce1`:
 
 - After a task: `ruby plugins/engineering-review/scripts/break_check.rb --uncovered <port base>`; one break per branch on the listed lines into `.breaks/task-<n>.json` with the test files that cover it; run the file; a `NOT CAUGHT` gets a test.
 - Before the PR: `--stale --replay`, `--uncovered <port base>` (every listed line holds no branch), `--table`.

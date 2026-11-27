@@ -337,11 +337,13 @@ class CliTest < Minitest::Test
     assert_equal "break_check.rb needs Ruby 3.2 or later; this is Ruby 3.1.4\n", output
   end
 
-  def test_ruby_3_2_runs
-    output, status = load_as_ruby("3.2.0")
+  def test_ruby_3_2_and_later_runs
+    ["3.2.0", "10.0.0"].each do |version|
+      output, status = load_as_ruby(version)
 
-    assert_equal 0, status.exitstatus
-    assert_equal "loaded\n", output
+      assert_equal 0, status.exitstatus, version
+      assert_equal "loaded\n", output, version
+    end
   end
 
   private

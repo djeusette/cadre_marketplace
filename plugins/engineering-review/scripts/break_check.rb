@@ -4,7 +4,7 @@
 #
 # This file parses on any Ruby, so an old one gets this message rather
 # than a syntax error from the files it loads.
-if (RUBY_VERSION.split(".").map(&:to_i) <=> [3, 2]) < 0
+if (RUBY_VERSION.split(".").map(&:to_i) <=> [3, 2, 0]) < 0
   puts "break_check.rb needs Ruby 3.2 or later; this is Ruby #{RUBY_VERSION}"
   exit 2
 end
