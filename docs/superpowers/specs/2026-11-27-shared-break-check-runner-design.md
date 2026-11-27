@@ -141,7 +141,7 @@ One PR per repo:
 - `.breaks/` in `.gitignore`;
 - a check: one real branch broken and caught through the plugin's runner, recorded in the PR.
 
-The stacks: ExUnit (cadre, colette-api, kinfield's umbrella with its two partitions), Vitest (colette-app, rooms-app, admin-app), `flutter test` (club-mobile), Python `unittest` (cadre_marketplace, whose `minitest` profile came in increment 1), Minitest and its TypeScript scripts' tests (colette-marketplace). cadre's PR also deletes `script/break_check.rb`, `script/break_check/`, `script/test/` and `script/README.md`, and points `AGENTS.md` and its Checks at the plugin's runner.
+The stacks: ExUnit (cadre, colette-api, kinfield's umbrella with its two partitions), Vitest (colette-app, rooms-app, admin-app), `flutter test` (club-mobile), Python `unittest` (cadre_marketplace, whose `minitest` profile came in increment 1), Minitest and its TypeScript scripts' tests (colette-marketplace). cadre's PR also deletes `script/break_check.rb`, `script/break_check/`, `script/test/` and `script/README.md`, points `AGENTS.md` at the plugin's runner, and drops the runner's tests from its Checks and CI (a break check runs per task and before a PR, not per commit).
 
 ## Left to the builder
 
@@ -167,7 +167,7 @@ The stacks: ExUnit (cadre, colette-api, kinfield's umbrella with its two partiti
 - **Deployable alone:** the shared runner shipped in 1; cadre's ledger format is unchanged, so its proofs stay fresh.
 - **Consumers:** anyone with a cadre branch that calls `ruby script/break_check.rb`: after a merge of `main` they call the plugin's runner, as the skill says.
 - **Code files:** cadre's `script/break_check.rb` and `script/break_check/` (deleted), `.break-check.json`; the tests and README go with them.
-- [ ] Not shipped
+- [x] PR djeusette/cadre#173
 
 ### Increment 3 — The five known gaps (cadre marketplace)
 
