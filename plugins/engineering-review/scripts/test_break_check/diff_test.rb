@@ -92,6 +92,28 @@ class DiffTest < Minitest::Test
     end
   end
 
+  def test_a_changed_line_that_is_not_utf_8_is_read
+    with_git_repo("lib/a.ex" => "\xFFa\n".b) do |root|
+      File.binwrite("lib/a.ex", "\xFFb\n".b)
+
+      assert_equal ["�b"], since(root).added.map { _1[:text] }
+    end
+  end
+
+  # macOS refuses such a name; Linux, where CI runs, takes it.
+  def test_an_untracked_file_whose_name_is_not_utf_8_is_read
+    with_git_repo("lib/a.ex" => "a\n") do |root|
+      name = "lib/\xFF.ex".b
+      begin
+        File.binwrite(name, "if x\n")
+      rescue Errno::EILSEQ
+        skip "this filesystem refuses a name that is not UTF-8"
+      end
+
+      assert_equal [name], since(root).added.map { _1[:file].b }
+    end
+  end
+
   def test_untracked_paths_that_are_not_files_hold_no_lines
     with_git_repo("lib/a.ex" => "a\n") do |root|
       File.symlink("missing.ex", "lib/dangling.ex")

@@ -33,19 +33,20 @@ module BreakCheck
       # -z: names come back as they are, never quoted.
       untracked = git(root, "ls-files", "-z", "--others", "--exclude-standard", "--", *paths).split("\0")
         .select { File.file?(File.join(root, _1)) }
-      Change.new(hunks: parse(diff), untracked: untracked.flat_map { whole_file(root, _1) })
+      Change.new(hunks: parse(diff.scrub), untracked: untracked.flat_map { whole_file(root, _1) })
     end
 
     def self.whole_file(root, file)
       BreakCheck.read(File.join(root, file)).each_line(chomp: true).with_index(1).map { |text, line| {file:, line:, text:} }
     end
 
-    # Paths come back as they are: no quoting of accented names.
+    # Paths come back as they are: no quoting of accented names, and no
+    # scrubbing, so a name that is not UTF-8 still opens its file.
     def self.git(root, *args)
       output, status = Open3.capture2e("git", "-c", "core.quotePath=false", *args, chdir: root)
       raise Error, "git #{args.first} failed: #{output.strip}" unless status.success?
 
-      output.force_encoding(Encoding::UTF_8).scrub
+      output.force_encoding(Encoding::UTF_8)
     end
 
     # A file's `+++` header comes before its first hunk; inside a hunk,

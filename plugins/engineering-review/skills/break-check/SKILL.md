@@ -83,7 +83,7 @@ A run prints one line per break as it happens, then a summary line (`<n> caught,
 
 - **0** every break was caught or already `proven`, or nothing is left.
 - **1** something is left: a break not caught, one that doesn't compile or is inconclusive, a stale or gone proof listed, a line no proof covers, a gone proof dropped. A normal end of `--uncovered`, `--stale` and `--stale --replay`: read the lines.
-- **2** the runner refused and broke nothing: no `.break-check.json` at the root or a bad one, an unknown profile, a `--partition` missing or not taken, a stale proof whose profile the file no longer has (break it again with `--profile`), Ruby older than 3.2, the lock is held, a swap missed, a bad breaks file, tests red before any break (on a replay of several profiles, after the earlier profiles' proofs are recorded), a bad command line, an unexpected error.
+- **2** the runner refused and broke nothing: no `.break-check.json` at the root or a bad one, an unknown profile, a `--partition` missing or not taken, a stale proof whose profile the file no longer has (break it again with `--profile`), Ruby older than 3.2, the lock is held, a swap missed, a bad breaks file, tests red before any break (on a replay of several profiles, after the earlier profiles' proofs are recorded), a bad command line, a path git quotes in the diff (one holding `"`, `\` or a control character), an unexpected error.
 - **3** a file could not be restored, or changed while it held a break. The message names the journal entry that holds the original. When the file differs from the original only by the break, put the original back; when someone edited it meanwhile, undo the break by hand and keep their edit. Then delete the entry, or every command exits 3 again.
 
 ## The ledger
