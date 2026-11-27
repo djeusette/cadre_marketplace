@@ -10,7 +10,7 @@ You brainstorm the feature with the person through `superpowers:brainstorming`, 
 ## Before you start
 
 1. Check that `superpowers:brainstorming` is among your available skills. When it is missing, tell the person to install and enable the `superpowers` plugin from the `claude-plugins-official` marketplace, and stop.
-2. Run only "Before you start", "Install or update the CLI" and "Sign in" in [the cadre skill](../cadre/SKILL.md), in that order, then come back here. This step is done once `cadre whoami --json` succeeds, so the brainstorm can end with the project registered.
+2. Run only "Before you start", "Install or update the CLI" and "Sign in" in [the cadre skill](../cadre/SKILL.md), in that order, then come back here. When one of them says to stop, the brainstorm stops too. This step is done once the person is signed in, so the brainstorm can end with the project registered: `cadre whoami --json` holds an `email`, or `cadre login` printed `Signed in as <email>.`
 
 ## Run superpowers brainstorming
 
