@@ -1381,6 +1381,13 @@ class PrStandardTest(unittest.TestCase):
             self.assertIn('\nplugins: ["../..", "../../../cadre"]\n', frontmatter, prompt.parent.name)
         self.assertIn("The `pr-description-*` cases also list `../../../cadre`", readme)
 
+    def test_the_readme_says_installing_it_installs_cadre(self):
+        readme = (PLUGIN_DIR.parent.parent / "README.md").read_text(encoding="utf-8")
+        bullet = next(line for line in readme.splitlines() if line.startswith("- **engineering-review** — "))
+
+        self.assertIn("Installing it installs `cadre`, whose `cadre:pr-description` is the standard the review checks a pull "
+                      "request's title and description against, and `security-audit`.", bullet)
+
     def test_the_pr_standard_is_cadres(self):
         agent = (PLUGIN_DIR / "agents" / "review-companion.md").read_text(encoding="utf-8")
 
