@@ -18,7 +18,7 @@ You plan one pull request at a time through `superpowers:writing-plans`: one rep
 Take the first case that fits the request, then follow the section named for the case:
 
 - **Handed over:** step 5 of "Start a milestone" in [milestone.md](../cadre/milestone.md) handed you its spec copy's path. Its steps 1 to 4 and the cadre skill's checks are done: go to step 3 of "A Cadre milestone".
-- **A Cadre milestone:** the request names a milestone, `<slug>/<n>`, a Cadre project, or a spec whose line under its title says it is tracked in Cadre.
+- **A Cadre milestone:** the request names a milestone, `<slug>/<n>`, a Cadre project, or a spec whose line under its title says it is tracked in Cadre. A tracked spec's status lines, when it has some, are ignored: Cadre shows where each milestone stands.
 - **A spec not tracked in Cadre:** the request names a spec without that line.
 - **Requirements with no spec:** the request describes a feature or a change, not only a spec or a project by name.
 
@@ -37,6 +37,10 @@ When none fits, ask the person what to plan: a milestone, a spec or requirements
    ```
 
    For one app's plan, the line ends with ` <app>`: `Cadre: <slug>/<n> <app>`.
+
+## A spec not tracked in Cadre
+
+Register it first: follow "Create a project" in [project.md](../cadre/project.md) from step 1, with that spec. It brainstorms the spec's End goal and Increments through `cadre:brainstorming` when the spec lacks either. Once `cadre project create` has registered the project, plan milestone `<slug>/1` as "A Cadre milestone" says, from its step 2.
 
 ## One pull request
 

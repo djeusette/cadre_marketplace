@@ -1512,7 +1512,7 @@ class WritingPlansTest < Minitest::Test
   end
 
   def test_its_sections_come_in_order
-    assert_equal ["## Before you start", "## What to plan", "## A Cadre milestone", "## One pull request", "## Run superpowers writing-plans"],
+    assert_equal ["## Before you start", "## What to plan", "## A Cadre milestone", "## A spec not tracked in Cadre", "## One pull request", "## Run superpowers writing-plans"],
                  skill.gsub(/^ *```.*?^ *```$/m, "").scan(/^## .*$/)
   end
 
@@ -1609,5 +1609,15 @@ class WritingPlansTest < Minitest::Test
     [%q{When the plan's file structure holds more than 20 code files, counted as "One pull request" says, the plan says why it can't be smaller.},
      "When it could be smaller, stop before writing the plan",
      %q{propose the split of a milestone to the person, as "Change a project" in [project.md](../cadre/project.md) adds a milestone}].each { |text| assert_includes run_section, text }
+  end
+  
+  def test_an_untracked_spec_is_registered_before_milestone_1_is_planned
+    spec_section = section(skill, "## A spec not tracked in Cadre")
+    [%q{Register it first: follow "Create a project" in [project.md](../cadre/project.md) from step 1, with that spec.},
+     "through `cadre:brainstorming` when the spec lacks either",
+     %q{Once `cadre project create` has registered the project, plan milestone `<slug>/1` as "A Cadre milestone" says, from its step 2.}].each do |text|
+      assert_includes spec_section, text
+    end
+    assert_includes what_to_plan, "A tracked spec's status lines, when it has some, are ignored: Cadre shows where each milestone stands."
   end
 end
