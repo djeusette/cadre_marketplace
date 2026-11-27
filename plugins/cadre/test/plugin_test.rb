@@ -47,10 +47,10 @@ class ManifestTest < Minitest::Test
     assert_equal "https://github.com/djeusette/cadre_marketplace", manifest["repository"]
   end
 
-  def test_marketplace_lists_cadre_last_at_the_plugin_version
-    assert_equal "cadre", marketplace.fetch("plugins").last["name"]
+  # No place in the list is pinned: the marketplace lists other plugins too.
+  def test_marketplace_lists_cadre_at_the_plugin_version
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.35.0", manifest["version"]
+    assert_equal "0.35.1", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -66,12 +66,18 @@ class ManifestTest < Minitest::Test
     refute_includes readme, "bumping its version"
   end
 
+  def test_readme_leaves_the_checks_to_agents_md
+    readme = File.read(File.join(ROOT, "README.md"))
+    assert_includes readme, "To run the checks, follow \"Checks\" in [AGENTS.md](AGENTS.md)."
+    refute_includes readme, "ruby plugins/cadre/test/plugin_test.rb"
+  end
+
   def test_readme_lists_cadre
     assert_match(/^- \*\*cadre\*\* — /, File.read(File.join(ROOT, "README.md")))
   end
 
   def test_readme_sums_cadre_up_and_links_its_skill
-    bullet = File.read(File.join(ROOT, "README.md"))[/^- \*\*cadre\*\* — .*?(?=^#|\z)/m]
+    bullet = File.read(File.join(ROOT, "README.md"))[/^- \*\*cadre\*\* — .*?(?=^- \*\*|^#|\z)/m]
     assert_equal "- **cadre** \u2014 runs Cadre from Claude Code: it starts milestones and links their pull requests, connects repos to Fly, Vercel or the app stores, deploys them and writes Skills tables. [`cadre:brainstorming`](plugins/cadre/skills/brainstorming/SKILL.md) brainstorms a feature into a Cadre project; [`cadre:writing-plans`](plugins/cadre/skills/writing-plans/SKILL.md) plans a milestone's pull request; [`cadre:pr-description`](plugins/cadre/skills/pr-description/SKILL.md) sets the standard for PR descriptions. It installs the `cadre` CLI and signs you in; cadre installs `superpowers` from `claude-plugins-official` with it. [The skill](plugins/cadre/skills/cadre/SKILL.md).", bullet.strip
     assert_operator bullet.split.size, :<=, 70
   end
@@ -80,10 +86,13 @@ class ManifestTest < Minitest::Test
 
   def test_agents_md_names_the_checks_the_release_and_which_skill_wins
     ["`LANG=en_US.UTF-8 ruby plugins/cadre/test/plugin_test.rb`", "invalid byte sequence in US-ASCII",
-     "change the test first, watch it go red, then the text", "`test_marketplace_lists_cadre_last_at_the_plugin_version`",
+     "change the test first, watch it go red, then the text", "`test_marketplace_lists_cadre_at_the_plugin_version`",
+     "`python3 -m unittest discover -s plugins/engineering-review/scripts -p 'test_*.py'`",
+     "`python3 plugins/engineering-review/scripts/check_plugin.py plugin plugins/engineering-review`",
+     "`ruby test/check_version_bumps_test.rb`", "bumps that plugin's version",
      "`mattpocock-skills:writing-for-agents` wins", "starts with `Cadre`",
      "enable its plugin under `enabledPlugins` in `.claude/settings.json`"].each { |text| assert_includes agents_md, text }
-    assert_includes ManifestTest.public_instance_methods, :test_marketplace_lists_cadre_last_at_the_plugin_version
+    assert_includes ManifestTest.public_instance_methods, :test_marketplace_lists_cadre_at_the_plugin_version
     refute_includes agents_md, "Rules for any agent"
     assert_match(/^The cadre skill's description starts with `Cadre`\.$/, agents_md)
     refute_includes agents_md, "wins, and the skill's description"

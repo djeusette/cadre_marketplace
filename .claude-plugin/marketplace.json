@@ -13,7 +13,7 @@
       "name": "cadre",
       "source": "./plugins/cadre",
       "description": "Run Cadre from Claude Code: register a feature's milestones, start them, connect repos and deploy them, tracked across repos in deploy order.",
-      "version": "0.35.0",
+      "version": "0.35.1",
       "author": {
         "name": "Colette Club"
       },
@@ -22,6 +22,43 @@
         "release",
         "projects",
         "milestones"
+      ]
+    },
+    {
+      "name": "engineering-review",
+      "source": "./plugins/engineering-review",
+      "description": "Language-agnostic engineering principles, a break check that proves each branch a change adds or changes has a test, and a review companion that supports human code review with explained findings, recommendations and diagrams.",
+      "version": "0.21.0",
+      "author": {
+        "name": "Colette Club"
+      },
+      "keywords": [
+        "code-review",
+        "clean-code",
+        "concurrency",
+        "testing",
+        "documentation",
+        "database",
+        "conventions"
+      ]
+    },
+    {
+      "name": "security-audit",
+      "source": {
+        "source": "github",
+        "repo": "cloudflare/security-audit-skill",
+        "sha": "c1c8a8c1471069fb0e188eeaff69b8e8db6564a8"
+      },
+      "description": "Cloudflare's security-audit skill, pinned to one commit. The review companion runs it in a subagent as its security layer.",
+      "author": {
+        "name": "Cloudflare"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/cloudflare/security-audit-skill",
+      "keywords": [
+        "security",
+        "code-review",
+        "vulnerabilities"
       ]
     }
   ]
