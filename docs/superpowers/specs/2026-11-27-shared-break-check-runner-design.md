@@ -90,7 +90,7 @@ At the repository root, committed. It holds one or more profiles: what cadre's `
 }
 ```
 
-- `command` is an argument list; `{files}` expands to the break's test files, `{partition}` to `--partition N`. A profile whose command or env names `{partition}` requires `--partition`; one that doesn't, refuses it.
+- `command` is an argument list; `{files}` expands to the break's test files, `{partition}` to the N of `--partition N`. A profile whose command or env names `{partition}` requires `--partition`; one that doesn't, refuses it.
 - The patterns are Ruby regular expressions as strings. `failing_test` captures the failing test's name in its first group and may span lines.
 - `infrastructure`, `refusal`, `doc_open` and `doc_close` are optional.
 - `"default": "<profile>"` names the profile used when `--profile` is left out. It is required when the file holds more than one profile *(my call)*.

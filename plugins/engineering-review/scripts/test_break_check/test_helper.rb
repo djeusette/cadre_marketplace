@@ -5,6 +5,35 @@ require "json"
 require_relative "../break_check/breaks"
 
 module RepoHelper
+  # cadre's two profiles, as a .break-check.json holds them.
+  EXUNIT = {
+    "command" => ["mise", "exec", "--", "mix", "test", "--seed", "0", "{files}"],
+    "env" => {"MIX_TEST_PARTITION" => "{partition}"},
+    "failing_test" => '^\s+\d+\) (test .+ \([\w.]+\))$',
+    "compile_error" => "== Compilation error in file",
+    "infrastructure" => "too_many_connections",
+    "refusal" => "Another mix test run is using",
+    "timeout" => 300,
+    "watched" => ["lib"],
+    "noise" => '\A\s*(?:#(?!\{).*|end|do|\)|\]|\}|)\s*\z',
+    "doc_open" => '\A\s*@(?:moduledoc|doc|typedoc)\s+"""\s*\z',
+    "doc_close" => '\A\s*"""\s*\z'
+  }.freeze
+
+  MINITEST = {
+    "command" => ["ruby", "-e", "ARGV.each { require File.expand_path(_1) }", "{files}"],
+    "failing_test" => '^\s+\d+\) (?:Failure|Error):\n(\S+#test_\w+)',
+    "compile_error" => "SyntaxError",
+    "timeout" => 120,
+    "watched" => ["script/break_check.rb", "script/break_check"],
+    "noise" => '\A\s*(?:#(?!\{).*|end|\)|\]|\}|)\s*\z'
+  }.freeze
+
+  # The text of a .break-check.json holding `profiles`.
+  def self.settings(profiles, default: nil)
+    JSON.generate({"profiles" => profiles, "default" => default}.compact)
+  end
+
   # Builds a temporary repository from `path => content` and runs the block
   # inside it, so every path in a test is relative, as in a real repo.
   def with_repo(files = {})

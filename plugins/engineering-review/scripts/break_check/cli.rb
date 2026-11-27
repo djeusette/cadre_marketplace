@@ -10,11 +10,6 @@ require_relative "workspace"
 
 module BreakCheck
   module CLI
-    PROFILES = {
-      "exunit" => ->(options) { Profiles.exunit(partition: options[:partition]) },
-      "minitest" => ->(_options) { Profiles.minitest }
-    }.freeze
-
     COMMANDS = %i[breaks stale uncovered table].freeze
 
     BANNER = <<~TEXT
@@ -27,8 +22,8 @@ module BreakCheck
 
     # Prints as it goes, so a run killed midway still shows its results.
     # Returns the exit code.
-    def self.run(argv, profiles: PROFILES, out: $stdout)
-      dispatch(parse(argv), profiles, out)
+    def self.run(argv, out: $stdout)
+      dispatch(parse(argv), out)
     rescue RestoreFailed => error
       out.puts "RESTORE FAILED: #{error.message}"
       3
@@ -41,7 +36,7 @@ module BreakCheck
     end
 
     def self.parse(argv)
-      options = {profile: "exunit"}
+      options = {}
       rest = OptionParser.new(BANNER) do |parser|
         parser.on("--partition N", Integer) { options[:partition] = _1 }
         parser.on("--profile NAME") { options[:profile] = _1 }
@@ -58,7 +53,12 @@ module BreakCheck
       end
     end
 
-    def self.dispatch(options, profiles, out)
+    # Every command reads .break-check.json first, so a run outside a
+    # repository's root never reads as an all-clear.
+    def self.dispatch(options, out)
+      raise Usage, BANNER unless COMMANDS.any? { options[_1] }
+
+      profile = Profiles.load(Dir.pwd, name: options[:profile], partition: options[:partition])
       ledger = Ledger.new(Dir.pwd)
       workspace = Workspace.new(Dir.pwd, out:)
 
@@ -66,17 +66,14 @@ module BreakCheck
         workspace.lock_and_recover { out.print ledger.table }
         0
       elsif options[:uncovered]
-        uncovered = Uncovered.new(Dir.pwd, profile(options, profiles))
+        uncovered = Uncovered.new(Dir.pwd, profile)
         workspace.lock_and_recover { print_uncovered(uncovered.call(options[:uncovered]), out) }
       elsif options[:stale] && options[:replay]
-        replay(ledger, workspace, profile(options, profiles), out)
+        replay(ledger, workspace, profile, out)
       elsif options[:stale]
         workspace.lock_and_recover { print_stale(ledger.stale, out) }
-      elsif options[:breaks]
-        breaks = Breaks.load(options[:breaks])
-        exit_code(Run.new(profile: profile(options, profiles), out:).call(breaks))
       else
-        raise Usage, BANNER
+        exit_code(Run.new(profile:, out:).call(Breaks.load(options[:breaks])))
       end
     end
 
@@ -105,10 +102,6 @@ module BreakCheck
       count = stale.values.sum(&:size)
       out.puts "#{count} stale"
       count.zero? ? 0 : 1
-    end
-
-    def self.profile(options, profiles)
-      profiles.fetch(options[:profile]) { raise Usage, "unknown profile #{options[:profile]}" }.call(options)
     end
 
     def self.exit_code(outcomes) = outcomes.all? { _1.result == :caught } ? 0 : 1

@@ -162,7 +162,7 @@ class UncoveredTest < Minitest::Test
       write("script/break_check/x.rb", "def y\n  # a comment\n  1 if z\nend\n")
       write("script/test/x_test.rb", "def test_y; end\n")
 
-      lines = BreakCheck::Uncovered.new(root, BreakCheck::Profiles.minitest).call("HEAD")
+      lines = BreakCheck::Uncovered.new(root, BreakCheck::Profiles.build("minitest", MINITEST, partition: nil)).call("HEAD")
 
       assert_equal [["script/break_check/x.rb", "def y"], ["script/break_check/x.rb", "  1 if z"]], lines.map { [_1[:file], _1[:text]] }
     end
@@ -170,7 +170,7 @@ class UncoveredTest < Minitest::Test
 
   private
 
-  def uncovered(root) = BreakCheck::Uncovered.new(root, BreakCheck::Profiles.exunit(partition: nil))
+  def uncovered(root) = BreakCheck::Uncovered.new(root, BreakCheck::Profiles.build("exunit", EXUNIT, partition: nil))
 
   def run_cli(argv)
     out = StringIO.new
@@ -178,7 +178,7 @@ class UncoveredTest < Minitest::Test
   end
 
   def with_git_repo
-    with_repo("lib/a.ex" => BASE_SOURCE, "test/a_test.exs" => "test") do |root|
+    with_repo("lib/a.ex" => BASE_SOURCE, "test/a_test.exs" => "test", ".break-check.json" => RepoHelper.settings({"exunit" => EXUNIT})) do |root|
       git("init", "-q")
       git("add", ".")
       git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "base")

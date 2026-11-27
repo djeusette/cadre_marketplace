@@ -189,16 +189,6 @@ class RunTest < Minitest::Test
     end
   end
 
-  def test_the_ex_unit_command_runs_one_partition_in_a_fixed_order
-    assert_equal [{"MIX_TEST_PARTITION" => "3"}, "mise", "exec", "--", "mix", "test", "--seed", "0", "test/a_test.exs"],
-      BreakCheck::Profiles.exunit(partition: 3).command.call(["test/a_test.exs"])
-  end
-
-  def test_the_ex_unit_command_needs_a_partition
-    error = assert_raises(BreakCheck::Usage) { BreakCheck::Profiles.exunit(partition: nil).command.call(["t.exs"]) }
-    assert_includes error.message, "--partition"
-  end
-
   private
 
   def run_breaks(breaks, out: StringIO.new, timeout: 10)

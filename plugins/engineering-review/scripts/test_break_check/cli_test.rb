@@ -8,7 +8,8 @@ require "stringio"
 class CliTest < Minitest::Test
   include RepoHelper
 
-  FILES = {"lib/a.ex" => "mode=pass\n", "lib/b.ex" => "mode=pass\n", "test/a_test.exs" => "test"}.freeze
+  FILES = {"lib/a.ex" => "mode=pass\n", "lib/b.ex" => "mode=pass\n", "test/a_test.exs" => "test",
+    ".break-check.json" => RepoHelper.settings({"exunit" => RepoHelper::EXUNIT, "fake" => FakeProfile.fields}, default: "exunit")}.freeze
 
   def test_exit_is_0_only_when_every_break_is_caught
     with_repo(FILES.merge("lib/a.ex" => "mode=pass\nx = 1\n")) do
@@ -284,9 +285,9 @@ class CliTest < Minitest::Test
   def test_term_mid_run_keeps_what_was_printed_and_stops_the_test_run
     with_repo(FILES) do |root|
       write_breaks([mode_break("fail"), mode_break("hang", file: "lib/b.ex")])
+      File.write(".break-check.json", RepoHelper.settings({"fake" => FakeProfile.fields(timeout: 60)}))
       pid = Process.spawn(RbConfig.ruby, "-e", "require #{File.expand_path("../break_check.rb", __dir__).dump}; " \
-        "require #{File.expand_path("fake_profile", __dir__).dump}; $stdout.sync = true; " \
-        "exit BreakCheck::CLI.run(['breaks.json', '--profile', 'fake'], profiles: {'fake' => ->(_) { FakeProfile.call(timeout: 60) }}, out: $stdout)",
+        "$stdout.sync = true; exit BreakCheck::CLI.run(['breaks.json', '--profile', 'fake'], out: $stdout)",
         out: "out.txt", err: File::NULL)
       wait_for { File.exist?(".hang-pid") }
       test_run = File.read(".hang-pid").to_i
@@ -302,14 +303,25 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_table_and_stale_refuse_without_settings
+    with_repo(FILES.except(".break-check.json")) do
+      [["--table"], ["--stale"]].each do |argv|
+        code, out = run_cli(argv)
+
+        assert_equal 2, code, argv.inspect
+        assert_includes out, "no .break-check.json in #{Dir.pwd}", argv.inspect
+      end
+    end
+  end
+
   private
 
   # The CLI with the fake test command; returns [exit code, everything printed].
-  def cli(argv) = run_cli(argv + ["--profile", "fake"], profiles: {"fake" => ->(_options) { FakeProfile.call }})
+  def cli(argv) = run_cli(argv + ["--profile", "fake"])
 
-  def run_cli(argv, profiles: BreakCheck::CLI::PROFILES)
+  def run_cli(argv)
     out = StringIO.new
-    [BreakCheck::CLI.run(argv, profiles:, out:), out.string]
+    [BreakCheck::CLI.run(argv, out:), out.string]
   end
 
   def wait_for(seconds: 15)
