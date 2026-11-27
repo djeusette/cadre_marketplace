@@ -8,7 +8,7 @@ Run `LANG=en_US.UTF-8 ruby plugins/cadre/test/plugin_test.rb`. Without `LANG` it
 
 ## Release
 
-Bump the version in `plugins/cadre/.claude-plugin/plugin.json`, in `.claude-plugin/marketplace.json` and in `test_marketplace_lists_cadre_last_at_the_plugin_version`.
+Bump the version in `plugins/cadre/.claude-plugin/plugin.json`, in `.claude-plugin/marketplace.json` and in `test_marketplace_lists_cadre_at_the_plugin_version`.
 
 ## Skills
 
