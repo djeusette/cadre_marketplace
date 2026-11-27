@@ -45,7 +45,7 @@ Every command reads `.break-check.json` first, and exits 2 when it is missing or
 10. **Ledger.** Each `caught` is written once its restore is verified, so a killed run loses nothing. The ledger is rewritten whole (a temp file, then a rename).
 11. **Stale.** `--stale --replay` names the gone proofs, reruns the stale ones as the ledger holds them, and only then drops the gone ones, so a replay that cannot run loses nothing.
 12. **Uncovered.** The lines added since `BASE` under the watched paths, untracked files included, minus the lines a fresh proof's `from` spans, noise lines and doc-block lines.
-13. **Table.** In the shape SKILL.md shows.
+13. **Table.** In the shape SKILL.md shows. A swap that holds a backtick is fenced with one backtick more than its longest run of them, with a space inside each end, so a backtick at either end stays code.
 14. **Exit codes** as SKILL.md gives them.
 
 ## .break-check.json
@@ -110,8 +110,6 @@ Once its tests are green, break-check the runner's own code with the runner of t
 - `--table` takes no base, so it prints the proofs of every change in the worktree; `cadre:pr-description` says which rows a PR drops.
 - The ledger keeps no profile, so `--stale --replay` reruns every stale proof with the one profile it is given, and a stale proof from another suite stops it red. Until runners record the profile, replay when only one suite's files changed, or move the other suite's stale lines out of the ledger by hand for the replay and put them back after it. These two are the only hand edits a ledger gets.
 - `--uncovered` lists added lines only, so a branch narrowed only by deleting lines never shows there; SKILL.md says to break it all the same.
-- `--table` wraps `from` and `to` in single backticks, so a swap that holds a backtick (a template literal, a raw string) breaks its cell. Until runners fence a cell with more backticks than it holds, check such a row against the ledger itself.
-
 ## Reference implementation
 
 This plugin's `scripts/break_check.rb` and the files under `scripts/break_check/` (`breaks.rb`, `cli.rb`, `ledger.rb`, `profile.rb`, `run.rb`, `uncovered.rb`, `workspace.rb`), with their tests in `scripts/test_break_check/`, ported from cadre's runner (djeusette/cadre#159). It is Ruby 3.2 or later, with the standard library only. Read it when the contract leaves a choice open; where the two disagree, the contract wins and the runner is fixed.

@@ -99,7 +99,7 @@ A run prints one line per break as it happens, then a summary line (`<n> caught,
 
 `line` is where `from` was when the break ran. `hashes` holds the SHA-256 of `file` and of each test file, which tells fresh from stale. A newer proof replaces the one with the same swap in the same file, and one with the same `file` and name whose `from` no longer occurs exactly once.
 
-A proof **belongs** to a change when its `from` spans a line the change adds or changes, or sits next to a line it deletes. `<runner> --table` prints every fresh proof in this worktree, whichever change it belongs to, in this shape, `|` escaped as `\|` and a newline as `⏎`:
+A proof **belongs** to a change when its `from` spans a line the change adds or changes, or sits next to a line it deletes. `<runner> --table` prints every fresh proof in this worktree, whichever change it belongs to, in this shape, `|` escaped as `\|`, a newline as `⏎`, and a swap that holds a backtick fenced with more backticks than it holds:
 
 ```markdown
 <details><summary>Break checks (1)</summary>

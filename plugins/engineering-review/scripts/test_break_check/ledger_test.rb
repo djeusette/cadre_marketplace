@@ -156,6 +156,18 @@ class LedgerTest < Minitest::Test
     end
   end
 
+  def test_table_fences_a_swap_that_holds_a_backtick
+    with_repo(FILES.merge("lib/b.ex" => "x = `ls`\ny = a``b\n")) do |root|
+      ledger = BreakCheck::Ledger.new(root)
+      ledger.record(brk(name: "one", file: "lib/b.ex", from: "x = `ls`", to: "x = ls"), line: 1, tests_failed: ["t"])
+      ledger.record(brk(name: "two", file: "lib/b.ex", from: "y = a``b", to: "`y`"), line: 2, tests_failed: ["t"])
+
+      table = ledger.table
+      assert_includes table, "| lib/b.ex:1 | `` x = `ls` `` → `x = ls` |"
+      assert_includes table, "| lib/b.ex:2 | ``` y = a``b ``` → `` `y` `` |"
+    end
+  end
+
   def test_record_stale_and_table_read_utf_8_whatever_the_locale
     with_repo(FILES.merge("lib/b.ex" => "a → b\n")) do |root|
       with_ascii_locale do

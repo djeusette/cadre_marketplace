@@ -101,7 +101,15 @@ module BreakCheck
       end
     end
 
-    def code(text) = "`#{cell(text)}`"
+    # A fence longer than any run of backticks inside, padded with the one
+    # space on each side that Markdown strips, so a backtick at either end
+    # stays code.
+    def code(text)
+      return "`#{cell(text)}`" unless text.include?("`")
+
+      fence = "`" * (text.scan(/`+/).map(&:size).max + 1)
+      "#{fence} #{cell(text)} #{fence}"
+    end
 
     def cell(text) = text.gsub("|", "\\|").gsub("\n", "⏎")
 
