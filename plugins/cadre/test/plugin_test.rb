@@ -1398,7 +1398,8 @@ class BrainstormingTest < Minitest::Test
   end
 
   def test_the_opening_says_what_the_brainstorm_ends_as_and_leaves_the_rest_to_the_handoff
-    assert_includes skill, "and it ends as a feature spec: an end goal and the milestones that reach it.\n"
+    assert_equal "You brainstorm the feature with the person through `superpowers:brainstorming`, and it ends as a feature spec: an end goal and the milestones that reach it.\n\n",
+                 skill[/^# Cadre brainstorming\n\n(.*?)(?=^## )/m, 1]
   end
 
   def test_the_checks_come_before_the_brainstorm
