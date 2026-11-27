@@ -1367,7 +1367,7 @@ class PrStandardTest(unittest.TestCase):
         self.assertIn("from the `cadre` plugin, `cadre:pr-description`", companion)
         runtime = next(line for line in companion.splitlines() if line.startswith("  - Load these skills with `Skill`:"))
         self.assertIn("and `cadre:pr-description`.", runtime)
-        self.assertIn("as `cadre:pr-description` gives it, comes from its `--table`", (PLUGIN_DIR / "skills" / "break-check" / "SKILL.md").read_text(encoding="utf-8"))
+        self.assertIn("as `cadre:pr-description` gives it, comes from the runner's `--table`", (PLUGIN_DIR / "skills" / "break-check" / "SKILL.md").read_text(encoding="utf-8"))
 
     def test_every_skill_or_agent_named_by_its_plugin_exists(self):
         files = sorted((PLUGIN_DIR / "skills").rglob("*.md")) + sorted((PLUGIN_DIR / "agents").glob("*.md"))

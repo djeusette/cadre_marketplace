@@ -191,3 +191,7 @@ engineering-principles (4 Minor) and writing-for-agents (2 Important, 5 Minor), 
 - README's bullet reads "Installing it installs `security-audit` and `cadre`, whose `cadre:pr-description` the review checks PR titles and descriptions against."
 - A test checks that every backticked `cadre:<name>` and `engineering-review:<name>` under `skills/` and `agents/` is a skill or an agent that exists.
 - The v0.22.0 note marks as not verified that the other cases' runs report `cadre:pr-description` as not loaded. The plan's "Dry runs" points to that note instead of repeating it.
+
+### Round 2: `1165ab6..630ca0a`
+
+engineering-principles (2 Minor) and writing-for-agents (3 Minor), all fixed: break-check's first pointer says the Break checks part comes from the runner's `--table`, in a sentence of its own; the agent loads `cadre:pr-description` with the `Skill` tool, alongside the other skills; the v0.22.0 note says "it is not verified that a plugin listed from outside the case directory loads, nor that every other case's run reports `cadre:pr-description` as not loaded".
