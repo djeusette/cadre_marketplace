@@ -1392,6 +1392,17 @@ class BrainstormingTest < Minitest::Test
     ["`superpowers:brainstorming`", "`superpowers` plugin", "`claude-plugins-official`", "and stop"].each { |text| assert_includes before_you_start, text }
   end
 
+def test_it_checks_the_cli_and_the_sign_in_before_it_brainstorms
+  ["[the cadre skill](../cadre/SKILL.md)", %q{"Before you start"}, %q{"Install or update the CLI"}, %q{"Sign in"},
+   "then come back here"].each { |text| assert_includes before_you_start, text }
+  assert_operator before_you_start.index("`superpowers:brainstorming`"), :<, before_you_start.index("[the cadre skill]")
+end
+
+def test_it_stops_on_a_superpowers_older_than_7
+  run = section(skill, "## Run superpowers brainstorming")
+  ["no builder check", "older than 7.0", "update the `superpowers` plugin", "and stop"].each { |text| assert_includes run, text }
+end
+
   def test_it_runs_superpowers_brainstorming_as_written_with_cadres_rules_on_top
     ["Invoke `superpowers:brainstorming`", "follow it as written", "Invoke it from this skill, not through a workflow that wraps it", "Where they differ from it, they win"].each do |text|
       assert_includes skill, text
