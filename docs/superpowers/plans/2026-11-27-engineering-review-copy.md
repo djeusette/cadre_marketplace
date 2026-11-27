@@ -196,4 +196,8 @@ Declined, as a standing ruling: rewording round 1's commit message. Commits are 
 
 ### Round 3: `5dea840..400cae0`
 
-engineering-principles: clean. writing-for-agents (2 Minor), fixed: README's opening names security-audit as a plugin, in plain words like the others; Round 2's first line says what Task 3's list and Round 1's line each say.
+engineering-principles: clean. writing-for-agents (2 Minor), fixed: README's opening names security-audit as a plugin, in plain words like the others; Round 2's first bullet says what Task 3's list and Round 1's line each say.
+
+### Round 4: `400cae0..2122be6`
+
+engineering-principles: clean. writing-for-agents (1 Minor), fixed: Round 3's record names Round 2's first bullet, not its first line.
