@@ -314,6 +314,21 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_with_one_profile_the_profile_may_be_left_out
+    with_repo(FILES.merge(".break-check.json" => RepoHelper.settings({"fake" => FakeProfile.fields}))) do
+      assert_equal 0, run_cli([write_breaks([mode_break("fail")])]).first
+    end
+  end
+
+  def test_a_partition_reaches_the_profile
+    with_repo(FILES) do
+      code, out = cli([write_breaks([mode_break("fail")]), "--partition", "1"])
+
+      assert_equal 2, code
+      assert_includes out, "profile fake takes no --partition"
+    end
+  end
+
   private
 
   # The CLI with the fake test command; returns [exit code, everything printed].

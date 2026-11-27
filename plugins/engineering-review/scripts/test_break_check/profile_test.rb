@@ -142,6 +142,7 @@ class ProfileTest < Minitest::Test
     fields = MINITEST.merge("command" => ["run", "--part={partition}", "{files}", "--end"], "env" => {"P" => "p{partition}", "Q" => "q"})
 
     assert_equal [{"P" => "p2", "Q" => "q"}, "run", "--part=2", "a.rb", "b.rb", "--end"], build(fields, partition: 2).command.call(["a.rb", "b.rb"])
+    assert_equal [{}, "run", "--part=4", "a.rb"], build(MINITEST.merge("command" => ["run", "--part={partition}", "{files}"]), partition: 4).command.call(["a.rb"])
   end
 
   def test_the_ex_unit_command_needs_a_partition
