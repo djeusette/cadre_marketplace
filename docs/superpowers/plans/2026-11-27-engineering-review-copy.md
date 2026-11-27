@@ -212,4 +212,8 @@ engineering-principles: clean. writing-for-agents (1 Minor), fixed: Round 5's en
 
 ### Round 7: `5dfb21f..6052122`
 
-engineering-principles: clean. writing-for-agents (1 Minor), fixed: Round 6's entry, in the reviewer's words.
+engineering-principles: clean. writing-for-agents (1 Minor), fixed: Round 6's entry says Round 5's entry names Rounds 2 and 3.
+
+### Round 8: `6052122..32a421c`
+
+engineering-principles: clean. writing-for-agents (1 Minor), fixed: Round 7's entry says what Round 6's entry says.
