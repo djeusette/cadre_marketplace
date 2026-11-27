@@ -64,6 +64,7 @@ From the Claude Code docs (marketplace reference, manifest reference, dependenci
 | --- | --- | --- |
 | colette-api, colette-app, rooms-app, admin-app | `.claude/settings.json` enables `engineering-review@colette-club` and `security-audit@colette-club`; the Skills table installs `engineering-review` and `security-audit` `@colette-club` | 6 |
 | kinfield | `.claude/settings.json` enables `engineering-review@colette-club` | 6 |
+| club-mobile | `.claude/settings.json` enables `engineering-review@colette-club` and `security-audit@colette-club`; the Skills table installs them `@colette-club`. Missed when the table was written, found after the other eight merged | 6 |
 | cadre | `.claude/settings.json` enables `engineering-review@colette-club` and `colette@colette-club`; the spec `docs/superpowers/specs/2026-10-22-cadre-design.md` has the `colette:writing-plans` plan line | 6 |
 | colette-app `docs/superpowers/specs/2026-10-22-english-pages-design.md`, colette-api `docs/superpowers/specs/2026-11-09-live-recording-statuses-design.md` and `2026-11-18-referral-code-tracking-design.md` | The `colette:writing-plans` plan line | 6 |
 | colette-marketplace itself | `.claude/settings.json` enables `engineering-review` and `security-audit` `@colette-club`; its `AGENTS.md` Skills table installs them from there | 6 |
@@ -169,7 +170,7 @@ David chose one shared runner (2026-11-26):
   - the noise and doc-block patterns.
 - The runner needs Ruby 3.2 or later, which `break-check`'s "Before you start" checks.
 
-`docs/superpowers/specs/2026-11-25-break-check-design.md` stays in colette-club. After increment 5 and before increment 8 deletes it, its unshipped work is brainstormed again with `cadre:brainstorming`, from that spec, into its own Cadre project. The new spec lives in the cadre marketplace. Roughly in this order:
+`docs/superpowers/specs/2026-11-25-break-check-design.md` stays in colette-club. After increment 5 and before increment 8 deletes it, its unshipped work is brainstormed again, from that spec, into `docs/superpowers/specs/2026-11-27-shared-break-check-runner-design.md` in the cadre marketplace, not tracked in Cadre (David's call, 2026-11-27). Roughly in this order:
 
 - the shared runner, with `.break-check.json`, its tests, and `contract.md` as its documentation;
 - cadre adopting it, replacing `script/break_check.rb`;
@@ -240,7 +241,7 @@ The cadre marketplace holds `cadre` (CLI, brainstorming, planning, PR descriptio
 - **Before deploying:** David's and the team's user-scope `@colette-club` copies dropped, and the team told, as "Switching the team repos" says.
 - **Consumers:** the Consumers table.
 - **Code files:** 1 per repo — `.claude/settings.json` (the Skills tables and specs are docs)
-- [x] PRs colette-club/colette-api#2363, colette-club/colette-app#325, colette-club/rooms-app#705, colette-club/admin-app#764, djeusette/kinfield#60, djeusette/cadre#169, colette-club/colette-marketplace#49, #39
+- [x] PRs colette-club/colette-api#2363, colette-club/colette-app#325, colette-club/rooms-app#705, colette-club/admin-app#764, djeusette/kinfield#60, djeusette/cadre#169, colette-club/colette-marketplace#49, #39, colette-club/club-mobile#222
 
 ### Increment 7 — the `colette` plugin goes (colette-marketplace)
 
@@ -258,7 +259,7 @@ The cadre marketplace holds `cadre` (CLI, brainstorming, planning, PR descriptio
 - **Before deploying:**
   - every PR of increment 6 merged, and every person has run the switch commands;
   - increment 7 merged, since `colette` depends on `engineering-review`;
-  - the break-check spec's new Cadre project registered.
+  - the break-check spec's successor written: `docs/superpowers/specs/2026-11-27-shared-break-check-runner-design.md`, not tracked in Cadre (David's call, 2026-11-27).
 - **Consumers:** none left after increment 6.
 - **Code files:** 9 — `.claude-plugin/marketplace.json`, and the eight code files of `plugins/engineering-review/` (deleted)
 - [ ] Not shipped
