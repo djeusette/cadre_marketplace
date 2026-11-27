@@ -28,7 +28,8 @@ end
 
 class NotAnObject < StandardError; end
 
-# The manifest at rev, or nil when the plugin has none there.
+# The manifest at rev, or nil when the plugin has none there; raises
+# NotAnObject when it is not a JSON object.
 def manifest(rev, name)
   out, _err, status = Open3.capture3("git", "show", "#{rev}:plugins/#{name}/#{MANIFEST}")
   return unless status.success?

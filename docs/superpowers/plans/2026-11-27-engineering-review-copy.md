@@ -107,6 +107,9 @@ The seam is the script's command line, run in a throwaway git repo (global and s
   - `test_a_new_plugin_passes`, `test_a_new_plugin_without_a_version_fails`;
   - `test_a_plugin_whose_base_has_no_version_passes_once_it_has_one`;
   - `test_a_version_that_is_not_a_version_number_fails_and_names_the_plugin` (`v0.36.0`);
+  - `test_a_plugin_json_that_is_not_json_fails_and_names_the_plugin`, `test_a_plugin_json_that_is_not_an_object_fails_and_names_the_plugin`;
+  - `test_a_plugin_whose_base_plugin_json_is_not_json_passes_once_it_has_a_version`;
+  - `test_a_plugin_with_several_changed_files_is_named_once`;
   - `test_a_removed_plugin_passes`, `test_a_change_outside_plugins_passes`;
   - `test_an_unknown_base_fails`, `test_no_base_prints_the_usage` (exit 2).
 - [ ] **Step 2:** the script's header comment gives the usage and the rule.
@@ -172,10 +175,21 @@ The seam is the script's command line, run in a throwaway git repo (global and s
 
 engineering-principles (2 Minor) and writing-for-agents (2 Important, 4 Minor). The copy is verbatim. Fixed:
 
-- A `plugin.json` at `HEAD` that is not a JSON object (a trailing comma, a top-level `[]`) is named, exit 1, instead of a backtrace; at the base it counts as no version. Tests for both, and for a plugin with several changed files named once; the no-op `.sort` is gone.
+- A `plugin.json` at `HEAD` that is not a JSON object (a trailing comma, a top-level `[]`) is named, exit 1, instead of a backtrace; at the base it counts as no version. Tests for both shapes at `HEAD`, and for a plugin with several changed files named once; the no-op `.sort` is gone.
 - "Not a version number" is the one term, in the test name and the plan; the script's header says a version number is needed at `HEAD` even when the base has none.
 - README's opening describes the marketplace, not only cadre's plugins.
 - The workflow's job and step names say what each runs.
 - The plan's "Nothing is tested inside it" says which thing.
 
 Declined, as a standing ruling: an `engineering-review@cadre` install line in README "Use it". No team machine should hold `engineering-review@cadre` beside `@colette-club` before increment 6's switch (the spec's anti-goal), and the bullet already says what the plugin is.
+
+### Round 2: `edbb863..5dea840`
+
+engineering-principles (1 Important, 3 Minor) and writing-for-agents (2 Important, 5 Minor), all fixed but one:
+
+- A base `plugin.json` that is not JSON is tested (red with `base_version`'s rescue removed); Task 3's case list and Round 1's line name every test.
+- The three round 1 tests are indented like their neighbours (a `<<~` heredoc had stripped them).
+- `manifest`'s comment says it raises `NotAnObject`.
+- README's opening names `security-audit`; the workflow's job and step names say what runs.
+
+Declined, as a standing ruling: rewording round 1's commit message. Commits are history; the plan's Round 1 line carries the accurate wording.
