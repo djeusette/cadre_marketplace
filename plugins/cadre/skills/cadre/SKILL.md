@@ -54,7 +54,7 @@ Read the file that holds what the person asked for, and follow it:
 
 Before writing, checking or editing a pull request's title or description, load `cadre:pr-description`: it holds the `Cadre:` line and `## Before deploying` rules.
 
-`brainstorm.md`, `canvas.md` and `design_link.rb` belong to project.md, which says when it needs each; `skills_table.rb` belongs to skills.md.
+`canvas.md` and `design_link.rb` belong to project.md, which says when it needs each; `skills_table.rb` belongs to skills.md.
 
 For a command's flags, run `cadre help <command>`: these files name a flag only to say when to pass it.
 

@@ -2,13 +2,13 @@
 
 ## Create a project
 
-1. Get the feature's spec, one with an `## End goal` and an `## Increments` section: the spec the person names, or a likely one in `docs/superpowers/specs/` once you ask and the person confirms it is this feature. When there is none, or the spec the person names lacks either section, read [brainstorm.md](brainstorm.md) and brainstorm the feature with the person as it says, from that spec when there is one. This step is done when you hold that spec.
+1. Get the feature's spec, one with an `## End goal` and an `## Increments` section: the spec the person names, or a likely one in `docs/superpowers/specs/` once you ask and the person confirms it is this feature. When there is none, or the spec the person names lacks either section, load the `cadre:brainstorming` skill and brainstorm the feature with the person as it says, from that spec when there is one. This step is done when you hold that spec.
 2. Build the project from the spec:
    - `name`: the spec's title without ` — design`.
    - `slug`: the name in kebab case, lowercase letters and digits only.
    - `end_goal`: the text of the End goal section.
    - `milestones`: one per `### Increment`, in spec order, its `title` the increment's title and its `repos` as "A milestone's `repos`" says.
-3. Check that the feature spec says it is tracked in Cadre, on the line under its title, so whoever implements it uses this skill:
+3. Check that the feature spec says it is tracked in Cadre, on the line under its title, so whoever implements it uses the `cadre:cadre` skill:
 
    ```markdown
    > Tracked in Cadre as `<slug>`. Implement each increment with the `cadre:cadre` skill ("start milestone <slug>/<i>"), which plans it and links its pull request to its milestone.
@@ -17,7 +17,7 @@
    When a spec the person named lacks the line, add it and leave the commit to them.
 4. Draw the project's canvas as [canvas.md](canvas.md) says, and keep the canvas link and each milestone's design link, built as "Link a milestone to its design" says. When no milestone has a screen, the project has no canvas: go to step 5.
 5. Write one spec per milestone, as "Write a milestone's spec" says.
-6. Play every milestone back one last time, as it will be registered: its title, its repos in deploy order, its consumers, what it delivers and its design link, then the files each app's styles were read from. When this run created the canvas, ask the person to confirm the canvas is shared with the team: you can't change its sharing, and every link must open for the team. Register nothing until the person approves them and, for a new canvas, confirms it is shared. Fix what they correct first. When a correction changes the feature spec, update the spec. When the brainstorm wrote it, commit it as "The handoff" in [brainstorm.md](brainstorm.md) commits it; when the person named it, leave the commit to them.
+6. Play every milestone back one last time, as it will be registered: its title, its repos in deploy order, its consumers, what it delivers and its design link, then the files each app's styles were read from. When this run created the canvas, ask the person to confirm the canvas is shared with the team: you can't change its sharing, and every link must open for the team. Register nothing until the person approves them and, for a new canvas, confirms it is shared. Fix what they correct first. When a correction changes the feature spec, update the spec. When the brainstorm wrote it, commit only the spec file, with the `git` commands "The handoff" in [the brainstorming skill](../brainstorming/SKILL.md) gives; when the person named it, leave the commit to them.
 7. Add them to the project: `canvas_url` is the canvas link and, per milestone, `spec` is its markdown and `design_url` its design link.
 8. Write the JSON to a temporary file and run `cadre project create <file> --json`. On a `422`, fix it as "When `cadre` refuses" says.
 9. Report the `url` field of the JSON body the command printed. When the session had no Artifact tool, say the project has no design yet.
@@ -57,11 +57,11 @@ It holds only this milestone's part of the feature spec: that increment's Delive
 
 ## Link a milestone to its design
 
-A milestone's design link opens the canvas on that milestone's designs, and the project's canvas link opens its review page. Read a board's key in `boards` and a page's `id` in `pages` of the canvas's `project/canvas.json`, then build each link with [design_link.rb](design_link.rb), in this skill's folder:
+A milestone's design link opens the canvas on that milestone's designs, and the project's canvas link opens its review page. Read a board's key in `boards` and a page's `id` in `pages` of the canvas's `project/canvas.json`, then build each link with [design_link.rb](design_link.rb), in project.md's folder:
 
 ```bash
-ruby <this skill's folder>/design_link.rb <canvas_url> --board <file>
-ruby <this skill's folder>/design_link.rb <canvas_url> --page review
+ruby <project.md's folder>/design_link.rb <canvas_url> --board <file>
+ruby <project.md's folder>/design_link.rb <canvas_url> --page review
 ```
 
 - A milestone's `design_url` links the first board of its first row, `--board <file>`: its row on the earliest part page in `pages`, and the row's first 1440 board, or its phone board for a screen only the mobile app has.

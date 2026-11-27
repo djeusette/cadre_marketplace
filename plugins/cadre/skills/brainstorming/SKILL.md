@@ -1,14 +1,20 @@
-# Brainstorm a feature into milestones
+---
+name: brainstorming
+description: Cadre brainstorming, which ends with the feature registered as a Cadre project. Use only when the person names it ("cadre:brainstorming", "cadre's brainstorming"), or when the cadre skill calls it from "Create a project".
+---
 
-You brainstorm the feature with the person through `superpowers:brainstorming`, and it ends as a feature spec: an end goal and the milestones that reach it. The cadre skill turns that spec into a project.
+# Cadre brainstorming
+
+You brainstorm the feature with the person through `superpowers:brainstorming`, and it ends as a feature spec: an end goal and the milestones that reach it.
 
 ## Before you start
 
-Check that `superpowers:brainstorming` is among your available skills. When it is missing, tell the person to install and enable the `superpowers` plugin from the `claude-plugins-official` marketplace, and stop.
+1. Check that `superpowers:brainstorming` is among your available skills. When it is missing, tell the person to install and enable the `superpowers` plugin from the `claude-plugins-official` marketplace, and stop.
+2. Run only "Before you start", "Install or update the CLI" and "Sign in" in [the cadre skill](../cadre/SKILL.md), then come back here. When one of those sections says to stop, the brainstorm stops too. This step is done once "Sign in" ends with the person signed in. The cadre skill's rules for a command's flags and for a refusal no file names, at the end of its "What to read next", hold for the rest of this run.
 
 ## Run superpowers brainstorming
 
-Invoke `superpowers:brainstorming` with the person's request, and follow it as written: its conversation, playback, visual companion, written design, builder check and approval gate. Invoke it from this file, not through a workflow that wraps it, so the project gets registered. The rules in this file add to it. Where they differ from it, they win:
+Invoke `superpowers:brainstorming` with the person's request, and with the spec the person or "Create a project" names, when there is one. When what it loads has no builder check, it is older than 7.0: tell the person to update the `superpowers` plugin, and stop. Otherwise follow it as written: its conversation, playback, visual companion, written design, builder check and approval gate. Invoke it directly from this skill, so "The handoff" below runs. The rules in this skill add to it. Where they differ from it, they win:
 
 - **Size.** A feature always gets a written spec, even when it fits in one milestone.
 - **Ground to cover.** Add the repos it touches, which one must deploy first, and the apps that use what changes. Name the apps of a repo that has several, such as an API on Fly and a frontend on Vercel, with the API first, so a milestone's `repos` can hold `repo/app` steps.
@@ -45,7 +51,7 @@ Draft the milestones while the design takes shape:
 
 Write it to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` in the current repo, with today's date. When that file exists, add `-2`, `-3`, … before `.md`, so an earlier spec is never overwritten.
 
-Title it `# <Feature> — design`, with the line under it that says it is tracked in Cadre, as step 3 of "Create a project" in [project.md](project.md) gives it; `<slug>` is the feature's name in kebab case. After what superpowers' written design covers, it ends with these two sections, in this order:
+Title it `# <Feature> — design`, with the line under it that says it is tracked in Cadre, as step 3 of "Create a project" in [project.md](../cadre/project.md) gives it; `<slug>` is the feature's name in kebab case. After what superpowers' written design covers, it ends with these two sections, in this order:
 
 ```markdown
 ## End goal
@@ -70,4 +76,4 @@ In the builder check, the builder plans increment 1 from the spec.
 
 Once the person approves the spec, commit only the spec file, with `git add <path>` and `git commit -m "docs: <feature> design" -- <path>`, and leave the push to the person: their other changes, staged or not, stay as they are.
 
-Go back to step 2 of "Create a project" in [project.md](project.md).
+Then follow "Create a project" in [project.md](../cadre/project.md) from step 2, with that spec.

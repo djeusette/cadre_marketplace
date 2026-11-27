@@ -36,6 +36,7 @@ class ManifestTest < Minitest::Test
     readme = File.read(File.join(ROOT, "README.md"))
     install = "/plugin marketplace add anthropics/claude-plugins-official\n/plugin marketplace add djeusette/cadre_marketplace\n/plugin install cadre@cadre"
     [install, "installs `superpowers` from `claude-plugins-official` with it"].each { |text| assert_includes readme, text }
+    assert_includes readme.sub(/^- \*\*cadre\*\* — .*$/, ""), "cadre's skills need superpowers 7.0 or later"
     refute_includes readme, "needs no other plugin"
     refute_includes readme, "without it cadre fails to load"
     refute_match(/colette/i, readme.sub("(https://colette-cadre.fly.dev)", ""))
@@ -49,7 +50,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.33.0", manifest["version"]
+    assert_equal "0.34.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -72,6 +73,7 @@ class ManifestTest < Minitest::Test
   def test_readme_sums_cadre_up_and_links_its_skill
     bullet = File.read(File.join(ROOT, "README.md"))[/^- \*\*cadre\*\* — .*?(?=^#|\z)/m]
     assert_includes bullet, "(plugins/cadre/skills/cadre/SKILL.md)"
+    assert_includes bullet, "[`cadre:brainstorming`](plugins/cadre/skills/brainstorming/SKILL.md) brainstorms a feature into a Cadre project"
     assert_includes bullet, "[`cadre:pr-description`](plugins/cadre/skills/pr-description/SKILL.md) sets the standard for PR descriptions."
     assert_operator bullet.split.size, :<=, 70
   end
@@ -259,8 +261,9 @@ class SkillTest < Minitest::Test
   def limits = section(project, "## Limits")
   def example = project[/```json\n(.*?)```/m, 1]
 
-  def test_creating_a_project_brainstorms_through_brainstorm_md
-    assert_includes create_section, "[brainstorm.md](brainstorm.md)"
+  def test_creating_a_project_brainstorms_through_cadre_brainstorming
+    assert_includes create_section, "`cadre:brainstorming`"
+    refute_includes create_section, "brainstorm.md"
     refute_match(/available skills|must be installed/, everything)
   end
 
@@ -268,7 +271,7 @@ class SkillTest < Minitest::Test
     ["one with an `## End goal` and an `## Increments` section", "the spec the person names",
      "a likely one in `docs/superpowers/specs/` once you ask and the person confirms it is this feature",
      "This step is done when you hold that spec.",
-     "When there is none, or the spec the person names lacks either section, read [brainstorm.md](brainstorm.md) and brainstorm the feature with the person as it says, from that spec when there is one."].each { |text| assert_includes create_section, text }
+     "When there is none, or the spec the person names lacks either section, load the `cadre:brainstorming` skill and brainstorm the feature with the person as it says, from that spec when there is one."].each { |text| assert_includes create_section, text }
   end
 
   def test_it_writes_a_spec_and_draws_the_canvas_through_canvas_md
@@ -292,6 +295,13 @@ class SkillTest < Minitest::Test
     assert_includes example, "\"canvas_url\": \"https://claude.ai/artifact/…#page-…\""
     ["keeps the canvas link", "page it shares"].each { |text| refute_includes everything, text }
     ["?page=", "claude.ai/design/p/"].each { |text| refute_includes everything + canvas, text }
+  end
+
+  def test_project_md_names_its_own_folder_and_the_cadre_skill_for_any_skill_that_follows_it
+    ["[design_link.rb](design_link.rb), in project.md's folder", "ruby <project.md's folder>/design_link.rb <canvas_url> --board <file>",
+     "ruby <project.md's folder>/design_link.rb <canvas_url> --page review"].each { |text| assert_includes design_section, text }
+    assert_includes create_section, "so whoever implements it uses the `cadre:cadre` skill:"
+    refute_includes project, "this skill"
   end
 
   def test_older_canvases_keep_page_links
@@ -338,7 +348,7 @@ class SkillTest < Minitest::Test
   end
 
   def test_a_corrected_spec_is_committed_alone_or_left_to_the_person
-    [%q{commit it as "The handoff" in [brainstorm.md](brainstorm.md) commits it}, "leave the commit to them"].each { |text| assert_includes create_section, text }
+    [%q{commit only the spec file, with the `git` commands "The handoff" in [the brainstorming skill](../brainstorming/SKILL.md) gives}, "leave the commit to them"].each { |text| assert_includes create_section, text }
     ["git commit", "never push"].each { |text| refute_includes create_section, text }
   end
 
@@ -435,7 +445,8 @@ class SkillTest < Minitest::Test
   def canvas = read("canvas.md")
 
   def test_canvas_md_belongs_to_project_md
-    assert_includes skill, "`brainstorm.md`, `canvas.md` and `design_link.rb` belong to project.md"
+    assert_includes skill, "`canvas.md` and `design_link.rb` belong to project.md"
+    refute_includes skill, "brainstorm.md"
     ["# Draw a project's canvas", "## Before you start", "## Create the canvas", "## Styles from the code", "## The part pages",
      "## The review page", "## Check the canvas", "## Add a milestone to a canvas"].each { |heading| assert_match(/^#{Regexp.escape(heading)}$/, canvas) }
   end
@@ -601,10 +612,6 @@ class SkillTest < Minitest::Test
     assert_includes milestone_refusals, "app: must be lowercase letters, digits, - or _"
     refute_includes milestone, "as `cadre repo show` lists it"
     refute_includes milestone, "app: needs a milestone"
-  end
-
-  def test_brainstorm_names_apps
-    assert_includes read("brainstorm.md"), "apps of a repo that has several"
   end
 
   # skills.md
@@ -1060,8 +1067,9 @@ class SkillTest < Minitest::Test
   end
 
   def test_skill_files_call_only_superpowers_skills_and_cadre_itself
+    # cadre:brainstorming is cadre's own skill, which "Create a project" calls (EP-I3).
     calls = skill_files.flat_map { |path| File.read(path).scan(/`([a-z][a-z0-9-]*:[a-z][a-z0-9-]*)`/).flatten }
-    assert_equal %w[cadre:cadre cadre:pr-description superpowers:brainstorming superpowers:using-git-worktrees superpowers:writing-plans], calls.uniq.sort
+    assert_equal %w[cadre:brainstorming cadre:cadre cadre:pr-description superpowers:brainstorming superpowers:using-git-worktrees superpowers:writing-plans], calls.uniq.sort
     skill_files.each { |path| refute_match(/\bEP-[A-Z]\d/, File.read(path), path) }
   end
 
@@ -1372,71 +1380,113 @@ class SkillsTableTest < Minitest::Test
   end
 end
 
-class BrainstormTest < Minitest::Test
-  def brainstorm = File.read(File.join(PLUGIN, "skills", "cadre", "brainstorm.md"))
+class BrainstormingTest < Minitest::Test
+  def skill = File.read(File.join(PLUGIN, "skills", "brainstorming", "SKILL.md"))
+  def frontmatter = skill[/\A---\n(.*?)\n---\n/m, 1]
+  include Sections
 
-  def before_you_start = brainstorm[/^## Before you start\n(.*?)(?=^## )/m, 1]
+  def before_you_start = section(skill, "## Before you start")
+
+  def test_frontmatter_names_the_skill_and_when_it_runs
+    assert_equal %w[description name], frontmatter.scan(/^([a-z-]+):/).flatten.sort
+    assert_includes frontmatter, "name: brainstorming"
+    assert_includes frontmatter, %q{description: Cadre brainstorming, which ends with the feature registered as a Cadre project. Use only when the person names it ("cadre:brainstorming", "cadre's brainstorming"), or when the cadre skill calls it from "Create a project".}
+  end
+
+  def test_brainstorm_names_apps
+    assert_includes skill, "apps of a repo that has several"
+  end
+
+  def test_the_opening_says_what_the_brainstorm_ends_as_and_leaves_the_rest_to_the_handoff
+    assert_equal "You brainstorm the feature with the person through `superpowers:brainstorming`, and it ends as a feature spec: an end goal and the milestones that reach it.\n\n",
+                 skill[/^# Cadre brainstorming\n\n(.*?)(?=^## )/m, 1]
+  end
+
+  def test_the_checks_come_before_the_brainstorm
+    assert_equal ["## Before you start", "## Run superpowers brainstorming", "## What a milestone is", "## Drafting the milestones",
+                  "## The feature spec", "## The handoff"], skill.gsub(/^```.*?^```$/m, "").scan(/^## .*$/)
+  end
 
   def test_it_stops_when_superpowers_brainstorming_is_missing
     ["`superpowers:brainstorming`", "`superpowers` plugin", "`claude-plugins-official`", "and stop"].each { |text| assert_includes before_you_start, text }
   end
 
+  def test_it_checks_the_cli_and_the_sign_in_before_it_brainstorms
+    ["Run only", "[the cadre skill](../cadre/SKILL.md)", %q{"Before you start"}, %q{"Install or update the CLI"},
+     %q{"Sign in"}, %q{in [the cadre skill](../cadre/SKILL.md), then come back here. When one of those sections says to stop, the brainstorm stops too.},
+     %q{The cadre skill's rules for a command's flags and for a refusal no file names, at the end of its "What to read next", hold for the rest of this run.},
+     %q{This step is done once "Sign in" ends with the person signed in.}].each { |text| assert_includes before_you_start, text }
+    refute_includes before_you_start, "in that order"
+    refute_includes before_you_start, "holds an `email`"
+    assert_operator before_you_start.index("`superpowers:brainstorming`"), :<, before_you_start.index("[the cadre skill]")
+  end
+
+  def test_it_stops_on_a_superpowers_older_than_7
+    run = section(skill, "## Run superpowers brainstorming")
+    ["no builder check", "older than 7.0", "update the `superpowers` plugin", "and stop"].each { |text| assert_includes run, text }
+    assert_operator run.index("no builder check"), :<, run.index("follow it as written")
+  end
+
   def test_it_runs_superpowers_brainstorming_as_written_with_cadres_rules_on_top
-    ["Invoke `superpowers:brainstorming`", "follow it as written", "not through a workflow that wraps it", "Where they differ from it, they win"].each do |text|
-      assert_includes brainstorm, text
-    end
+    [%q{Invoke `superpowers:brainstorming` with the person's request, and with the spec the person or "Create a project" names, when there is one.},
+     "follow it as written", %q{Invoke it directly from this skill, so "The handoff" below runs.},
+     "Where they differ from it, they win"].each { |text| assert_includes skill, text }
+    refute_includes skill, "wraps it"
   end
 
   def test_it_leaves_the_conversation_to_superpowers
-    ["wishing this existed", "one open question", "several approaches", "200–300 words"].each { |text| refute_includes brainstorm, text }
+    ["wishing this existed", "one open question", "several approaches", "200–300 words"].each { |text| refute_includes skill, text }
   end
 
   def test_its_rules_cover_what_superpowers_does_not
     ["even when it fits in one milestone", "the repos it touches", "must deploy first", "apps that use what changes",
-     "without asking", "Ask before reading anything outside it", "Play the milestones back"].each { |text| assert_includes brainstorm, text }
+     "without asking", "Ask before reading anything outside it", "Play the milestones back"].each { |text| assert_includes skill, text }
   end
 
   def test_a_milestone_is_the_smallest_step_that_ships_one_feature_and_deploys_alone
     ["one feature", "smallest step", "previous version still runs", "out of users' reach", "a rollback loses no data",
      "installed mobile app versions", "deploy order", "never on a later one", "aim for 10", "20 code files",
-     "two smaller", "never invent a split"].each { |text| assert_includes brainstorm, text }
+     "two smaller", "never invent a split"].each { |text| assert_includes skill, text }
   end
 
   def test_a_milestone_is_a_vertical_slice_and_contracts_change_by_expand_contract
-    ["a *vertical slice*", "thin and end to end", "by *expand–contract*: add the new, move every consumer"].each { |text| assert_includes brainstorm, text }
-    assert_equal 1, brainstorm.scan("out of users' reach").size
+    ["a *vertical slice*", "thin and end to end", "by *expand–contract*: add the new, move every consumer"].each { |text| assert_includes skill, text }
+    assert_equal 1, skill.scan("out of users' reach").size
   end
 
   def test_a_large_milestone_says_why_on_its_code_files_line
-    assert_includes brainstorm, "its **Code files** line says why it can't be smaller"
-    ["This is a preference, not a limit", "Don't ask the person this"].each { |text| refute_includes brainstorm, text }
+    assert_includes skill, "its **Code files** line says why it can't be smaller"
+    ["This is a preference, not a limit", "Don't ask the person this"].each { |text| refute_includes skill, text }
   end
 
   def test_skipping_the_questions_leaves_one_approval_before_the_commit
-    skip_path = brainstorm[/When the person says to skip the questions(.*?)$/, 1]
+    skip_path = skill[/When the person says to skip the questions(.*?)$/, 1]
     ["still ends with the spec", "mark every open point as your call", "approve the spec"].each { |text| assert_includes skip_path, text }
   end
 
   def test_the_feature_spec_has_cadres_tracking_line_under_its_title
-    ["the line under it that says it is tracked in Cadre", "step 3 of \"Create a project\" in [project.md](project.md)", "kebab case"].each { |text| assert_includes brainstorm, text }
+    ["the line under it that says it is tracked in Cadre", "step 3 of \"Create a project\" in [project.md](../cadre/project.md)", "kebab case"].each { |text| assert_includes skill, text }
   end
 
   def test_it_commits_only_the_spec_file
-    assert_includes brainstorm, 'git commit -m "docs: <feature> design" -- <path>'
+    assert_includes skill, 'git commit -m "docs: <feature> design" -- <path>'
   end
 
   def test_it_hands_back_to_the_cadre_skill_instead_of_writing_plans
-    ["instead of invoking `superpowers:writing-plans`", "Go back to step 2"].each { |text| assert_includes brainstorm, text }
+    assert_includes skill, "instead of invoking `superpowers:writing-plans`"
+    handoff = section(skill, "## The handoff")
+    assert_includes handoff, %q{follow "Create a project" in [project.md](../cadre/project.md) from step 2, with that spec.}
+    refute_includes handoff, "scripts"
   end
 
   def test_the_split_challenge_keeps_each_part_usable
-    assert_includes brainstorm, "two smaller ones that each deploy and give someone something to use"
+    assert_includes skill, "two smaller ones that each deploy and give someone something to use"
   end
 
   def test_it_writes_and_commits_the_feature_spec
     ["docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md", "`-2`", "## End goal", "## Increments", "### Increment <i> — ",
      "**Delivers:**", "**Deployable alone:**", "**Consumers:**", "**Code files:**",
-     "plans increment 1", "Once the person approves the spec", "commit only the spec file", "leave the push to the person"].each { |text| assert_includes brainstorm, text }
-    refute_includes brainstorm, "Not shipped"
+     "plans increment 1", "Once the person approves the spec", "commit only the spec file", "leave the push to the person"].each { |text| assert_includes skill, text }
+    refute_includes skill, "Not shipped"
   end
 end

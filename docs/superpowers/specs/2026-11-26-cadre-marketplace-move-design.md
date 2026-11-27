@@ -48,7 +48,7 @@ From the Claude Code docs (marketplace reference, manifest reference, dependenci
 - **A removed plugin** stays installed and reports that it is not found in the marketplace. A `renames` entry mapping its name to `null` tells users it was removed instead.
 - **Installing a dependency that an update adds** needs Claude Code 2.1.319 or later. On an older client, `engineering-review` stays disabled until `claude plugin update engineering-review@cadre` and `/reload-plugins` are run.
 - **`superpowers` has no version** in cadre's dependency, as today. A range would resolve against tags named `superpowers--v<version>`, which this design does not rely on. cadre's README gains the note that its skills need superpowers 7.0 or later (colette's README has it today).
-- **No EP IDs in cadre.** Its skills cannot cite `engineering-principles`. They state the rules they apply in their own words, as `brainstorm.md` already does for milestones. They may name another skill (`break-check`, `engineering-principles`) for a repo whose Skills table lists it.
+- **No EP IDs in cadre.** Its skills cannot cite `engineering-principles`. They state the rules they apply in their own words, as `cadre:brainstorming` does for milestones. They may name another skill (`break-check`, `engineering-principles`) for a repo whose Skills table lists it.
 - **No "colette" in cadre's skill files or README.** `test_no_skill_file_names_colette` and `test_readme_installs_cadre_with_superpowers` forbid it, and both stay.
 - **Evals cannot run on David's Mac.** Every behaviour a skill must have is pinned by its wording tests and checked by dry runs by subagent. There is one dry run per mode, and one per skill where a plain "brainstorm this" or "plan this" request, with `cadre` installed, stays on superpowers. Each eval case that moves is recorded as not measured.
 - **During the move, edits go to the cadre marketplace's copies only.** Each colette-club skill is frozen from the increment that forks it until colette-club deletes it *(my call)*:
@@ -206,7 +206,7 @@ The cadre marketplace holds `cadre` (CLI, brainstorming, planning, PR descriptio
 - **Deployable alone:** `project.md` step 1 hands over to it, and `brainstorm.md` goes. Projects already registered are unaffected. `test_skill_files_call_only_superpowers_skills_and_cadre_itself` gains `cadre:brainstorming` (EP-I3: cadre now calls its own skill).
 - **Consumers:** none.
 - **Code files:** 2 — `.claude-plugin/marketplace.json`, `plugins/cadre/.claude-plugin/plugin.json`
-- [ ] Not shipped
+- [x] PR #35
 
 ### Increment 3 — `cadre:writing-plans` (cadre marketplace)
 
