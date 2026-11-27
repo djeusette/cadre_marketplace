@@ -184,8 +184,8 @@ assert marketplace == "claude-plugins-official" or
 
   After "For a row naming a plugin skill, enable its plugin under `enabledPlugins` in `.claude/settings.json`.", the same paragraph gains: "`.claude/settings.json` enables the published `@cadre` plugins, not this checkout's `plugins/`."
 - [x] Step 6: every check in `AGENTS.md` "Checks", and `ruby script/check_version_bumps.rb origin/main` prints `OK` (no plugin changes).
-- [ ] Step 7.
-- [ ] Step 8: once all eight PRs are open, Increment 6's status line becomes `- [x] PRs colette-club/colette-api#<n>, colette-club/colette-app#<n>, colette-club/rooms-app#<n>, colette-club/admin-app#<n>, djeusette/kinfield#<n>, djeusette/cadre#<n>, colette-club/colette-marketplace#<n>, #<n>`, committed on this branch and pushed. Append the increment's note to `move-progress.md` in `/Users/djeusette/Library/Application Support/Claude/side-session-notes/local_5986f0d0-b560-4215-a9f8-8216ee396103/`.
+- [x] Step 7.
+- [x] Step 8: once all eight PRs are open, Increment 6's status line becomes `- [x] PRs colette-club/colette-api#<n>, colette-club/colette-app#<n>, colette-club/rooms-app#<n>, colette-club/admin-app#<n>, djeusette/kinfield#<n>, djeusette/cadre#<n>, colette-club/colette-marketplace#<n>, #<n>`, committed on this branch and pushed. Append the increment's note to `move-progress.md` in `/Users/djeusette/Library/Application Support/Claude/side-session-notes/local_5986f0d0-b560-4215-a9f8-8216ee396103/`.
 
 ### Each PR's review
 
@@ -208,8 +208,8 @@ In scratch `CLAUDE_CONFIG_DIR`s, 2026-11-27, Claude Code 2.1.331:
 - Plan: Fable (1 Critical, 7 Important, 11 Minor), fixed.
 - colette-api: round 1 principles clean; writing (1 Important, 4 Minor), fixed: the commit body says `cadre@cadre` is engineering-review's dependency, the test's name and messages name `extraKnownMarketplaces` and `enabledPlugins`, the moduledoc says "each with its marketplace", the docs commit points to `cadre:cadre`. Round 2 principles clean; writing (1 Minor), fixed: the commit body names the exact install command. Round 3 clean on both.
 - colette-app: round 1 clean on both.
-- rooms-app, admin-app: round 1 principles clean; writing (1 Minor each), fixed: the commit body says superpowers is cadre's dependency. Round 2 writing clean.
+- rooms-app, admin-app: round 1 principles clean; writing (1 Minor each), fixed: the commit body says superpowers is cadre's dependency. Round 2 clean on both.
 - kinfield: round 1 principles clean.
-- cadre: round 1 principles (2 Minor) and writing (1 Important, 1 Minor), fixed: line 124 drops the cadre skill's own rule and gives the review to `engineering-review`, line 812 says "then `engineering-review:pr-description`", the docs commit body names every edit.
-- colette-marketplace: round 1 principles (1 Minor) and writing (1 Minor), fixed: `AGENTS.md` says `.claude/settings.json` enables the two plugins from the cadre marketplace.
-- cadre_marketplace: round 1 principles (5 Minor) and writing (2 Important, 7 Minor), fixed: one commit per change; `AGENTS.md` says `.claude/settings.json` enables the published `@cadre` plugins; the plan says "holds" these four, the install's dependencies, the tests' real names, each repo's commit form, David's call once, and ticks the steps done.
+- cadre: round 1 principles (2 Minor) and writing (1 Important, 1 Minor), fixed: line 124 drops the cadre skill's own rule and gives the review to `engineering-review`, line 812 says "then `engineering-review:pr-description`", the docs commit body names every edit. Round 2 principles and writing (1 Minor), fixed: line 124 says "as `cadre:pr-description` says". Round 3 clean on both.
+- colette-marketplace: round 1 principles (1 Minor) and writing (1 Minor), fixed: `AGENTS.md` says `.claude/settings.json` enables the two plugins from the cadre marketplace. Round 2 clean on both.
+- cadre_marketplace: round 1 principles (5 Minor) and writing (2 Important, 7 Minor), fixed: one commit per change; `AGENTS.md` says `.claude/settings.json` enables the published `@cadre` plugins; the plan says "holds" these four, the install's dependencies, the tests' real names, each repo's commit form, David's call once, and ticks the steps done. Round 2 principles and writing (1 Minor), fixed: line 33 points to Task 0 Step 3 without repeating its list. Round 3 clean on both.
