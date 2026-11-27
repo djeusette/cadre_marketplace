@@ -1498,6 +1498,7 @@ class WritingPlansTest < Minitest::Test
   def what_to_plan = section(skill, "## What to plan")
   def milestone_section = section(skill, "## A Cadre milestone")
   def run_section = section(skill, "## Run superpowers writing-plans")
+  def one_pull_request = section(skill, "## One pull request")
 
   def test_frontmatter_names_the_skill_and_when_it_runs
     assert_equal %w[description name], frontmatter.scan(/^([a-z-]+):/).flatten.sort
@@ -1511,7 +1512,7 @@ class WritingPlansTest < Minitest::Test
   end
 
   def test_its_sections_come_in_order
-    assert_equal ["## Before you start", "## What to plan", "## A Cadre milestone", "## Run superpowers writing-plans"],
+    assert_equal ["## Before you start", "## What to plan", "## A Cadre milestone", "## One pull request", "## Run superpowers writing-plans"],
                  skill.gsub(/^ *```.*?^ *```$/m, "").scan(/^## .*$/)
   end
 
@@ -1582,5 +1583,31 @@ class WritingPlansTest < Minitest::Test
 
   def test_execution_stays_with_superpowers
     assert_includes run_section, "Execute the plan as `superpowers:writing-plans` offers."
+  end
+  
+  def test_it_asks_before_planning_after_an_unmerged_milestone
+    ["Run `cadre status <slug> --json`.", "lists the project's milestones in order, not by number",
+     "When an entry before `<n>`'s has a `state` that is neither `can_deploy` nor `deployed`",
+     "name it to the person and ask whether to plan anyway"].each { |text| assert_includes milestone_section, text }
+  end
+  
+  def test_it_rechecks_the_milestone_against_the_code_as_it_is_now
+    ["Read the code as it is now, without asking.", %q{as "One pull request" says, and estimate its code files},
+     %q{update it as "Update a milestone's spec" in [project.md](../cadre/project.md) says},
+     %q{pull and commit the spec copy again, as steps 1 and 4 of "Start a milestone" do}].each { |text| assert_includes milestone_section, text }
+    assert_operator milestone_section.index("cadre status <slug> --json`."), :<, milestone_section.index("Read the code as it is now")
+    assert_operator milestone_section.index("Read the code as it is now"), :<, milestone_section.index(%q{Plan as "Run superpowers writing-plans" says})
+  end
+  
+  def test_one_pull_request_ships_one_milestone
+    ["A plan is one pull request that ships one milestone: one feature, the smallest step that can be deployed and used on its own, and its consumers named",
+     %q{as "What a milestone is" in [the brainstorming skill](../brainstorming/SKILL.md) defines them. Read only that section there.},
+     "Its code files are counted without tests and docs: aim for 10, and prefer 20 or fewer."].each { |text| assert_includes one_pull_request, text }
+  end
+  
+  def test_a_plan_above_20_code_files_says_why_or_stops
+    [%q{When the plan's file structure holds more than 20 code files, counted as "One pull request" says, the plan says why it can't be smaller.},
+     "When it could be smaller, stop before writing the plan",
+     %q{propose the split of a milestone to the person, as "Change a project" in [project.md](../cadre/project.md) adds a milestone}].each { |text| assert_includes run_section, text }
   end
 end
