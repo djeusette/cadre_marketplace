@@ -240,7 +240,7 @@ The cadre marketplace holds `cadre` (CLI, brainstorming, planning, PR descriptio
 - **Before deploying:** David's and the team's user-scope `@colette-club` copies dropped, and the team told, as "Switching the team repos" says.
 - **Consumers:** the Consumers table.
 - **Code files:** 1 per repo — `.claude/settings.json` (the Skills tables and specs are docs)
-- [ ] Not shipped
+- [x] PRs colette-club/colette-api#2363, colette-club/colette-app#325, colette-club/rooms-app#705, colette-club/admin-app#764, djeusette/kinfield#60, djeusette/cadre#169, colette-club/colette-marketplace#49, #39
 
 ### Increment 7 — the `colette` plugin goes (colette-marketplace)
 
