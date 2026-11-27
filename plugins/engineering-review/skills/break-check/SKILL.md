@@ -1,11 +1,11 @@
 ---
 name: break-check
-description: Break check: breaks each branch a change adds or changes and records the proof. Use when a task's tests are green, before a PR, or to write a missing runner.
+description: Break check: breaks each branch a change adds or changes and records the proof. Use when a task's tests are green, before a PR, or to write a repository's .break-check.json.
 ---
 
 # Break check
 
-A test is real only if it fails when its code breaks. A break check shows it: break one **branch** on purpose, see a named test fail, undo the break. EP-G4 asks it of every branch a change adds or changes, and says what a branch is. Each repository commits a **runner** that does the breaking and keeps the record, so the check costs few tokens and each branch is proven once.
+A test is real only if it fails when its code breaks. A break check shows it: break one **branch** on purpose, see a named test fail, undo the break. EP-G4 asks it of every branch a change adds or changes, and says what a branch is. This plugin ships the **runner** that does the breaking and keeps the record, reading each repository's settings from its `.break-check.json`, so the check costs few tokens and each branch is proven once.
 
 - **Break:** the smallest change to one branch that still compiles (see [Breaks](#breaks)). Its **swap** is the pair `from` → `to`: the exact text it replaces, and the text it puts there.
 - **Proof:** a line in the **ledger**, written by the runner alone, when a test it names failed on a break, on tests that ran green just before. A proof starts from green tests: the red step of TDD fails because the code is not there yet, not because of the branch.
@@ -13,15 +13,22 @@ A test is real only if it fails when its code breaks. A break check shows it: br
 - **Stale:** a proof whose file or one of whose test files changed since; the runner replays it.
 - **Gone:** a proof whose `from` no longer occurs exactly once, or whose test file is missing; its branch needs a new break.
 
+## Before you start
+
+1. `ruby --version` prints Ruby 3.2 or later. An older one (macOS's `/usr/bin/ruby` is 2.6) makes the runner exit 2: put a newer Ruby first on `PATH`.
+2. The repository root holds `.break-check.json`, or a runner of the repository's own. With neither, write `.break-check.json` first, as [The runner](#the-runner) says.
+
 ## Run it in your own context
 
 Whoever wrote the code runs its breaks, in the same session: a fresh agent's starting context is most of what a break check costs. The runner prints one line per break: read those lines, not the test output.
 
 ## The runner
 
-`<runner>` below is the repository's committed runner, as its `AGENTS.md` or a README names it, the runner's own README included. `<runner> --help` lists its flags, including whatever the repository's tests need to run beside other sessions. A runner with more than one profile (one per test suite, such as the app's and the runner's own) runs each recipe below once for each profile whose watched paths the change touches; when stale proofs of two suites stop a replay, see the known gaps in [contract.md](contract.md).
+`<runner>` below is `ruby <this skill's base directory>/../../scripts/break_check.rb`, run from the repository root; the session shows the base directory when this skill loads. It reads the repository's profiles from `.break-check.json` at the root: one per test suite, each with its test command, how to read its output and where its branches live, in the fields [contract.md](contract.md) gives. `<runner> --help` lists its flags: `--profile NAME` picks a profile other than the file's `default`, and `--partition N` is required by a profile whose command takes one, so its tests run beside other sessions': pick an N no other session uses. A repository with more than one profile (such as the app's and a script folder's) runs each recipe below once for each profile whose watched paths the change touches; when stale proofs of two suites stop a replay, see the known gaps in [contract.md](contract.md).
 
-Look for a committed runner (a `break_check` script, its README) before deciding there is none. A repository with no runner gets one before its first break: write it in the language the repository's people prefer, following [contract.md](contract.md), with its tests, and commit it. Breaks go through the runner, since only it records a proof a later step or a review can read. The PR description's Break checks part, as `cadre:pr-description` gives it, comes from the runner's `--table`.
+Look for a committed runner (a `break_check` script its `AGENTS.md` or a README names) before reaching for the plugin's: while a repository still keeps one, a committed runner of the repository's own wins, and `<runner>` is that one, called as its `AGENTS.md` or README says.
+
+A repository with neither gets `.break-check.json` before its first break, committed with `.breaks/` in its `.gitignore`. Write one profile per test suite, its patterns copied from what its tests really print: run one failing test and one that doesn't compile, and read the output. Its check is one break of a branch that already has a test: `caught` shows the profile reads that suite. Breaks go through the runner, since only it records a proof a later step or a review can read. The PR description's Break checks part, as `cadre:pr-description` gives it, comes from the runner's `--table`.
 
 ## After a task's tests are green
 
@@ -76,7 +83,7 @@ A run prints one line per break as it happens, then a summary line (`<n> caught,
 
 - **0** every break was caught or already `proven`, or nothing is left.
 - **1** something is left: a break not caught, one that doesn't compile or is inconclusive, a stale or gone proof listed, a line no proof covers, a gone proof dropped. A normal end of `--uncovered`, `--stale` and `--stale --replay`: read the lines.
-- **2** the runner refused and broke nothing: the lock is held, a swap missed, a bad breaks file, tests red before any break, a bad command line, an unexpected error.
+- **2** the runner refused and broke nothing: no `.break-check.json` at the root or a bad one, an unknown profile, a `--partition` missing or not taken, Ruby older than 3.2, the lock is held, a swap missed, a bad breaks file, tests red before any break, a bad command line, an unexpected error.
 - **3** a file could not be restored, or changed while it held a break. The message names the journal entry that holds the original. When the file differs from the original only by the break, put the original back; when someone edited it meanwhile, undo the break by hand and keep their edit. Then delete the entry, or every command exits 3 again.
 
 ## The ledger

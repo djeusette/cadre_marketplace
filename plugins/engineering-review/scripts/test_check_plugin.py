@@ -1434,6 +1434,7 @@ class EvalGraderTest(unittest.TestCase):
         self.assertIsNone(proven.search('  A -- no --> NF["error not_found ❌ untested"]\n✅ proven'))
         runner = self.grader_pattern("break-checks-ledger", "never-runs-the-runner")
         self.assertIsNotNone(runner.search("ruby script/break_check.rb --table"))
+        self.assertIsNotNone(runner.search("ruby ~/.claude/plugins/cache/cadre/engineering-review/0.23.0/scripts/break_check.rb --table"))
         for command in ("./script/break_check.rb --stale", "./script/break_check.rb mine.json"):
             self.assertIsNotNone(runner.search(command), command)
         for command in ("ruby /tmp/repo/script/break_check.rb --stale --replay", "bundle exec ruby script/break_check.rb --table",
@@ -2043,13 +2044,13 @@ class BreakCheckTest(unittest.TestCase):
         skill = self.read("skills/break-check/SKILL.md")
         contract = self.read("skills/break-check/contract.md")
 
-        for heading in ("## Run it in your own context", "## The runner", "## After a task's tests are green", "## Before the PR",
+        for heading in ("## Before you start", "## Run it in your own context", "## The runner", "## After a task's tests are green", "## Before the PR",
                         "## Breaks", "## Results", "## Exit codes", "## The ledger"):
             self.assertIn(f"\n{heading}\n", skill)
         for text in (".breaks/ledger.jsonl", "--stale --replay", "--uncovered", "--table", "in your own context",
                      "a scratch worktree has none", "a JSON array", "[contract.md](contract.md)", "EP-G4",
                      "A proof starts from green tests: the red step of TDD fails", "A break that raises, empties or replaces a body proves nothing",
-                     "A repository with no runner gets one before its first break", "Look for a committed runner",
+                     "Look for a committed runner", "a committed runner of the repository's own wins", "ruby --version", "Ruby 3.2", "../../scripts/break_check.rb", "`.break-check.json`",
                      "once for each profile whose watched paths the change touches",
                      "narrows only by deleting lines", "its `to` the same lines with the deleted text put back", "and each branch `--uncovered` cannot list (narrowed only by deleting lines, or outside the watched paths) has a fresh proof", "read `git diff <the task's base commit>` for deleted lines, and for branches outside those paths, too", "break it again from the `gone` line the replay printed", "Once `--stale` ends with `0 stale`", "A proof **belongs** to a change when its `from` spans a line the change adds or changes, or sits next to a line it deletes",
                      "on a replay, put the proof's swap in a breaks file"):
@@ -2059,9 +2060,9 @@ class BreakCheckTest(unittest.TestCase):
             self.assertIn(result, skill)
         for code in ("- **0**", "- **1**", "- **2**", "- **3**"):
             self.assertIn(code, skill.split("## Exit codes", 1)[1].split("\n## ", 1)[0])
-        for heading in ("## Contents", "## The command line", "## Internals", "## The profile", "## Its tests", "## Reference implementation"):
+        for heading in ("## Contents", "## The command line", "## Internals", "## .break-check.json", "## Its tests", "## Reference implementation"):
             self.assertIn(f"\n{heading}\n", contract)
-        for text in ("RESTORED <file> FROM A KILLED RUN", "354ee07e", "script/break_check/profile.rb", "git-ignores", "## Known gaps", "The ledger keeps no profile", "These two are the only hand edits a ledger gets"):
+        for text in ("RESTORED <file> FROM A KILLED RUN", "[.break-check.json](#break-checkjson)", "`{files}`", "`{partition}`", "`default`", "`scripts/break_check/`", "`scripts/test_break_check/`", "djeusette/cadre#159", "git-ignores", "## Known gaps", "The ledger keeps no profile", "These two are the only hand edits a ledger gets"):
             self.assertIn(text, contract)
 
     def test_ep_g4_requires_a_proof_per_branch_and_points_to_break_check(self):
