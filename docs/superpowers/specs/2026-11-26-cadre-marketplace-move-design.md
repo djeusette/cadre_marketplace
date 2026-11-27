@@ -215,7 +215,7 @@ The cadre marketplace holds `cadre` (CLI, brainstorming, planning, PR descriptio
 - **Deployable alone:** `milestone.md` step 5 hands over to it, and the call-list test gains `cadre:writing-plans`. `colette:writing-plans` keeps working for anyone who still has `colette`. colette's planning behaviours that apply to milestones and requirements move here, as wording tests and dry runs.
 - **Consumers:** none.
 - **Code files:** 2 — `.claude-plugin/marketplace.json`, `plugins/cadre/.claude-plugin/plugin.json`
-- [ ] Not shipped
+- [x] PR #36
 
 ### Increment 4 — `engineering-review` copied into the cadre marketplace (cadre marketplace)
 
