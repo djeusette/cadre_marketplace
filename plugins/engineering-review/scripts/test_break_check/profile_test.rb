@@ -34,6 +34,25 @@ class ProfileTest < Minitest::Test
     end
   end
 
+  def test_a_misspelt_profiles_key_is_named
+    with_repo(".break-check.json" => JSON.generate("profile" => {"minitest" => MINITEST})) do |root|
+      error = assert_raises(BreakCheck::Usage) { load_profile(root) }
+      assert_equal ".break-check.json: unknown key profile", error.message
+    end
+  end
+
+  def test_every_profile_is_checked_not_only_the_chosen_one
+    files = {"script/break_check.rb" => "", "script/break_check/x.rb" => ""}
+    with_repo(files.merge(".break-check.json" => settings({"a" => MINITEST, "b" => {}}, default: "a"))) do |root|
+      error = assert_raises(BreakCheck::Usage) { load_profile(root) }
+      assert_match(/\A\.break-check\.json: profile b: missing command/, error.message)
+    end
+    with_repo(files.merge(".break-check.json" => settings({"a" => MINITEST, "b" => MINITEST.merge("watched" => ["libs"])}, default: "a"))) do |root|
+      error = assert_raises(BreakCheck::Usage) { load_profile(root) }
+      assert_equal ".break-check.json: profile b: watched path libs does not exist", error.message
+    end
+  end
+
   def test_two_profiles_without_a_default_refuse
     with_repo(".break-check.json" => settings({"a" => MINITEST, "b" => MINITEST}), "script/break_check.rb" => "") do |root|
       error = assert_raises(BreakCheck::Usage) { load_profile(root, name: "a") }

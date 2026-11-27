@@ -16,7 +16,7 @@ A test is real only if it fails when its code breaks. A break check shows it: br
 ## Before you start
 
 1. `ruby --version` prints Ruby 3.2 or later. An older one (macOS's `/usr/bin/ruby` is 2.6) makes the runner exit 2: put a newer Ruby first on `PATH`.
-2. The repository root holds `.break-check.json`, or a runner of the repository's own. With neither, write `.break-check.json` first, as [The runner](#the-runner) says.
+2. The repository root holds `.break-check.json`, or a runner of the repository's own. With neither, follow [The runner](#the-runner).
 
 ## Run it in your own context
 
@@ -24,11 +24,11 @@ Whoever wrote the code runs its breaks, in the same session: a fresh agent's sta
 
 ## The runner
 
-`<runner>` below is `ruby <this skill's base directory>/../../scripts/break_check.rb`, run from the repository root; the session shows the base directory when this skill loads. It reads the repository's profiles from `.break-check.json` at the root: one per test suite, each with its test command, how to read its output and where its branches live, in the fields [contract.md](contract.md) gives. `<runner> --help` lists its flags: `--profile NAME` picks a profile other than the file's `default`, and `--partition N` is required by a profile whose command takes one, so its tests run beside other sessions': pick an N no other session uses. A repository with more than one profile (such as the app's and a script folder's) runs each recipe below once for each profile whose watched paths the change touches; when stale proofs of two suites stop a replay, see the known gaps in [contract.md](contract.md).
+Look for a committed runner (a `break_check` script its `AGENTS.md` or a README names) first: while a repository still keeps one, a committed runner of the repository's own wins, and `<runner>` below is that one, called as its `AGENTS.md` or README says.
 
-Look for a committed runner (a `break_check` script its `AGENTS.md` or a README names) before reaching for the plugin's: while a repository still keeps one, a committed runner of the repository's own wins, and `<runner>` is that one, called as its `AGENTS.md` or README says.
+Otherwise, `<runner>` is `ruby <this skill's base directory>/../../scripts/break_check.rb`, run from the repository root; the session shows the base directory when this skill loads. It reads the repository's profiles from `.break-check.json` at the root. `<runner> --help` lists its flags: `--profile NAME` picks a profile other than the file's `default`, and `--partition N` is required by a profile whose `command` or `env` names `{partition}`, so its tests run beside other sessions': pick an N no other session uses. A repository with more than one profile (such as the app's and a script folder's) runs each recipe below once for each profile whose watched paths the change touches; when stale proofs of two suites stop a replay, see the known gaps in [contract.md](contract.md).
 
-A repository with neither gets `.break-check.json` before its first break, committed with `.breaks/` in its `.gitignore`. Write one profile per test suite, its patterns copied from what its tests really print: run one failing test and one that doesn't compile, and read the output. Its check is one break of a branch that already has a test: `caught` shows the profile reads that suite. Breaks go through the runner, since only it records a proof a later step or a review can read. The PR description's Break checks part, as `cadre:pr-description` gives it, comes from the runner's `--table`.
+A repository with neither gets `.break-check.json` before its first break, committed with `.breaks/` in its `.gitignore`. Write one profile per test suite, in the fields [contract.md's `.break-check.json`](contract.md#break-checkjson) gives, its patterns copied from what its tests really print: run one failing test and one that doesn't compile, and read the output. Each profile's check is one break of a branch that already has a test, run with `--profile <name>`: `caught` shows the profile reads its suite. Breaks go through the runner, since only it records a proof a later step or a review can read. The PR description's Break checks part, as `cadre:pr-description` gives it, comes from the runner's `--table`.
 
 ## After a task's tests are green
 

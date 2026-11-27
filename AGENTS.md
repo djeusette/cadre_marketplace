@@ -10,7 +10,7 @@ Run each before a commit:
 - `ruby test/check_version_bumps_test.rb`
 - `ruby plugins/engineering-review/scripts/test_break_check/all.rb`
 
-A change to the break-check runner breaks its branches with this checkout's runner, not the installed one: `ruby plugins/engineering-review/scripts/break_check.rb .breaks/<task>.json`.
+Every break-check command on the runner's own code uses this checkout's runner, not the installed one: `ruby plugins/engineering-review/scripts/break_check.rb`.
 
 `plugin_test.rb` and `test_check_plugin.py` pin their plugin's exact wording: change the test first, watch it go red, then the text.
 

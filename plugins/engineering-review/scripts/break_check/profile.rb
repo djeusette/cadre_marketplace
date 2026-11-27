@@ -14,17 +14,24 @@ module BreakCheck
   module Profiles
     SETTINGS = ".break-check.json"
 
+    # Checks every profile in the file, so a broken one shows before it is
+    # picked; the partition goes to the chosen one only.
     def self.load(root, name:, partition:)
       path = File.join(root, SETTINGS)
       raise Usage, "no #{SETTINGS} in #{root}: run from the repository root, or write one (see contract.md)" unless File.file?(path)
 
       profiles, default = parse(path)
       chosen = name || default || profiles.keys.first
-      fields = profiles.fetch(chosen) { raise Usage, "unknown profile #{chosen} (#{SETTINGS} has #{profiles.keys.join(", ")})" }
-      build(chosen, fields, partition:).tap do |profile|
-        missing = profile.watched.find { !File.exist?(File.join(root, _1)) }
-        refuse(chosen, "watched path #{missing} does not exist") if missing
-      end
+      raise Usage, "unknown profile #{chosen} (#{SETTINGS} has #{profiles.keys.join(", ")})" unless profiles.key?(chosen)
+
+      built = profiles.to_h { |each_name, fields| [each_name, build(each_name, fields, partition: (partition if each_name == chosen))] }
+      built.each { |each_name, profile| check_watched(root, each_name, profile) }
+      built.fetch(chosen)
+    end
+
+    def self.check_watched(root, name, profile)
+      missing = profile.watched.find { !File.exist?(File.join(root, _1)) }
+      refuse(name, "watched path #{missing} does not exist") if missing
     end
 
     REQUIRED = %w[command failing_test compile_error timeout watched noise].freeze
@@ -101,11 +108,13 @@ module BreakCheck
     # The profiles and the default, once the file's shape is checked.
     def self.parse(path)
       settings = JSON.parse(BreakCheck.read(path))
-      profiles = settings["profiles"] if settings.is_a?(Hash)
-      raise Usage, "#{SETTINGS}: profiles must name at least one profile" unless profiles.is_a?(Hash) && profiles.any?
+      raise Usage, "#{SETTINGS}: profiles must name at least one profile" unless settings.is_a?(Hash)
 
       unknown = settings.keys - %w[profiles default]
       raise Usage, "#{SETTINGS}: unknown key #{unknown.join(", ")}" if unknown.any?
+
+      profiles = settings["profiles"]
+      raise Usage, "#{SETTINGS}: profiles must name at least one profile" unless profiles.is_a?(Hash) && profiles.any?
 
       default = settings["default"]
       raise Usage, "#{SETTINGS}: default is required when there is more than one profile" if profiles.size > 1 && !default

@@ -19,7 +19,7 @@ Run from the repository root:
 - `<runner> --stale` lists stale and gone proofs; `--stale --replay` reruns the stale ones from the ledger.
 - `<runner> --uncovered BASE` lists the changed lines since `BASE` that no fresh proof covers.
 - `<runner> --table` prints the fresh proofs as the PR's table.
-- `--profile NAME`, on any command, picks a profile other than the file's `default`; `--partition N` is for a profile whose command takes one, checked only when a test runs.
+- `--profile NAME`, on any command, picks a profile other than the file's `default`; `--partition N` is for a profile whose `command` or `env` names `{partition}`, checked only when a test runs.
 - `<runner> --help` lists every flag.
 
 Every command reads `.break-check.json` first, and exits 2 when it is missing or invalid, or names no such profile, so a run outside the root never reads as an all-clear. The runner exits 2 on Ruby older than 3.2 too, before it loads anything else. Everything the runner keeps is under `.breaks/`, in the repository it runs in and never beside the runner itself, and the change that adopts the runner git-ignores it. One command at a time.
@@ -82,7 +82,7 @@ At the repository root, committed. It holds the repository's settings, so the ru
 | `noise` | yes | changed lines that hold no branch (a closing keyword, a comment) |
 | `doc_open`, `doc_close` | no, but together | the lines that start and end a doc block, whose lines hold no branch |
 
-- A pattern is a Ruby regular expression written as a JSON string, its backslashes doubled. Flags go inline, as in `(?m)`.
+- `failing_test`, `compile_error`, `infrastructure`, `refusal`, `noise`, `doc_open` and `doc_close` are patterns: Ruby regular expressions written as JSON strings, their backslashes doubled. Flags go inline, as in `(?m)`.
 - `{partition}`, anywhere in `command` or `env`, becomes the N of `--partition N`. A profile that names it needs `--partition` to run tests; one that doesn't refuses `--partition`.
 - `default` names the profile a command uses when `--profile` is left out. It is required when the file holds more than one profile; with one, that one is used.
 - Any other key, a required field missing, a value of the wrong kind or a pattern that doesn't compile: the runner exits 2 naming the profile and the field.

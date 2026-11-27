@@ -13,10 +13,10 @@ module BreakCheck
     COMMANDS = %i[breaks stale uncovered table].freeze
 
     BANNER = <<~TEXT
-      Usage: ruby break_check.rb BREAKS.json [--profile NAME] [--partition N]  break each branch, record what is caught
+      Usage: ruby break_check.rb BREAKS.json [--partition N]                  break each branch, record what is caught
              ruby break_check.rb --stale [--replay [--partition N]]            list stale proofs, or rerun them
              ruby break_check.rb --uncovered BASE                              changed lines since BASE with no fresh proof
-             ruby break_check.rb --table                                       the ledger as the PR's table
+             ruby break_check.rb --table                                       the fresh proofs as the PR's table
       Run from the repository root; profiles come from its .break-check.json, and
       --profile NAME, on any command, picks one other than its default.
     TEXT
@@ -39,8 +39,8 @@ module BreakCheck
     def self.parse(argv)
       options = {}
       rest = OptionParser.new(BANNER) do |parser|
-        parser.on("--partition N", Integer) { options[:partition] = _1 }
-        parser.on("--profile NAME") { options[:profile] = _1 }
+        parser.on("--partition N", Integer, "replaces {partition}; required by a profile that names it") { options[:partition] = _1 }
+        parser.on("--profile NAME", "a profile of .break-check.json other than its default") { options[:profile] = _1 }
         parser.on("--stale") { options[:stale] = true }
         parser.on("--replay") { options[:replay] = true }
         parser.on("--table") { options[:table] = true }
