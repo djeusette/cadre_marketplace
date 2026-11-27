@@ -1612,8 +1612,7 @@ class WritingPlansTest < Minitest::Test
   end
 
   def test_a_plan_above_20_code_files_says_kept_whole_or_why_or_stops
-    [%q{When the plan's file structure holds more than 20 code files, counted as "One pull request" says: when the person kept the part whole at step 4 of "A Cadre milestone", the plan says so; otherwise it says why it can't be smaller, and when it could be smaller, stop before writing the plan: propose a milestone's split as that step says, then plan again from step 5;},
-     %q{take requirements on to `cadre:brainstorming`, as "Requirements with no spec" says.}].each { |text| assert_includes run_section, text }
+    assert_includes run_section, %q{When the plan's file structure holds more than 20 code files, counted as "One pull request" says: when the person kept the part whole at step 4 of "A Cadre milestone", the plan says so; otherwise it says why it can't be smaller, and when it could be smaller, stop before writing the plan: propose a milestone's split as that step says, then plan again from step 5; take requirements on to `cadre:brainstorming`, as "Requirements with no spec" says.}
   end
 
   def test_an_untracked_spec_is_registered_before_milestone_1_is_planned
