@@ -114,15 +114,15 @@
 
 Fresh subagents read only `plugins/cadre/skills/writing-plans/SKILL.md` in this worktree and the cadre files it links, by their worktree paths: the installed cadre is 0.34.0, with the old step 5, so they never load a `cadre:*` skill with the Skill tool. They run no `cadre` or `git` command that writes; the brief gives each stubbed output. Each stops at the args it would hand `superpowers:writing-plans` and reports them. Briefs name no authoring skill and forbid `colette:writing-plans`.
 
-- [ ] 1. **A Cadre milestone, named.** "plan wish-reminders/2 with cadre:writing-plans" in `shop-api`, milestone 1 `in_review`. Passes when the run checks superpowers, says what it chose, runs the three cadre sections, runs only steps 1 to 4 of "Start a milestone", asks about milestone 1, reads the Skills table, and hands over the spec copy's path, the header line, the skills per task, the size rule, the delta review rounds and a PR task naming `cadre:pr-description` that never merges locally.
-- [ ] 1b. **Handed over from step 5.** Passes when no second `cadre whoami`, no second spec pull and no return into the `cadre` skill.
-- [ ] 1c. **A tracked feature spec, no number.** Passes when it takes the `current` milestone and says so.
-- [ ] 2. **An untracked spec with Increments.** Passes when it follows "Create a project" from step 1 and stops at step 6's playback, with no plan written.
-- [ ] 2b. **The return.** Starts from a stubbed `cadre project create` answer. Passes when it plans `<slug>/1` from "A Cadre milestone" step 2.
-- [ ] 2c. **An untracked spec without Increments.** Passes when "Create a project" step 1 loads `cadre:brainstorming`.
-- [ ] 3a. **Requirements, one pull request.** "cadre:writing-plans: members can archive a wish" in a small repo. Passes when it says one pull request and why, and hands over no spec file and no Cadre line.
-- [ ] 3b. **Requirements across two repos.** Passes when it loads `cadre:brainstorming`.
-- [ ] 4. **Not asked.** Each subagent gets the installed skills' descriptions, the new one included, and one request. "plan this: members can archive a wish", five fresh runs, and "plan docs/superpowers/specs/2026-10-19-archive-wishes-design.md" on an untracked spec pass on `superpowers:writing-plans`; "use cadre's planning for wish reminders" passes on `cadre:writing-plans`; a spec with the Cadre tracking line passes on `cadre:cadre`.
+- [x] 1. **A Cadre milestone, named.** "plan wish-reminders/2 with cadre:writing-plans" in `shop-api`, milestone 1 `in_review`. Passes when the run checks superpowers, says what it chose, runs the three cadre sections, runs only steps 1 to 4 of "Start a milestone", asks about milestone 1, reads the Skills table, and hands over the spec copy's path, the header line, the skills per task, the size rule, the delta review rounds and a PR task naming `cadre:pr-description` that never merges locally.
+- [x] 1b. **Handed over from step 5.** Passes when no second `cadre whoami`, no second spec pull and no return into the `cadre` skill.
+- [x] 1c. **A tracked feature spec, no number.** Passes when it takes the `current` milestone and says so.
+- [x] 2. **An untracked spec with Increments.** Passes when it follows "Create a project" from step 1 and stops at step 6's playback, with no plan written.
+- [x] 2b. **The return.** Starts from a stubbed `cadre project create` answer. Passes when it plans `<slug>/1` from "A Cadre milestone" step 2.
+- [x] 2c. **An untracked spec without Increments.** Passes when "Create a project" step 1 loads `cadre:brainstorming`.
+- [x] 3a. **Requirements, one pull request.** "cadre:writing-plans: members can archive a wish" in a small repo. Passes when it says one pull request and why, and hands over no spec file and no Cadre line.
+- [x] 3b. **Requirements across two repos.** Passes when it loads `cadre:brainstorming`.
+- [x] 4. **Not asked.** Each subagent gets the installed skills' descriptions, the new one included, and one request. "plan this: members can archive a wish", five fresh runs, and "plan docs/superpowers/specs/2026-10-19-archive-wishes-design.md" on an untracked spec pass on `superpowers:writing-plans`; "use cadre's planning for wish reminders" passes on `cadre:writing-plans`; a spec with the Cadre tracking line passes on `cadre:cadre`.
 
 A failed run means test first, then text. colette's eval cases, none run, each recorded as not measured in the PR: plans-the-next-increment (1), colette-spec-plans-with-colette (4, the tracked spec), plain-spec-plans-with-superpowers (4), spec-without-increments (2c), plans-small-requirements (3a), big-requirements-get-increments (3b). brainstorm-hands-off-to-writing-plans is dropped: `cadre:brainstorming` hands over to "Create a project".
 
@@ -141,6 +141,14 @@ A failed run means test first, then text. colette's eval cases, none run, each r
 - [ ] **Step 3:** both manifests at `0.35.0`; the bullet as above.
 - [ ] **Step 4: Run.** Expected: green.
 - [ ] **Step 5: Commit** `Cadre 0.35.0: cadre:writing-plans, one pull request planned at a time`.
+
+## Dry runs, results
+
+Every run passed. 1, 1b and 1c stop at the args to `superpowers:writing-plans` or at the milestone said; 1b runs no second sign-in, spec pull or cadre skill. 2 stops at "Create a project" step 6's playback; 2b plans `gift-wrap/1` from step 2 with no check run twice; 2c reaches `cadre:brainstorming` from "Create a project" step 1. 3a runs no `cadre` command and hands over no spec file and no Cadre line; 3b stops at `cadre:brainstorming`. Routing: the three one-line "plan this" runs picked `superpowers:brainstorming`, superpowers' own first step for a one-line feature; two "plan this" runs with settled requirements and the untracked spec picked `superpowers:writing-plans`; "use cadre's planning" picked `cadre:writing-plans`; the tracked spec picked `cadre:cadre`.
+
+Fixed from them: step 5 hands over the milestone `<slug>/<n>` with the spec copy's path; the question about an unmerged milestone says this branch lacks its changes; the code read without asking is this repo's.
+
+Left as they are, outside this increment: `milestone.md` step 3 names no command for "`<branch>` exists"; "Create a project" step 3 adds the tracking line before step 6's approval and leaves it uncommitted in the main checkout, so a new worktree lacks it.
 
 ## Finishing
 
