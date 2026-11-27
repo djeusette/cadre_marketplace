@@ -21,7 +21,7 @@ Whoever wrote the code runs its breaks, in the same session: a fresh agent's sta
 
 `<runner>` below is the repository's committed runner, as its `AGENTS.md` or a README names it, the runner's own README included. `<runner> --help` lists its flags, including whatever the repository's tests need to run beside other sessions. A runner with more than one profile (one per test suite, such as the app's and the runner's own) runs each recipe below once for each profile whose watched paths the change touches; when stale proofs of two suites stop a replay, see the known gaps in [contract.md](contract.md).
 
-Look for a committed runner (a `break_check` script, its README) before deciding there is none. A repository with no runner gets one before its first break: write it in the language the repository's people prefer, following [contract.md](contract.md), with its tests, and commit it. Breaks go through the runner, since only it records a proof a later step or a review can read, and the PR's table comes from its `--table` (`pr-description`).
+Look for a committed runner (a `break_check` script, its README) before deciding there is none. A repository with no runner gets one before its first break: write it in the language the repository's people prefer, following [contract.md](contract.md), with its tests, and commit it. Breaks go through the runner, since only it records a proof a later step or a review can read, and the PR's table comes from its `--table` (`cadre:pr-description`).
 
 ## After a task's tests are green
 
@@ -38,7 +38,7 @@ In the worktree that holds the ledger (a scratch worktree has none):
 
 1. `<runner> --stale --replay` reruns every stale proof and drops the gone ones, whose branches `--uncovered` then lists again, except a branch `--uncovered` cannot list: break it again from the `gone` line the replay printed.
 2. `<runner> --uncovered <the PR's base commit>`, and `git diff <the PR's base commit>` for the branches it cannot list (deleted lines, paths outside the watched ones) that `--table` shows no fresh proof for; break those as in steps 2–4 of "After a task's tests are green". A test added here can make other proofs stale: rerun step 1 until `<runner> --stale` ends with `0 stale`.
-3. Once `--stale` ends with `0 stale`, every line `--uncovered` lists holds no branch, and each branch `--uncovered` cannot list (narrowed only by deleting lines, or outside the watched paths) has a fresh proof, `<runner> --table` prints the Break checks part of the PR description (`pr-description`).
+3. Once `--stale` ends with `0 stale`, every line `--uncovered` lists holds no branch, and each branch `--uncovered` cannot list (narrowed only by deleting lines, or outside the watched paths) has a fresh proof, `<runner> --table` prints the Break checks part of the PR description (`cadre:pr-description`).
 
 Done when the table is printed after the last break.
 

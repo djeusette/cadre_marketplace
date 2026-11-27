@@ -881,7 +881,7 @@ class SkillContentTest(unittest.TestCase):
         principles = (PLUGIN_DIR / "skills" / "engineering-principles" / "SKILL.md").read_text(encoding="utf-8")
         rule = next(line for line in principles.splitlines() if line.startswith("- **EP-F5** — "))
 
-        for part in ("title", "what it does", "how it works", "mermaid", "behind the scenes", "screenshots and videos", "break checks", "`pr-description`"):
+        for part in ("title", "what it does", "how it works", "mermaid", "behind the scenes", "screenshots and videos", "break checks", "`cadre:pr-description`"):
             self.assertIn(part, rule.lower())
         self.assertIn("`<feature> (<i>/<n>): <what it delivers>`", rule)
 
@@ -948,7 +948,7 @@ class SkillContentTest(unittest.TestCase):
         self.assertIn("pr_description: |", schema)
         self.assertIn("`gh pr view <n> --json title,body`", (PLUGIN_DIR / "skills" / "review-report" / "SKILL.md").read_text(encoding="utf-8"))
         self.assertIn("four backticks", companion)
-        self.assertIn("`engineering-review:pr-description`", companion)
+        self.assertIn("`cadre:pr-description`", companion)
         self.assertIn("**No PR** (no GitHub remote, a branch without a PR, a commit range) **and nothing pasted:**", companion)
         self.assertIn("**A PR that cannot be read** (`gh` missing, not logged in or failing) **and nothing pasted:**", companion)
 
@@ -1079,9 +1079,9 @@ class SkillContentTest(unittest.TestCase):
         item = passes.split("**5. The PR title and description (EP-F5).**", 1)[1].split("\n**Report.**", 1)[0]
         behind = passes.split("**PR description, behind the scenes (EP-F5).**", 1)[1].split("\n**Report.**", 1)[0]
 
-        for text in ("of the kinds `pr-description` lists", "as `pr-description` asks", "Where `pr-description` says it is needed"):
+        for text in ("of the kinds `cadre:pr-description` lists", "as `cadre:pr-description` asks", "Where `cadre:pr-description` says it is needed"):
             self.assertIn(text, item)
-        self.assertIn("The scope is the one `pr-description` gives its transactions, sync and async, and side effects items", behind)
+        self.assertIn("The scope is the one `cadre:pr-description` gives its transactions, sync and async, and side effects items", behind)
         for text in ("an env var or secret to set or unset", "logs, metrics, toasts and navigation",
                      "each step, participant and branch they show exists, in that order", "The check judges the content, not the heading names"):
             self.assertIn(text, skill)
@@ -1221,7 +1221,7 @@ class SkillContentTest(unittest.TestCase):
         template = skill.split("## Template", 1)[1].split("## Not essential", 1)[0]
         rule = next(line for line in principles.splitlines() if line.startswith("- **EP-F5** — "))
 
-        for text in ("The description is rejected", "one 🔴 finding", "not ready for review", '"Pictures" in `pr-description`'):
+        for text in ("The description is rejected", "one 🔴 finding", "not ready for review", '"Pictures" in `cadre:pr-description`'):
             self.assertIn(text, pictures)
         for text in ("**Capture**", "**Host**", "**Embed**", "**Clean up**", "assets/pr-<n>", "gh pr create --draft", "refs/pull/<m>/head",
                      "by the commit's SHA, never by the branch name", "?raw=true", "gh pr close <m> --delete-branch", "${sha}"):
@@ -1349,6 +1349,27 @@ class SkillContentTest(unittest.TestCase):
         passes = (PLUGIN_DIR / "skills" / "review-passes" / "SKILL.md").read_text(encoding="utf-8")
 
         self.assertNotIn("GENERIC_PLAN", passes)
+
+
+class PrStandardTest(unittest.TestCase):
+    CADRE_STANDARD = PLUGIN_DIR.parent / "cadre" / "skills" / "pr-description" / "SKILL.md"
+    POINTERS = ("skills/review-companion/SKILL.md", "skills/review-passes/SKILL.md", "skills/review-report/SKILL.md",
+                "skills/engineering-principles/SKILL.md", "skills/break-check/SKILL.md", "skills/break-check/contract.md")
+
+    def test_no_skill_or_agent_names_the_pr_standard_by_its_old_name(self):
+        files = sorted((PLUGIN_DIR / "skills").rglob("*.md")) + sorted((PLUGIN_DIR / "agents").glob("*.md"))
+        for path in files:
+            text = path.read_text(encoding="utf-8")
+            self.assertNotIn("`pr-description`", text, path)
+            self.assertNotIn("engineering-review:pr-description", text, path)
+        for name in self.POINTERS:
+            self.assertIn("`cadre:pr-description`", (PLUGIN_DIR / name).read_text(encoding="utf-8"), name)
+
+    def test_the_sections_the_review_cites_are_in_cadres_pr_standard(self):
+        standard = self.CADRE_STANDARD.read_text(encoding="utf-8")
+
+        for section in ("## The title", "## Not essential", "## Pictures", "## Rewriting a description"):
+            self.assertIn(f"\n{section}\n", standard)
 
 
 class EvalGraderTest(unittest.TestCase):
