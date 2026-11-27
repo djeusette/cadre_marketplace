@@ -47,7 +47,7 @@
 - [ ] **Step 1: Change the tests**
   - `BrainstormTest` becomes `BrainstormingTest`: it includes `Sections`, and its reader `skill` reads `plugins/cadre/skills/brainstorming/SKILL.md` (today `brainstorm`). Every assertion it holds stays, with these changes:
     - `"step 3 of \"Create a project\" in [project.md](../cadre/project.md)"`;
-    - `test_it_hands_back_to_the_cadre_skill_instead_of_writing_plans` asserts `%q{follow "Create a project" in [project.md](../cadre/project.md) from step 2}` and `"its scripts are in that file's folder"` in `## The handoff`, in place of `"Go back to step 2"`;
+    - `test_it_hands_back_to_the_cadre_skill_instead_of_writing_plans` asserts `%q{follow "Create a project" in [project.md](../cadre/project.md) from step 2}` in `## The handoff`, in place of `"Go back to step 2"`;
     - "Invoke it from this skill, not through a workflow that wraps it".
   - New `test_frontmatter_names_the_skill_and_when_it_runs`: keys `name` and `description` only; `name: brainstorming`; the description exactly `Cadre brainstorming, which ends with the feature registered as a Cadre project. Use only when the person names it ("cadre:brainstorming", "cadre's brainstorming"), or when the cadre skill calls it from "Create a project".` It opens on `Cadre`, not on the plain trigger it must not match.
   - `test_brainstorm_names_apps` moves into `BrainstormingTest`.
@@ -63,7 +63,7 @@
   - Add the frontmatter above, and title it `# Cadre brainstorming`.
   - The opening: the brainstorm ends as a feature spec, and the handoff registers it as a Cadre project.
   - `project.md` links become `../cadre/project.md`; "from this file" becomes "from this skill".
-  - `## The handoff`: after the commit, `Then follow "Create a project" in [project.md](../cadre/project.md) from step 2, with that spec: its scripts are in that file's folder.`
+  - `## The handoff`: after the commit, `Then follow "Create a project" in [project.md](../cadre/project.md) from step 2, with that spec.`
   - `project.md` step 1 and step 6, and `SKILL.md`'s line, as the tests say.
 - [ ] **Step 6: Run the checks.** Expected: green.
 - [ ] **Step 7: Commit** `cadre:brainstorming replaces brainstorm.md` (`git add` the named paths; `git commit -- <paths>`).
@@ -116,7 +116,16 @@ A failed run means test first, then text. Eval cases, none run and each recorded
 - Dry run 4 covers the mode where the `cadre` skill creates a project; dry runs 1 to 3 get sharper pass criteria, and dry run 3 five runs.
 - Task 1 moves the file alone first, so each changed sentence is seen red, not masked by a missing file.
 - The description opens on `Cadre` and names its two triggers in checkable terms.
-- The checks are linked, not invoked: `cadre:cadre` would route to "Create a project" step 1 and back here. "then come back here" bounds them, and the handoff says where `project.md`'s scripts live.
+- The checks are linked, not invoked: `cadre:cadre` would route to "Create a project" step 1 and back here. "then come back here" bounds them.
 - The checks run on every path: a skip would key on who sent the run, which nothing observes, and save only three read-only commands.
 - The README bullet lands at 70 words with ";", and the README gains the superpowers 7.0 note the spec's Constraints ask for, which no increment owned.
 - From the frozen skill, only its version probe carries over, as the builder check superpowers 7.0 added.
+
+## Reviews, folded in
+
+The `engineering-principles` and `writing-for-agents` reviews of the branch changed it past the tasks above:
+
+- `project.md` names its own folder for `design_link.rb` and the `cadre:cadre` skill on step 3, so it reads right when the brainstorm hands over to it; step 1 loads the skill, and step 6 points to the commit in "The handoff" alone.
+- The version check comes before "follow it as written", and the skill takes the spec "Create a project" handed over.
+- The step's done-criterion points to "Sign in" instead of restating it; the heading order, "Run only" and "in that order" are pinned.
+- "Invoke it directly from this skill" replaces the negation about a wrapping workflow; the spec's Constraints no longer name `brainstorm.md`.

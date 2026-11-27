@@ -271,7 +271,7 @@ class SkillTest < Minitest::Test
     ["one with an `## End goal` and an `## Increments` section", "the spec the person names",
      "a likely one in `docs/superpowers/specs/` once you ask and the person confirms it is this feature",
      "This step is done when you hold that spec.",
-     "When there is none, or the spec the person names lacks either section, brainstorm the feature with the person through the `cadre:brainstorming` skill, from that spec when there is one."].each { |text| assert_includes create_section, text }
+     "When there is none, or the spec the person names lacks either section, load the `cadre:brainstorming` skill and brainstorm the feature with the person as it says, from that spec when there is one."].each { |text| assert_includes create_section, text }
   end
 
   def test_it_writes_a_spec_and_draws_the_canvas_through_canvas_md
@@ -348,7 +348,7 @@ class SkillTest < Minitest::Test
   end
 
   def test_a_corrected_spec_is_committed_alone_or_left_to_the_person
-    [%q{commit it as "The handoff" in [the brainstorming skill](../brainstorming/SKILL.md) commits it}, "leave the commit to them"].each { |text| assert_includes create_section, text }
+    [%q{commit only the spec file, as the first paragraph of "The handoff" in [the brainstorming skill](../brainstorming/SKILL.md) says}, "leave the commit to them"].each { |text| assert_includes create_section, text }
     ["git commit", "never push"].each { |text| refute_includes create_section, text }
   end
 
@@ -1397,6 +1397,10 @@ class BrainstormingTest < Minitest::Test
     assert_includes skill, "apps of a repo that has several"
   end
 
+  def test_the_opening_says_create_a_project_registers_the_spec
+    assert_includes skill, %q{The handoff then gives that spec to "Create a project", which registers it in Cadre.}
+  end
+
   def test_the_checks_come_before_the_brainstorm
     assert_equal ["## Before you start", "## Run superpowers brainstorming", "## What a milestone is", "## Drafting the milestones",
                   "## The feature spec", "## The handoff"], skill.gsub(/^```.*?^```$/m, "").scan(/^## .*$/)
@@ -1409,7 +1413,7 @@ class BrainstormingTest < Minitest::Test
   def test_it_checks_the_cli_and_the_sign_in_before_it_brainstorms
     ["Run only", "in that order", "[the cadre skill](../cadre/SKILL.md)", %q{"Before you start"}, %q{"Install or update the CLI"},
      %q{"Sign in"}, "then come back here", "the brainstorm stops too",
-     %q{This step is done once "Sign in" has signed the person in.}].each { |text| assert_includes before_you_start, text }
+     %q{This step is done once "Sign in" ends with the person signed in.}].each { |text| assert_includes before_you_start, text }
     refute_includes before_you_start, "holds an `email`"
     assert_operator before_you_start.index("`superpowers:brainstorming`"), :<, before_you_start.index("[the cadre skill]")
   end
@@ -1421,9 +1425,10 @@ class BrainstormingTest < Minitest::Test
   end
 
   def test_it_runs_superpowers_brainstorming_as_written_with_cadres_rules_on_top
-    ["Invoke `superpowers:brainstorming`", "follow it as written", "Invoke it from this skill, not through a workflow that wraps it", "Where they differ from it, they win"].each do |text|
-      assert_includes skill, text
-    end
+    [%q{Invoke `superpowers:brainstorming` with the person's request, and with the spec "Create a project" handed over when there is one.},
+     "follow it as written", %q{Invoke it directly from this skill, so "The handoff" below runs and registers the project.},
+     "Where they differ from it, they win"].each { |text| assert_includes skill, text }
+    refute_includes skill, "wraps it"
   end
 
   def test_it_leaves_the_conversation_to_superpowers
