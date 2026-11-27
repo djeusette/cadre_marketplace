@@ -262,4 +262,4 @@ The cadre marketplace holds `cadre` (CLI, brainstorming, planning, PR descriptio
   - the break-check spec's successor written: `docs/superpowers/specs/2026-11-27-shared-break-check-runner-design.md`, not tracked in Cadre (David's call, 2026-11-27).
 - **Consumers:** none left after increment 6.
 - **Code files:** 9 — `.claude-plugin/marketplace.json`, and the eight code files of `plugins/engineering-review/` (deleted)
-- [ ] Not shipped
+- [x] PR colette-club/colette-marketplace#51
