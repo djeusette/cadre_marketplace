@@ -1,6 +1,6 @@
 # cadre_marketplace
 
-Claude Code plugins (marketplace name: `cadre`): cadre runs [Cadre](https://colette-cadre.fly.dev), which shows where every milestone stands, on every repo, in deploy order; engineering-review reviews code, with `security-audit` as its security layer.
+Claude Code plugins (marketplace name: `cadre`): cadre runs [Cadre](https://colette-cadre.fly.dev), which shows where every milestone stands, on every repo, in deploy order; engineering-review reviews code, and security-audit is its security layer.
 
 ## Use it
 

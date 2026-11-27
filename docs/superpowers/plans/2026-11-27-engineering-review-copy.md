@@ -187,9 +187,13 @@ Declined, as a standing ruling: an `engineering-review@cadre` install line in RE
 
 engineering-principles (1 Important, 3 Minor) and writing-for-agents (2 Important, 5 Minor), all fixed but one:
 
-- A base `plugin.json` that is not JSON is tested (red with `base_version`'s rescue removed); Task 3's case list and Round 1's line name every test.
+- A base `plugin.json` that is not JSON is tested (red with `base_version`'s rescue removed); Task 3's case list names every test, and Round 1's line says its tests cover `HEAD`.
 - The three round 1 tests are indented like their neighbours (a `<<~` heredoc had stripped them).
 - `manifest`'s comment says it raises `NotAnObject`.
 - README's opening names `security-audit`; the workflow's job and step names say what runs.
 
 Declined, as a standing ruling: rewording round 1's commit message. Commits are history; the plan's Round 1 line carries the accurate wording.
+
+### Round 3: `5dea840..400cae0`
+
+engineering-principles: clean. writing-for-agents (2 Minor), fixed: README's opening names security-audit as a plugin, in plain words like the others; Round 2's first line says what Task 3's list and Round 1's line each say.
