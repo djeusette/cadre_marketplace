@@ -301,8 +301,7 @@ class CliTest < Minitest::Test
       assert_empty Dir["#{root}/.breaks/journal/*"]
       refute File.exist?("#{root}/.breaks/child")
       # The killed group's leader stays a zombie until init reaps it, which
-      # on Linux can come after the runner has exited, and kill(0) still
-      # answers for a zombie (macOS with EPERM).
+      # on Linux can come after the runner has exited.
       wait_for { group_gone?(test_run) }
       assert_raises(Errno::ESRCH) { Process.kill(0, -test_run) }
     end
@@ -367,6 +366,7 @@ class CliTest < Minitest::Test
     [BreakCheck::CLI.run(argv, out:), out.string]
   end
 
+  # kill(0) still answers for a zombie: success on Linux, EPERM on macOS.
   def group_gone?(group)
     Process.kill(0, -group)
     false
