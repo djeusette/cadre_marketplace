@@ -1,13 +1,13 @@
 # A repo's Skills table
 
-A repo names the skills its work needs in a `## Skills` table in its root `AGENTS.md`: one row per skill, with when it applies and how to get it. Read it whenever you start a milestone, as [milestone.md](milestone.md) says, and draft one when the person asks ("Write this repo's Skills table with the cadre skill.").
+A repo names the skills its work needs in a `## Skills` table in its root `AGENTS.md`: one row per skill, with when it applies and how to get it. Read it whenever you plan, as the `cadre:writing-plans` skill says, and draft one when the person asks ("Write this repo's Skills table with the cadre skill.").
 
 ## Read the table
 
 Run, from the repo:
 
 ```bash
-ruby <this skill's folder>/skills_table.rb "$(git rev-parse --show-toplevel)"
+ruby <skills.md's folder>/skills_table.rb "$(git rev-parse --show-toplevel)"
 ```
 
 - When the script exits non-zero, show the person its output and stop.
@@ -30,7 +30,7 @@ With no row stopping the work, go on to "Load what the work needs".
 
 ## Load what the work needs
 
-Load every row whose When fits the milestone's work, before planning.
+Load every row whose When fits the work, before planning.
 
 ## No Skills table
 
@@ -50,7 +50,7 @@ Tell the person the repo has no Skills table, and ask whether to draft it now or
    - enable each plugin in `.claude/settings.json` under `enabledPlugins`, and add its marketplace under `extraKnownMarketplaces` when it isn't `claude-plugins-official`;
    - add the line `@AGENTS.md` to `CLAUDE.md`, creating it when the repo has none.
 5. Read the table again, fixing what it names, until the script reports no `problems`, then name any `unlisted` folders to the person and show them the diff.
-6. When the person says, commit only those files, on the current branch: while starting a milestone that is the milestone's branch, so the table ships with its pull request. Then, while starting a milestone, go on to "Check each row".
+6. When the person says, commit only those files: while planning a milestone, on the milestone's branch, so the table ships with its pull request; otherwise on the branch the person names, asking which when they name none. Then, while planning, go on to "Check each row".
 
 ## The table's shape
 

@@ -50,7 +50,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.34.0", manifest["version"]
+    assert_equal "0.35.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -72,9 +72,7 @@ class ManifestTest < Minitest::Test
 
   def test_readme_sums_cadre_up_and_links_its_skill
     bullet = File.read(File.join(ROOT, "README.md"))[/^- \*\*cadre\*\* — .*?(?=^#|\z)/m]
-    assert_includes bullet, "(plugins/cadre/skills/cadre/SKILL.md)"
-    assert_includes bullet, "[`cadre:brainstorming`](plugins/cadre/skills/brainstorming/SKILL.md) brainstorms a feature into a Cadre project"
-    assert_includes bullet, "[`cadre:pr-description`](plugins/cadre/skills/pr-description/SKILL.md) sets the standard for PR descriptions."
+    assert_equal "- **cadre** \u2014 runs Cadre from Claude Code: it starts milestones and links their pull requests, connects repos to Fly, Vercel or the app stores, deploys them and writes Skills tables. [`cadre:brainstorming`](plugins/cadre/skills/brainstorming/SKILL.md) brainstorms a feature into a Cadre project; [`cadre:writing-plans`](plugins/cadre/skills/writing-plans/SKILL.md) plans a milestone's pull request; [`cadre:pr-description`](plugins/cadre/skills/pr-description/SKILL.md) sets the standard for PR descriptions. It installs the `cadre` CLI and signs you in; cadre installs `superpowers` from `claude-plugins-official` with it. [The skill](plugins/cadre/skills/cadre/SKILL.md).", bullet.strip
     assert_operator bullet.split.size, :<=, 70
   end
 
@@ -515,8 +513,8 @@ class SkillTest < Minitest::Test
   def milestone_refusals = section(milestone, "## When `cadre` refuses")
 
   def test_it_starts_a_milestone_with_one_plan_and_one_pull_request_per_repo
-    ["cadre project pull", "cadre spec pull <slug>/<n>", "docs/superpowers/specs/<slug>-<n>.md", "`superpowers:writing-plans`",
-     "Cadre: <slug>/<n>", "in its own session", "one plan and one pull request", "gh repo view --json name -q .name",
+    ["cadre project pull", "cadre spec pull <slug>/<n>", "docs/superpowers/specs/<slug>-<n>.md",
+     "in its own session", "gh repo view --json name -q .name",
      %q{as "Update a milestone's spec" in [project.md](project.md) says}].each do |text|
       assert_includes start_section, text
     end
@@ -559,12 +557,8 @@ class SkillTest < Minitest::Test
     refute_includes start_section, "When they name this repo's apps"
   end
 
-  def test_each_task_names_its_skills_for_the_subagent_that_executes_it
-    assert_includes start_section, "each task names the skills it needs (from the table when the repo has one), since a subagent executing it loads only those"
-  end
-
   def test_it_starts_a_milestone_from_its_app_steps
-    ["a repo/app entry is its repo", "one plan and one pull request", "the first step with no pull request",
+    ["a repo/app entry is its repo", "the first step with no pull request",
      %q{found as "The first step with no pull request" says}, "`<slug>-<n>-<app>` for one app's pull request"].each { |text| assert_includes start_section, text }
     ["cadre status <slug> --json", "`number`", "`steps` in deploy order", "`app` (null for a whole-repo step)",
      "the open and merged `pull_requests` that count on it", "The first step whose `pull_requests` is empty",
@@ -575,10 +569,10 @@ class SkillTest < Minitest::Test
     ["gh pr list", "<slug>/20", "owner.login"].each { |text| refute_includes milestone, text }
   end
 
-  def test_the_plan_says_it_is_tracked_in_cadre
-    assert_includes start_section, PLAN_LINE
-    assert_includes start_section, "For one app's plan, the line ends with ` <app>`: `Cadre: <slug>/<n> <app>`."
-    assert_equal 1, start_section.scan("REQUIRED SKILL").size
+  def test_step_5_hands_over_to_cadre_writing_plans
+    assert_includes start_section, "5. Plan this repo's part with the `cadre:writing-plans` skill: load it, and hand it the milestone `<slug>/<n>`, the spec copy's path, this repo's part and, for one app's pull request, its app."
+    ["REQUIRED SKILL", "Execute the plan", "\n6. "].each { |text| refute_includes start_section, text }
+    refute_includes milestone, "this skill"
   end
 
   def test_the_pull_request_description_follows_cadre_pr_description
@@ -589,7 +583,6 @@ class SkillTest < Minitest::Test
 
   def test_the_pull_request_lists_what_a_deploy_needs_first
     refute_includes milestone, "ticks an item in GitHub"
-    assert_includes start_section, "the plan ends with a pull request task, which names `cadre:pr-description` among the skills it loads: it holds the rules for the `Cadre:` line and the `## Before deploying` section"
     assert_includes track_section, "Load `cadre:pr-description` before writing or editing its pull request's description."
   end
 
@@ -632,7 +625,7 @@ class SkillTest < Minitest::Test
   end
 
   def test_it_reads_the_table_with_the_script
-    assert_includes read_table, %q{ruby <this skill's folder>/skills_table.rb "$(git rev-parse --show-toplevel)"}
+    assert_includes read_table, %q{ruby <skills.md's folder>/skills_table.rb "$(git rev-parse --show-toplevel)"}
     ["<repo root>", "It prints JSON"].each { |text| refute_includes read_table, text }
   end
 
@@ -645,10 +638,9 @@ class SkillTest < Minitest::Test
   end
 
   def test_each_plan_task_names_the_skills_it_needs
-    assert_equal "Load every row whose When fits the milestone's work, before planning.", load_skills.strip
-    [%q{as [skills.md](skills.md) says, before planning}, "each task names the skills it needs (from the table when the repo has one)"].each do |text|
-      assert_includes start_section, text
-    end
+    assert_equal "Load every row whose When fits the work, before planning.", load_skills.strip
+    assert_includes skills, "Read it whenever you plan, as the `cadre:writing-plans` skill says"
+    refute_includes skills, "this skill"
   end
 
   def test_no_table_offers_to_draft_and_never_blocks
@@ -675,14 +667,15 @@ class SkillTest < Minitest::Test
   def test_it_routes_the_skills_table_request
     assert_includes description, "write a repo's Skills table"
     assert_operator description.split.size, :<=, 100
-    assert_match(/^- \[skills\.md\]\(skills\.md\): .*"Write this repo's Skills table"/, router)
+    assert_match(/^- \[skills\.md\]\(skills\.md\): read and check a repo's Skills table when `cadre:writing-plans` plans; .*"Write this repo's Skills table"/, router)
   end
 
   def test_each_section_says_where_to_go_next
     ["exits non-zero", "show the person its output and stop", %q{go on to "Check each row"}].each { |text| assert_includes read_table, text }
     assert_includes check_rows, %q{go on to "Load what the work needs"}
     assert_includes no_table, %q{go on to "Load what the work needs"}
-    [%q{go on to "Check each row"}, "the milestone's branch", "commit only those files"].each { |text| assert_includes draft_table, text }
+    [%q{go on to "Check each row"}, "while planning a milestone, on the milestone's branch", "otherwise on the branch the person names, asking which when they name none", "commit only those files", "while planning"].each { |text| assert_includes draft_table, text }
+    refute_includes draft_table, "while starting a milestone"
     refute_includes draft_table, "on their own"
   end
 
@@ -1067,9 +1060,10 @@ class SkillTest < Minitest::Test
   end
 
   def test_skill_files_call_only_superpowers_skills_and_cadre_itself
-    # cadre:brainstorming is cadre's own skill, which "Create a project" calls (EP-I3).
+    # cadre:brainstorming and cadre:writing-plans are cadre's own skills, which "Create a project" and
+    # "Start a milestone" call (EP-I3).
     calls = skill_files.flat_map { |path| File.read(path).scan(/`([a-z][a-z0-9-]*:[a-z][a-z0-9-]*)`/).flatten }
-    assert_equal %w[cadre:brainstorming cadre:cadre cadre:pr-description superpowers:brainstorming superpowers:using-git-worktrees superpowers:writing-plans], calls.uniq.sort
+    assert_equal %w[cadre:brainstorming cadre:cadre cadre:pr-description cadre:writing-plans superpowers:brainstorming superpowers:using-git-worktrees superpowers:writing-plans], calls.uniq.sort
     skill_files.each { |path| refute_match(/\bEP-[A-Z]\d/, File.read(path), path) }
   end
 
@@ -1488,5 +1482,158 @@ class BrainstormingTest < Minitest::Test
      "**Delivers:**", "**Deployable alone:**", "**Consumers:**", "**Code files:**",
      "plans increment 1", "Once the person approves the spec", "commit only the spec file", "leave the push to the person"].each { |text| assert_includes skill, text }
     refute_includes skill, "Not shipped"
+  end
+end
+
+class WritingPlansTest < Minitest::Test
+  PLAN_LINE = SkillTest::PLAN_LINE
+
+  def skill = File.read(File.join(PLUGIN, "skills", "writing-plans", "SKILL.md"))
+  def frontmatter = skill[/\A---\n(.*?)\n---\n/m, 1]
+  include Sections
+
+  def before_you_start = section(skill, "## Before you start")
+  def what_to_plan = section(skill, "## What to plan")
+  def milestone_section = section(skill, "## A Cadre milestone")
+  def run_section = section(skill, "## Run superpowers writing-plans")
+  def one_pull_request = section(skill, "## One pull request")
+
+  def test_frontmatter_names_the_skill_and_when_it_runs
+    assert_equal %w[description name], frontmatter.scan(/^([a-z-]+):/).flatten.sort
+    assert_includes frontmatter, "name: writing-plans"
+    assert_includes frontmatter, %q{description: Cadre planning, which plans one pull request at a time for a Cadre milestone or for requirements. Use only when the person names it ("cadre:writing-plans", "cadre's planning"), or when the cadre skill calls it from "Start a milestone".}
+  end
+
+  def test_the_opening_says_it_plans_one_pull_request_at_a_time
+    assert_equal "You plan one pull request at a time through `superpowers:writing-plans`: one repo's part of a Cadre milestone, or requirements given with no spec. Later milestones are planned once this one has shipped, with what it taught.\n\n",
+                 skill[/^# Cadre writing plans\n\n(.*?)(?=^## )/m, 1]
+  end
+
+  def test_its_sections_come_in_order
+    assert_equal ["## Before you start", "## What to plan", "## A Cadre milestone", "## A spec not tracked in Cadre", "## Requirements with no spec", "## One pull request", "## Run superpowers writing-plans"],
+                 skill.gsub(/^ *```.*?^ *```$/m, "").scan(/^## .*$/)
+  end
+
+  def test_it_stops_when_superpowers_writing_plans_is_missing
+    ["`superpowers:writing-plans`", "`superpowers` plugin", "`claude-plugins-official`", "and stop"].each { |text| assert_includes before_you_start, text }
+  end
+
+  def test_it_says_what_it_chose_and_why
+    assert_includes before_you_start, %q{Find what to plan, as "What to plan" says. Except when handed over, tell the person what you chose and why.}
+  end
+
+  def test_before_you_start_routes_to_the_case_section
+    assert_includes before_you_start, %q{4. Follow the section named for the case; when handed over, go to step 3 of "A Cadre milestone".}
+    refute_includes what_to_plan, "go to step 3"
+  end
+
+  def test_it_checks_the_cli_and_the_sign_in_for_cadre_work
+    [%q{For "A Cadre milestone" and "A spec not tracked in Cadre", run only "Before you start", "Install or update the CLI" and "Sign in" in [the cadre skill](../cadre/SKILL.md), then come back here. When one of those sections says to stop, the planning stops too.},
+     %q{This step is done once "Sign in" ends with the person signed in.},
+     %q{The cadre skill's rules for a command's flags and for a refusal no file names, at the end of its "What to read next", hold for the rest of this run.}].each { |text| assert_includes before_you_start, text }
+    assert_operator before_you_start.index("`superpowers:writing-plans`"), :<, before_you_start.index("[the cadre skill]")
+  end
+
+  def test_what_to_plan_takes_the_first_case_that_fits
+    ["Take the first case that fits the request:\n", "**Handed over:**",
+     %q{step 5 of "Start a milestone" in [milestone.md](../cadre/milestone.md) handed you `<slug>/<n>`, the spec copy's path, this repo's part and, for one app's pull request, its app. Steps 1 to 4 of "Start a milestone" and the cadre skill's checks are done.},
+     "**A Cadre milestone:**", "`<slug>/<n>`", "a Cadre project",
+     "a spec whose line under its title says it is tracked in Cadre", "**A spec not tracked in Cadre:**",
+     "**Requirements with no spec:**", "describes a feature or a change", "ask the person what to plan: a milestone, a spec or requirements"].each { |text| assert_includes what_to_plan, text }
+    assert_operator what_to_plan.index("**Handed over:**"), :<, what_to_plan.index("**A Cadre milestone:**")
+  end
+
+  def test_it_finds_the_milestone_to_plan
+    ["its increment `<i>` is milestone `<slug>/<i>`", "whose `current` is true in `cadre status <slug> --json`", "and say so",
+     "ask the person which"].each { |text| assert_includes milestone_section, text }
+  end
+
+  def test_named_for_a_milestone_it_runs_start_a_milestone_first
+    [%q{Run only steps 1 to 4 of "Start a milestone" in [milestone.md](../cadre/milestone.md) for `<slug>/<n>`, then come back here. When one of those steps says to stop, the planning stops too.},
+     "This step is done when you hold the spec copy's path, this repo's part and, for one app's pull request, its app, on the milestone's branch."].each do |text|
+      assert_includes milestone_section, text
+    end
+  end
+
+  def test_the_plan_says_it_is_tracked_in_cadre
+    assert_includes milestone_section, PLAN_LINE
+    ["so whoever executes it uses the `cadre:cadre` skill", "For one app's plan, the line ends with ` <app>`: `Cadre: <slug>/<n> <app>`.",
+     %q{only this repo's part of `<slug>/<n>`, or the app "Start a milestone" chose}].each { |text| assert_includes milestone_section, text }
+    assert_equal 1, skill.scan("REQUIRED SKILL").size
+    refute_includes skill, "this skill's folder"
+  end
+
+  def test_it_reads_the_skills_table_before_planning
+    assert_includes run_section, "Read the repo's Skills table, check its rows and load the skills the work calls for, as [skills.md](../cadre/skills.md) says."
+    assert_operator run_section.index("[skills.md]"), :<, run_section.index("Invoke `superpowers:writing-plans`")
+  end
+
+  def test_it_runs_superpowers_writing_plans_with_cadres_rules_on_top
+    ["Invoke `superpowers:writing-plans` with the spec copy's path or the requirements, and these rules on top. Where they differ from it, they win:",
+     "Plan only the given part (this repo's part of the milestone, or its one app, or the requirements) as one plan and one pull request: the spec-coverage check covers that part alone.",
+     "Each task names the skills it needs (from the table when the repo has one), since a subagent executing it loads only those."].each { |text| assert_includes run_section, text }
+  end
+
+  def test_the_plan_pushes_and_opens_its_pull_request
+    ["The plan ends with a pull request task, which names `cadre:pr-description` among the skills it loads: it holds the rules for the title, the `Cadre:` line and the `## Before deploying` section.",
+     "It pushes the branch and opens the pull request, never a local merge."].each { |text| assert_includes run_section, text }
+  end
+
+  def test_later_review_rounds_review_only_the_new_commits
+    ["Before the pull request task, the plan has a final review task.", "Its first round reviews the whole branch", "`git diff <last-reviewed-sha>..HEAD`",
+     "lists every earlier ruling as a standing decision", "records, in that task, the commit it reviewed up to and its rulings", "The review ends when a round is clean."].each { |text| assert_includes run_section, text }
+  end
+
+  def test_execution_stays_with_superpowers
+    assert_includes run_section, "Execute the plan as `superpowers:writing-plans` offers."
+  end
+
+  def test_it_asks_before_planning_after_an_unmerged_milestone
+    ["Run `cadre status <slug> --json`.", "lists the project's milestones in order, not by number",
+     "When an entry before `<n>`'s has a step whose `repo` is this repo and whose `pull_requests` hold none with `status` `merged` or `deployed`",
+     "that milestone's work here isn't merged yet, so this branch lacks it: name it to the person and ask whether to plan anyway"].each { |text| assert_includes milestone_section, text }
+  end
+
+  def test_it_rechecks_the_milestone_against_the_code_as_it_is_now
+    ["Read this repo's code as it is now, without asking, and estimate its part's code files, counted as \"One pull request\" says.",
+     "When the part no longer ships as one pull request, propose a split to the person",
+     %q{Once the person approves, land it: for a split, add the new milestone right after `<slug>/<n>` as "Change a project" in [project.md](../cadre/project.md) says, and narrow this milestone's spec to what stays in it; for a spec change, apply it.},
+     %q{Make either spec edit, the narrowing or the spec change, through "Update a milestone's spec" there, then run only steps 1, 2 and 4 of "Start a milestone" again and come back here. When one of them says to stop, the planning stops too.},
+     "When the person declines a split, plan the part as it is: the plan says the person kept it whole.",
+     "This step is done when you have told the person the estimate and what you proposed is settled."].each { |text| assert_includes milestone_section, text }
+    assert_operator milestone_section.index("cadre status <slug> --json`."), :<, milestone_section.index("Read this repo's code as it is now")
+    assert_operator milestone_section.index("Read this repo's code as it is now"), :<, milestone_section.index(%q{Plan as "Run superpowers writing-plans" says})
+  end
+
+  def test_one_pull_request_ships_one_increment
+    ["A plan is one pull request that ships one increment: one feature, the smallest step that can be deployed and used on its own, and its consumers named",
+     %q{as "What a milestone is" in [the brainstorming skill](../brainstorming/SKILL.md) defines a milestone. Read only that section there.},
+     "Its code files are counted without tests and docs: aim for 10, and prefer 20 or fewer."].each { |text| assert_includes one_pull_request, text }
+  end
+
+  def test_a_plan_above_20_code_files_says_kept_whole_or_why_or_stops
+    assert_includes run_section, %q{When the plan's file structure holds more than 20 code files, counted as "One pull request" says: when the person kept the part whole at step 4 of "A Cadre milestone", the plan says so; otherwise it says why it can't be smaller, and when it could be smaller, stop before writing the plan: propose a milestone's split as that step says, then plan again from step 5; take requirements on to `cadre:brainstorming`, as "Requirements with no spec" says.}
+  end
+
+  def test_an_untracked_spec_is_registered_before_milestone_1_is_planned
+    spec_section = section(skill, "## A spec not tracked in Cadre")
+    [%q{Register it first: follow "Create a project" in [project.md](../cadre/project.md) from step 1, with that spec.},
+     "through `cadre:brainstorming` when the spec lacks either",
+     %q{Once `cadre project create` has registered the project, plan milestone `<slug>/1` as "A Cadre milestone" says, from its step 2.}].each do |text|
+      assert_includes spec_section, text
+    end
+    assert_includes what_to_plan, "A tracked spec's status lines, when it has some, are ignored: Cadre shows where each milestone stands."
+  end
+
+  def test_requirements_are_one_pull_request_or_a_brainstorm_first
+    requirements = section(skill, "## Requirements with no spec")
+    [%q{Read this repo's code without asking, then decide whether the requirements ship as one pull request, as "One pull request" says.},
+     "tell the person the work is one pull request, and why",
+     %q{Plan it as "Run superpowers writing-plans" says, with the requirements and no spec file.},
+     "Cadre doesn't track it, so the plan has no tracking line and its pull request no `Cadre:` line.",
+     %q{or when the size rule in "Run superpowers writing-plans" stops the plan:}, "load `cadre:brainstorming` and brainstorm the feature from the requirements, as it says",
+     %q{Once "Create a project" has registered the project, come back here and plan milestone `<slug>/1` as "A Cadre milestone" says, from its step 2.}].each do |text|
+      assert_includes requirements, text
+    end
   end
 end

@@ -106,6 +106,7 @@ It runs when it is named, or when the `cadre` skill starts a milestone. Its mode
 - There is no status-lines mode. David chose this over keeping one: the two live specs that still use colette's status lines are registered in Cadre in increment 6. They are cadre's `2026-10-22-cadre-design.md` and colette-app's `2026-10-22-english-pages-design.md`.
 - **Requirements with no spec.** As colette does: one increment planned directly, or a spec first through `cadre:brainstorming`.
 - Every plan's PR step names `cadre:pr-description`. `milestone.md` step 5 already names it from increment 1, where the call-list test gains it.
+- Every plan's final review, when it runs in rounds, reviews the whole branch once, then only the commits since the last round, with every earlier ruling standing. David chose this (2026-11-27), because full-branch rounds kept reversing each other.
 - It never cites an EP ID. It states the increment rules it applies: one feature per PR, the smallest deployable step, code files counted without tests and docs, and consumers named.
 
 ### `cadre:pr-description`
@@ -214,7 +215,7 @@ The cadre marketplace holds `cadre` (CLI, brainstorming, planning, PR descriptio
 - **Deployable alone:** `milestone.md` step 5 hands over to it, and the call-list test gains `cadre:writing-plans`. `colette:writing-plans` keeps working for anyone who still has `colette`. colette's planning behaviours that apply to milestones and requirements move here, as wording tests and dry runs.
 - **Consumers:** none.
 - **Code files:** 2 — `.claude-plugin/marketplace.json`, `plugins/cadre/.claude-plugin/plugin.json`
-- [ ] Not shipped
+- [x] PR #36
 
 ### Increment 4 — `engineering-review` copied into the cadre marketplace (cadre marketplace)
 

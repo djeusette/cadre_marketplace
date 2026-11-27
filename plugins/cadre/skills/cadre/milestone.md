@@ -19,18 +19,7 @@ When the person asks to "start milestone `<slug>/<n>`", or to start work on a mi
 
    This step is done when `git branch --show-current` prints `<branch>` in a worktree under the main checkout. The main checkout stays on its branch: the record, the plan and the pull request start from the worktree.
 4. Copy the spec into this repo's `docs/superpowers/specs/<slug>-<n>.md` as a record and commit only that file: `git add <path>`, then `git commit -m "docs: spec of <slug>/<n>" -- <path>`. When `<path>` already holds this text, as when a milestone is started again, skip the commit. Cadre's copy stays the original: cadre reads only its own.
-5. Read the repo's Skills table, check its rows and load the skills the work calls for, as [skills.md](skills.md) says, before planning. Then plan this repo's part with `superpowers:writing-plans`, giving it the spec copy's path and these rules on top:
-   - plan only this repo's part of milestone `<slug>/<n>`, or the app step 2 chose, as one plan and one pull request;
-   - each task names the skills it needs (from the table when the repo has one), since a subagent executing it loads only those;
-   - the plan ends with a pull request task, which names `cadre:pr-description` among the skills it loads: it holds the rules for the `Cadre:` line and the `## Before deploying` section;
-   - the plan's header says it is tracked in Cadre, on the line under its title, so whoever executes it uses this skill:
-
-     ```markdown
-     > **Tracked in Cadre as `<slug>/<n>`.** REQUIRED SKILL: use `cadre:cadre` while implementing this plan. Its pull request's description has the line `Cadre: <slug>/<n>`.
-     ```
-
-     For one app's plan, the line ends with ` <app>`: `Cadre: <slug>/<n> <app>`.
-6. Execute the plan as `superpowers:writing-plans` offers.
+5. Plan this repo's part with the `cadre:writing-plans` skill: load it, and hand it the milestone `<slug>/<n>`, the spec copy's path, this repo's part and, for one app's pull request, its app.
 
 ## Track a milestone's implementation
 
