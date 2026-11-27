@@ -570,7 +570,7 @@ class SkillTest < Minitest::Test
   end
 
   def test_step_5_hands_over_to_cadre_writing_plans
-    assert_includes start_section, "5. Plan this repo's part with the `cadre:writing-plans` skill: load it, and hand it the spec copy's path, this repo's part and, for one app's pull request, its app."
+    assert_includes start_section, "5. Plan this repo's part with the `cadre:writing-plans` skill: load it, and hand it the milestone `<slug>/<n>`, the spec copy's path, this repo's part and, for one app's pull request, its app."
     ["REQUIRED SKILL", "Execute the plan", "\n6. "].each { |text| refute_includes start_section, text }
     refute_includes milestone, "this skill"
   end
@@ -1530,7 +1530,7 @@ class WritingPlansTest < Minitest::Test
   end
 
   def test_what_to_plan_takes_the_first_case_that_fits
-    ["Take the first case that fits", "**Handed over:**", %q{step 5 of "Start a milestone" in [milestone.md](../cadre/milestone.md) handed you its spec copy's path},
+    ["Take the first case that fits", "**Handed over:**", %q{step 5 of "Start a milestone" in [milestone.md](../cadre/milestone.md) handed you the milestone and its spec copy's path},
      %q{go to step 3 of "A Cadre milestone"}, "**A Cadre milestone:**", "`<slug>/<n>`", "a Cadre project",
      "a spec whose line under its title says it is tracked in Cadre", "**A spec not tracked in Cadre:**",
      "**Requirements with no spec:**", "describes a feature or a change", "ask the person what to plan: a milestone, a spec or requirements",
@@ -1586,15 +1586,15 @@ class WritingPlansTest < Minitest::Test
   def test_it_asks_before_planning_after_an_unmerged_milestone
     ["Run `cadre status <slug> --json`.", "lists the project's milestones in order, not by number",
      "When an entry before `<n>`'s has a `state` that is neither `can_deploy` nor `deployed`",
-     "name it to the person and ask whether to plan anyway"].each { |text| assert_includes milestone_section, text }
+     "its pull requests aren't all merged yet, so this branch lacks their changes: name it to the person and ask whether to plan anyway"].each { |text| assert_includes milestone_section, text }
   end
   
   def test_it_rechecks_the_milestone_against_the_code_as_it_is_now
-    ["Read the code as it is now, without asking.", %q{as "One pull request" says, and estimate its code files},
+    ["Read this repo's code as it is now, without asking.", %q{as "One pull request" says, and estimate its code files},
      %q{update it as "Update a milestone's spec" in [project.md](../cadre/project.md) says},
      %q{pull and commit the spec copy again, as steps 1 and 4 of "Start a milestone" do}].each { |text| assert_includes milestone_section, text }
-    assert_operator milestone_section.index("cadre status <slug> --json`."), :<, milestone_section.index("Read the code as it is now")
-    assert_operator milestone_section.index("Read the code as it is now"), :<, milestone_section.index(%q{Plan as "Run superpowers writing-plans" says})
+    assert_operator milestone_section.index("cadre status <slug> --json`."), :<, milestone_section.index("Read this repo's code as it is now")
+    assert_operator milestone_section.index("Read this repo's code as it is now"), :<, milestone_section.index(%q{Plan as "Run superpowers writing-plans" says})
   end
   
   def test_one_pull_request_ships_one_milestone
@@ -1621,7 +1621,7 @@ class WritingPlansTest < Minitest::Test
   
   def test_requirements_are_one_pull_request_or_a_brainstorm_first
     requirements = section(skill, "## Requirements with no spec")
-    [%q{Read the code without asking, then decide whether the requirements ship as one pull request, as "One pull request" says.},
+    [%q{Read this repo's code without asking, then decide whether the requirements ship as one pull request, as "One pull request" says.},
      "tell the person the work is one pull request, and why",
      %q{Plan it as "Run superpowers writing-plans" says, with the requirements and no spec file.},
      "Cadre doesn't track it, so the plan has no tracking line and its pull request no `Cadre:` line.",

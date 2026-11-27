@@ -17,7 +17,7 @@ You plan one pull request at a time through `superpowers:writing-plans`: one rep
 
 Take the first case that fits the request, then follow the section named for the case:
 
-- **Handed over:** step 5 of "Start a milestone" in [milestone.md](../cadre/milestone.md) handed you its spec copy's path. Its steps 1 to 4 and the cadre skill's checks are done: go to step 3 of "A Cadre milestone".
+- **Handed over:** step 5 of "Start a milestone" in [milestone.md](../cadre/milestone.md) handed you the milestone and its spec copy's path. Its steps 1 to 4 and the cadre skill's checks are done: go to step 3 of "A Cadre milestone".
 - **A Cadre milestone:** the request names a milestone, `<slug>/<n>`, a Cadre project, or a spec whose line under its title says it is tracked in Cadre. A tracked spec's status lines, when it has some, are ignored: Cadre shows where each milestone stands.
 - **A spec not tracked in Cadre:** the request names a spec without that line.
 - **Requirements with no spec:** the request describes a feature or a change, not only a spec or a project by name.
@@ -28,8 +28,8 @@ When none fits, ask the person what to plan: a milestone, a spec or requirements
 
 1. Find the milestone `<slug>/<n>`: the one the request names. A spec tracked in Cadre as `<slug>` names only its project: its increment `<i>` is milestone `<slug>/<i>`. When the request gives no number, take the milestone whose `current` is true in `cadre status <slug> --json`, and say so; when none is, ask the person which.
 2. Run only steps 1 to 4 of "Start a milestone" in [milestone.md](../cadre/milestone.md) for `<slug>/<n>`, then come back here. When one of those steps says to stop, the planning stops too. This step is done when you hold the spec copy's path, this repo's part and, for one app's pull request, its app, on the milestone's branch.
-3. Run `cadre status <slug> --json`. Its `milestones` lists the project's milestones in order, not by number. When an entry before `<n>`'s has a `state` that is neither `can_deploy` nor `deployed`, its pull requests aren't all merged yet: name it to the person and ask whether to plan anyway.
-4. Read the code as it is now, without asking. Check that this repo's part still ships as one pull request, as "One pull request" says, and estimate its code files. When the earlier milestones changed the picture, propose the change to the milestone's spec. Once the person approves it, update it as "Update a milestone's spec" in [project.md](../cadre/project.md) says, then pull and commit the spec copy again, as steps 1 and 4 of "Start a milestone" do.
+3. Run `cadre status <slug> --json`. Its `milestones` lists the project's milestones in order, not by number. When an entry before `<n>`'s has a `state` that is neither `can_deploy` nor `deployed`, its pull requests aren't all merged yet, so this branch lacks their changes: name it to the person and ask whether to plan anyway.
+4. Read this repo's code as it is now, without asking. Check that this repo's part still ships as one pull request, as "One pull request" says, and estimate its code files. When the earlier milestones changed the picture, propose the change to the milestone's spec. Once the person approves it, update it as "Update a milestone's spec" in [project.md](../cadre/project.md) says, then pull and commit the spec copy again, as steps 1 and 4 of "Start a milestone" do.
 5. Plan as "Run superpowers writing-plans" says, with the spec copy's path and only this repo's part of `<slug>/<n>`, or the app "Start a milestone" chose. The plan's header says it is tracked in Cadre, on the line under its title, so whoever executes it uses the `cadre:cadre` skill:
 
    ```markdown
@@ -44,7 +44,7 @@ Register it first: follow "Create a project" in [project.md](../cadre/project.md
 
 ## Requirements with no spec
 
-Read the code without asking, then decide whether the requirements ship as one pull request, as "One pull request" says.
+Read this repo's code without asking, then decide whether the requirements ship as one pull request, as "One pull request" says.
 
 - **One pull request:** tell the person the work is one pull request, and why. Plan it as "Run superpowers writing-plans" says, with the requirements and no spec file. Cadre doesn't track it, so the plan has no tracking line and its pull request no `Cadre:` line.
 - **More than one,** or when the planner stops on the size rule: load `cadre:brainstorming` and brainstorm the feature from the requirements, as it says. Once "Create a project" has registered the project, come back here and plan milestone `<slug>/1` as "A Cadre milestone" says, from its step 2.

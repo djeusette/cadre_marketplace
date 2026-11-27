@@ -19,7 +19,7 @@ When the person asks to "start milestone `<slug>/<n>`", or to start work on a mi
 
    This step is done when `git branch --show-current` prints `<branch>` in a worktree under the main checkout. The main checkout stays on its branch: the record, the plan and the pull request start from the worktree.
 4. Copy the spec into this repo's `docs/superpowers/specs/<slug>-<n>.md` as a record and commit only that file: `git add <path>`, then `git commit -m "docs: spec of <slug>/<n>" -- <path>`. When `<path>` already holds this text, as when a milestone is started again, skip the commit. Cadre's copy stays the original: cadre reads only its own.
-5. Plan this repo's part with the `cadre:writing-plans` skill: load it, and hand it the spec copy's path, this repo's part and, for one app's pull request, its app.
+5. Plan this repo's part with the `cadre:writing-plans` skill: load it, and hand it the milestone `<slug>/<n>`, the spec copy's path, this repo's part and, for one app's pull request, its app.
 
 ## Track a milestone's implementation
 
