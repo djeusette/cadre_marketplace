@@ -125,7 +125,7 @@ A failed run means test first, then text. Eval cases, none run and each recorded
 
 The `engineering-principles` and `writing-for-agents` reviews of the branch changed it past the tasks above:
 
-- `project.md` names its own folder for `design_link.rb` and the `cadre:cadre` skill on step 3, so it reads right when the brainstorm hands over to it; step 1 loads the skill, and step 6 points to the commit in "The handoff" alone.
-- The version check comes before "follow it as written", and the skill takes the spec "Create a project" handed over.
-- The step's done-criterion points to "Sign in" instead of restating it; the heading order, "Run only" and "in that order" are pinned.
+- `project.md` names its own folder for `design_link.rb` and the `cadre:cadre` skill on step 3, so it reads right when the brainstorm hands over to it; step 1 loads the skill, and step 6 points to the `git` commands in "The handoff".
+- The version check comes before "follow it as written", and the skill takes the spec the person or "Create a project" names.
+- The step's done-criterion points to "Sign in" instead of restating it; the heading order and "Run only" are pinned, and the cadre skill's rules for flags and unnamed refusals hold for the whole run.
 - "Invoke it directly from this skill" replaces the negation about a wrapping workflow; the spec's Constraints no longer name `brainstorm.md`.

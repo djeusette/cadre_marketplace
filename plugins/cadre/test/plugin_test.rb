@@ -348,7 +348,7 @@ class SkillTest < Minitest::Test
   end
 
   def test_a_corrected_spec_is_committed_alone_or_left_to_the_person
-    [%q{commit only the spec file, as the first paragraph of "The handoff" in [the brainstorming skill](../brainstorming/SKILL.md) says}, "leave the commit to them"].each { |text| assert_includes create_section, text }
+    [%q{commit only the spec file, with the `git` commands "The handoff" in [the brainstorming skill](../brainstorming/SKILL.md) gives}, "leave the commit to them"].each { |text| assert_includes create_section, text }
     ["git commit", "never push"].each { |text| refute_includes create_section, text }
   end
 
@@ -1411,9 +1411,11 @@ class BrainstormingTest < Minitest::Test
   end
 
   def test_it_checks_the_cli_and_the_sign_in_before_it_brainstorms
-    ["Run only", "in that order", "[the cadre skill](../cadre/SKILL.md)", %q{"Before you start"}, %q{"Install or update the CLI"},
+    ["Run only", "[the cadre skill](../cadre/SKILL.md)", %q{"Before you start"}, %q{"Install or update the CLI"},
      %q{"Sign in"}, "then come back here", "the brainstorm stops too",
+     %q{The cadre skill's rules for a command's flags and for a refusal no file names, at the end of its "What to read next", hold for the rest of this run.},
      %q{This step is done once "Sign in" ends with the person signed in.}].each { |text| assert_includes before_you_start, text }
+    refute_includes before_you_start, "in that order"
     refute_includes before_you_start, "holds an `email`"
     assert_operator before_you_start.index("`superpowers:brainstorming`"), :<, before_you_start.index("[the cadre skill]")
   end
@@ -1425,8 +1427,8 @@ class BrainstormingTest < Minitest::Test
   end
 
   def test_it_runs_superpowers_brainstorming_as_written_with_cadres_rules_on_top
-    [%q{Invoke `superpowers:brainstorming` with the person's request, and with the spec "Create a project" handed over when there is one.},
-     "follow it as written", %q{Invoke it directly from this skill, so "The handoff" below runs and registers the project.},
+    [%q{Invoke `superpowers:brainstorming` with the person's request, and with the spec the person or "Create a project" names, when there is one.},
+     "follow it as written", %q{Invoke it directly from this skill, so "The handoff" below runs.},
      "Where they differ from it, they win"].each { |text| assert_includes skill, text }
     refute_includes skill, "wraps it"
   end

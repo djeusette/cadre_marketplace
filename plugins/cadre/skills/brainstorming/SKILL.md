@@ -10,11 +10,11 @@ You brainstorm the feature with the person through `superpowers:brainstorming`, 
 ## Before you start
 
 1. Check that `superpowers:brainstorming` is among your available skills. When it is missing, tell the person to install and enable the `superpowers` plugin from the `claude-plugins-official` marketplace, and stop.
-2. Run only "Before you start", "Install or update the CLI" and "Sign in" in [the cadre skill](../cadre/SKILL.md), in that order, then come back here. When one of them says to stop, the brainstorm stops too. This step is done once "Sign in" ends with the person signed in.
+2. Run only "Before you start", "Install or update the CLI" and "Sign in" in [the cadre skill](../cadre/SKILL.md), then come back here. The cadre skill's rules for a command's flags and for a refusal no file names, at the end of its "What to read next", hold for the rest of this run. When one of them says to stop, the brainstorm stops too. This step is done once "Sign in" ends with the person signed in.
 
 ## Run superpowers brainstorming
 
-Invoke `superpowers:brainstorming` with the person's request, and with the spec "Create a project" handed over when there is one. When what it loads has no builder check, it is older than 7.0: tell the person to update the `superpowers` plugin, and stop. Otherwise follow it as written: its conversation, playback, visual companion, written design, builder check and approval gate. Invoke it directly from this skill, so "The handoff" below runs and registers the project. The rules in this skill add to it. Where they differ from it, they win:
+Invoke `superpowers:brainstorming` with the person's request, and with the spec the person or "Create a project" names, when there is one. When what it loads has no builder check, it is older than 7.0: tell the person to update the `superpowers` plugin, and stop. Otherwise follow it as written: its conversation, playback, visual companion, written design, builder check and approval gate. Invoke it directly from this skill, so "The handoff" below runs. The rules in this skill add to it. Where they differ from it, they win:
 
 - **Size.** A feature always gets a written spec, even when it fits in one milestone.
 - **Ground to cover.** Add the repos it touches, which one must deploy first, and the apps that use what changes. Name the apps of a repo that has several, such as an API on Fly and a frontend on Vercel, with the API first, so a milestone's `repos` can hold `repo/app` steps.
