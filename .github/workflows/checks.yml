@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   ruby:
-    name: cadre and the version-bump check
+    name: cadre's and the version-bump check's tests
     runs-on: ubuntu-latest
     env:
       LANG: C.UTF-8
@@ -20,7 +20,7 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.4"
-      - name: cadre
+      - name: cadre's tests
         run: ruby plugins/cadre/test/plugin_test.rb
       - name: The version-bump check's tests
         run: ruby test/check_version_bumps_test.rb
@@ -33,9 +33,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - name: Tests
+      - name: engineering-review's tests
         run: python3 -m unittest discover -s plugins/engineering-review/scripts -p 'test_*.py'
-      - name: The plugin
+      - name: check_plugin.py
         run: python3 plugins/engineering-review/scripts/check_plugin.py plugin plugins/engineering-review
 
   version-bumps:

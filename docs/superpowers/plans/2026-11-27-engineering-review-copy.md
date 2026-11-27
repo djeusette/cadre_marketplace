@@ -39,7 +39,7 @@
 - A pull request that changes only a test or an eval inside `plugins/<name>/` still needs the bump: the check reads paths, not file kinds (Task 3, `test_a_change_to_any_file_of_a_plugin_needs_a_bump`).
 - A new plugin, a removed plugin and a change outside `plugins/` pass the bump check; a lowered version fails it (Task 3).
 - A PR where one plugin is bumped and another is not fails and names only the one not bumped (Task 3).
-- A changed plugin whose `plugin.json` has no version, or one `Gem::Version` cannot read, at the head fails with its name rather than crashing; a base with no version counts as lower (Task 3).
+- A changed plugin whose `plugin.json` at the head has no version, one that is not a version number, or is not a JSON object fails with its name rather than crashing; a base with no version counts as lower (Task 3).
 - An unknown base or a shallow checkout exits 2 with git's message, never `OK`; a file moved from one plugin to another needs both bumped (Task 3).
 - `engineering-review@cadre` installs from this checkout with `security-audit` beside it, in a throwaway config dir (Task 5).
 - The copy is verbatim: `git ls-tree -r` of the copy against the source sha differs on the `plugin.json` line alone, so every other file has the same blob and mode, hidden fixture files included (Task 2, Step 4).
@@ -90,12 +90,12 @@
 - Create: `script/check_version_bumps.rb`, `test/check_version_bumps_test.rb`
 
 **Interfaces:**
-- Produces: `ruby script/check_version_bumps.rb <base>`. The plugins are the `plugins/<name>/` that `git diff --name-only --no-renames -z <base>...HEAD -- plugins/` touches. Each one whose `.claude-plugin/plugin.json` exists at `HEAD` must have a version `Gem::Version` reads there, higher than the base's when the base has one. A plugin gone at `HEAD` passes. Files are read as UTF-8. Output, exactly:
+- Produces: `ruby script/check_version_bumps.rb <base>`. The plugins are the `plugins/<name>/` that `git diff --name-only --no-renames -z <base>...HEAD -- plugins/` touches. Each one whose `.claude-plugin/plugin.json` exists at `HEAD` must have a version number (`Gem::Version`) there, higher than the base's when the base has one. A plugin gone at `HEAD` passes. Files are read as UTF-8. Output, exactly:
   - `OK`, exit 0;
-  - per failing plugin, exit 1: `plugins/<name> changed but its version <v> is not above <base v>`, `plugins/<name> has no version in .claude-plugin/plugin.json`, or `plugins/<name> has version "<v>" in .claude-plugin/plugin.json, which is not a version number`;
+  - per failing plugin, exit 1: `plugins/<name> changed but its version <v> is not above <base v>`, `plugins/<name> has no version in .claude-plugin/plugin.json`, `plugins/<name> has version "<v>" in .claude-plugin/plugin.json, which is not a version number`, or `plugins/<name> has a .claude-plugin/plugin.json that is not a JSON object`;
   - usage with no argument, or git's message when git fails (an unknown base, no merge base), exit 2.
 
-The seam is the script's command line, run in a throwaway git repo (global and system config off, a fixed author). Nothing is tested inside it.
+The seam is the script's command line, run in a throwaway git repo (global and system config off, a fixed author). No test calls the script's functions directly.
 
 - [ ] **Step 1: One red-green per case**, in this order, each test asserting the exit status and the exact output line, each seen red on its own assertion before the code that turns it green:
   - `test_a_change_without_a_bump_fails_and_names_the_plugin`;
@@ -106,7 +106,7 @@ The seam is the script's command line, run in a throwaway git repo (global and s
   - `test_a_file_moved_between_plugins_needs_both_bumped`;
   - `test_a_new_plugin_passes`, `test_a_new_plugin_without_a_version_fails`;
   - `test_a_plugin_whose_base_has_no_version_passes_once_it_has_one`;
-  - `test_an_unreadable_version_fails_and_names_the_plugin` (`v0.36.0`);
+  - `test_a_version_that_is_not_a_version_number_fails_and_names_the_plugin` (`v0.36.0`);
   - `test_a_removed_plugin_passes`, `test_a_change_outside_plugins_passes`;
   - `test_an_unknown_base_fails`, `test_no_base_prints_the_usage` (exit 2).
 - [ ] **Step 2:** the script's header comment gives the usage and the rule.
@@ -167,3 +167,15 @@ The seam is the script's command line, run in a throwaway git repo (global and s
 - For David, not this PR: `main` is unprotected, so a red check doesn't block a merge, and checks don't re-run when `main` moves (two PRs can both bump to the same version). Repo-level tests in `plugins/cadre/test` force a cadre release for README or AGENTS wording changes.
 
 ## Reviews, folded in
+
+### Round 1: `origin/main...edbb863`, full branch
+
+engineering-principles (2 Minor) and writing-for-agents (2 Important, 4 Minor). The copy is verbatim. Fixed:
+
+- A `plugin.json` at `HEAD` that is not a JSON object (a trailing comma, a top-level `[]`) is named, exit 1, instead of a backtrace; at the base it counts as no version. Tests for both, and for a plugin with several changed files named once; the no-op `.sort` is gone.
+- "Not a version number" is the one term, in the test name and the plan; the script's header says a version number is needed at `HEAD` even when the base has none.
+- README's opening describes the marketplace, not only cadre's plugins.
+- The workflow's job and step names say what each runs.
+- The plan's "Nothing is tested inside it" says which thing.
+
+Declined, as a standing ruling: an `engineering-review@cadre` install line in README "Use it". No team machine should hold `engineering-review@cadre` beside `@colette-club` before increment 6's switch (the spec's anti-goal), and the bullet already says what the plugin is.

@@ -136,7 +136,7 @@ class CheckVersionBumpsTest < Minitest::Test
     assert_equal ["OK\n", 0], check("base")
   end
 
-  def test_an_unreadable_version_fails_and_names_the_plugin
+  def test_a_version_that_is_not_a_version_number_fails_and_names_the_plugin
     plugin("demo", "0.35.0")
     tag_base
     plugin("demo", "v0.36.0")
@@ -144,6 +144,34 @@ class CheckVersionBumpsTest < Minitest::Test
 
     assert_equal ["plugins/demo has version \"v0.36.0\" in .claude-plugin/plugin.json, which is not a version number\n", 1], check("base")
   end
+
+def test_a_plugin_json_that_is_not_json_fails_and_names_the_plugin
+  plugin("demo", "0.1.0")
+  tag_base
+  write("plugins/demo/.claude-plugin/plugin.json", '{"version":"0.2.0",}')
+  commit
+
+  assert_equal ["plugins/demo has a .claude-plugin/plugin.json that is not a JSON object\n", 1], check("base")
+end
+
+def test_a_plugin_json_that_is_not_an_object_fails_and_names_the_plugin
+  plugin("demo", "0.1.0")
+  tag_base
+  write("plugins/demo/.claude-plugin/plugin.json", "[]")
+  commit
+
+  assert_equal ["plugins/demo has a .claude-plugin/plugin.json that is not a JSON object\n", 1], check("base")
+end
+
+def test_a_plugin_with_several_changed_files_is_named_once
+  plugin("demo", "0.1.0")
+  tag_base
+  write("plugins/demo/a.md", "a")
+  write("plugins/demo/b.md", "b")
+  commit
+
+  assert_equal ["plugins/demo changed but its version 0.1.0 is not above 0.1.0\n", 1], check("base")
+end
 
   def test_a_removed_plugin_passes
     plugin("gone", "1.0.0")
