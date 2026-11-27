@@ -36,6 +36,7 @@ class ManifestTest < Minitest::Test
     readme = File.read(File.join(ROOT, "README.md"))
     install = "/plugin marketplace add anthropics/claude-plugins-official\n/plugin marketplace add djeusette/cadre_marketplace\n/plugin install cadre@cadre"
     [install, "installs `superpowers` from `claude-plugins-official` with it"].each { |text| assert_includes readme, text }
+    assert_includes readme.sub(/^- \*\*cadre\*\* — .*$/, ""), "cadre's skills need superpowers 7.0 or later"
     refute_includes readme, "needs no other plugin"
     refute_includes readme, "without it cadre fails to load"
     refute_match(/colette/i, readme.sub("(https://colette-cadre.fly.dev)", ""))
@@ -49,7 +50,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.33.0", manifest["version"]
+    assert_equal "0.34.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -72,6 +73,7 @@ class ManifestTest < Minitest::Test
   def test_readme_sums_cadre_up_and_links_its_skill
     bullet = File.read(File.join(ROOT, "README.md"))[/^- \*\*cadre\*\* — .*?(?=^#|\z)/m]
     assert_includes bullet, "(plugins/cadre/skills/cadre/SKILL.md)"
+    assert_includes bullet, "[`cadre:brainstorming`](plugins/cadre/skills/brainstorming/SKILL.md) brainstorms a feature into a Cadre project"
     assert_includes bullet, "[`cadre:pr-description`](plugins/cadre/skills/pr-description/SKILL.md) sets the standard for PR descriptions."
     assert_operator bullet.split.size, :<=, 70
   end
