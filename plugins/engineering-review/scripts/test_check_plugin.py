@@ -1371,6 +1371,16 @@ class PrStandardTest(unittest.TestCase):
         for section in ("## The title", "## Not essential", "## Pictures", "## Rewriting a description"):
             self.assertIn(f"\n{section}\n", standard)
 
+    def test_the_description_cases_load_cadre(self):
+        cases = sorted((PLUGIN_DIR / "evals").glob("pr-description-*/prompt.md"))
+        readme = (PLUGIN_DIR / "evals" / "README.md").read_text(encoding="utf-8")
+
+        self.assertEqual(len(cases), 8)
+        for prompt in cases:
+            frontmatter = prompt.read_text(encoding="utf-8").split("---\n", 2)[1]
+            self.assertIn('\nplugins: ["../..", "../../../cadre"]\n', frontmatter, prompt.parent.name)
+        self.assertIn("The `pr-description-*` cases also list `../../../cadre`", readme)
+
     def test_the_pr_standard_is_cadres(self):
         agent = (PLUGIN_DIR / "agents" / "review-companion.md").read_text(encoding="utf-8")
 
