@@ -1397,8 +1397,8 @@ class BrainstormingTest < Minitest::Test
     assert_includes skill, "apps of a repo that has several"
   end
 
-  def test_the_opening_says_create_a_project_registers_the_spec
-    assert_includes skill, %q{The handoff then gives that spec to "Create a project", which registers it in Cadre.}
+  def test_the_opening_says_what_the_brainstorm_ends_as_and_leaves_the_rest_to_the_handoff
+    assert_includes skill, "and it ends as a feature spec: an end goal and the milestones that reach it.\n"
   end
 
   def test_the_checks_come_before_the_brainstorm
@@ -1412,7 +1412,7 @@ class BrainstormingTest < Minitest::Test
 
   def test_it_checks_the_cli_and_the_sign_in_before_it_brainstorms
     ["Run only", "[the cadre skill](../cadre/SKILL.md)", %q{"Before you start"}, %q{"Install or update the CLI"},
-     %q{"Sign in"}, "then come back here", "the brainstorm stops too",
+     %q{"Sign in"}, %q{in [the cadre skill](../cadre/SKILL.md), then come back here. When one of those sections says to stop, the brainstorm stops too.},
      %q{The cadre skill's rules for a command's flags and for a refusal no file names, at the end of its "What to read next", hold for the rest of this run.},
      %q{This step is done once "Sign in" ends with the person signed in.}].each { |text| assert_includes before_you_start, text }
     refute_includes before_you_start, "in that order"

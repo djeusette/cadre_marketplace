@@ -129,3 +129,4 @@ The `engineering-principles` and `writing-for-agents` reviews of the branch chan
 - The version check comes before "follow it as written", and the skill takes the spec the person or "Create a project" names.
 - The step's done-criterion points to "Sign in" instead of restating it; the heading order and "Run only" are pinned, and the cadre skill's rules for flags and unnamed refusals hold for the whole run.
 - "Invoke it directly from this skill" replaces the negation about a wrapping workflow; the spec's Constraints no longer name `brainstorm.md`.
+- The stop sentence names "those sections" and sits right after "come back here"; the opening no longer previews the handoff, which the description and "The handoff" carry.
