@@ -31,8 +31,8 @@ module BreakCheck
       diff = git(root, "diff", "--no-color", "--no-ext-diff", "-M", "--src-prefix=a/", "--dst-prefix=b/", "-U0",
         "--end-of-options", base, "--", *paths)
       # -z: names are never quoted. each_line, not split, so a name that is
-      # not UTF-8 never raises; only the diff text is scrubbed, so such a
-      # name still opens its file.
+      # not UTF-8 never raises; only the diff text given to `parse` is
+      # scrubbed, so such a name still opens its file.
       untracked = git(root, "ls-files", "-z", "--others", "--exclude-standard", "--", *paths).each_line("\0", chomp: true)
         .select { File.file?(File.join(root, _1)) }
       Change.new(hunks: parse(diff.scrub), untracked: untracked.flat_map { whole_file(root, _1) })
