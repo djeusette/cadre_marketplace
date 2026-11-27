@@ -8,7 +8,7 @@
    - `slug`: the name in kebab case, lowercase letters and digits only.
    - `end_goal`: the text of the End goal section.
    - `milestones`: one per `### Increment`, in spec order, its `title` the increment's title and its `repos` as "A milestone's `repos`" says.
-3. Check that the feature spec says it is tracked in Cadre, on the line under its title, so whoever implements it uses this skill:
+3. Check that the feature spec says it is tracked in Cadre, on the line under its title, so whoever implements it uses the `cadre:cadre` skill:
 
    ```markdown
    > Tracked in Cadre as `<slug>`. Implement each increment with the `cadre:cadre` skill ("start milestone <slug>/<i>"), which plans it and links its pull request to its milestone.
@@ -57,11 +57,11 @@ It holds only this milestone's part of the feature spec: that increment's Delive
 
 ## Link a milestone to its design
 
-A milestone's design link opens the canvas on that milestone's designs, and the project's canvas link opens its review page. Read a board's key in `boards` and a page's `id` in `pages` of the canvas's `project/canvas.json`, then build each link with [design_link.rb](design_link.rb), in this skill's folder:
+A milestone's design link opens the canvas on that milestone's designs, and the project's canvas link opens its review page. Read a board's key in `boards` and a page's `id` in `pages` of the canvas's `project/canvas.json`, then build each link with [design_link.rb](design_link.rb), in project.md's folder:
 
 ```bash
-ruby <this skill's folder>/design_link.rb <canvas_url> --board <file>
-ruby <this skill's folder>/design_link.rb <canvas_url> --page review
+ruby <project.md's folder>/design_link.rb <canvas_url> --board <file>
+ruby <project.md's folder>/design_link.rb <canvas_url> --page review
 ```
 
 - A milestone's `design_url` links the first board of its first row, `--board <file>`: its row on the earliest part page in `pages`, and the row's first 1440 board, or its phone board for a screen only the mobile app has.

@@ -10,11 +10,11 @@ You brainstorm the feature with the person through `superpowers:brainstorming`, 
 ## Before you start
 
 1. Check that `superpowers:brainstorming` is among your available skills. When it is missing, tell the person to install and enable the `superpowers` plugin from the `claude-plugins-official` marketplace, and stop.
-2. Run only "Before you start", "Install or update the CLI" and "Sign in" in [the cadre skill](../cadre/SKILL.md), in that order, then come back here. When one of them says to stop, the brainstorm stops too. This step is done once the person is signed in, so the brainstorm can end with the project registered: `cadre whoami --json` holds an `email`, or `cadre login` printed `Signed in as <email>.`
+2. Run only "Before you start", "Install or update the CLI" and "Sign in" in [the cadre skill](../cadre/SKILL.md), in that order, then come back here. When one of them says to stop, the brainstorm stops too. This step is done once "Sign in" has signed the person in.
 
 ## Run superpowers brainstorming
 
-Invoke `superpowers:brainstorming` with the person's request, and follow it as written: its conversation, playback, visual companion, written design, builder check and approval gate. Invoke it from this skill, not through a workflow that wraps it, so the project gets registered. When the skill you invoked has no builder check, it is older than 7.0: tell the person to update the `superpowers` plugin, and stop. The rules in this skill add to it. Where they differ from it, they win:
+Invoke `superpowers:brainstorming` with the person's request. When what it loads has no builder check, it is older than 7.0: tell the person to update the `superpowers` plugin, and stop. Otherwise follow it as written: its conversation, playback, visual companion, written design, builder check and approval gate. Invoke it from this skill, not through a workflow that wraps it, so the project gets registered. The rules in this skill add to it. Where they differ from it, they win:
 
 - **Size.** A feature always gets a written spec, even when it fits in one milestone.
 - **Ground to cover.** Add the repos it touches, which one must deploy first, and the apps that use what changes. Name the apps of a repo that has several, such as an API on Fly and a frontend on Vercel, with the API first, so a milestone's `repos` can hold `repo/app` steps.
@@ -76,4 +76,4 @@ In the builder check, the builder plans increment 1 from the spec.
 
 Once the person approves the spec, commit only the spec file, with `git add <path>` and `git commit -m "docs: <feature> design" -- <path>`, and leave the push to the person: their other changes, staged or not, stay as they are.
 
-Then follow "Create a project" in [project.md](../cadre/project.md) from step 2, with that spec: its scripts are in that file's folder.
+Then follow "Create a project" in [project.md](../cadre/project.md) from step 2, with that spec.

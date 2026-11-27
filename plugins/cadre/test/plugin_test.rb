@@ -297,6 +297,13 @@ class SkillTest < Minitest::Test
     ["?page=", "claude.ai/design/p/"].each { |text| refute_includes everything + canvas, text }
   end
 
+  def test_project_md_names_its_own_folder_and_the_cadre_skill_for_any_skill_that_follows_it
+    ["[design_link.rb](design_link.rb), in project.md's folder", "ruby <project.md's folder>/design_link.rb <canvas_url> --board <file>",
+     "ruby <project.md's folder>/design_link.rb <canvas_url> --page review"].each { |text| assert_includes design_section, text }
+    assert_includes create_section, "so whoever implements it uses the `cadre:cadre` skill:"
+    refute_includes project, "this skill"
+  end
+
   def test_older_canvases_keep_page_links
     ["When `pages` has no `review` page", "--page <id>", "the canvas link stays as it is"].each { |text| assert_includes design_section, text }
   end
@@ -1390,20 +1397,27 @@ class BrainstormingTest < Minitest::Test
     assert_includes skill, "apps of a repo that has several"
   end
 
+  def test_the_checks_come_before_the_brainstorm
+    assert_equal ["## Before you start", "## Run superpowers brainstorming", "## What a milestone is", "## Drafting the milestones",
+                  "## The feature spec", "## The handoff"], skill.gsub(/^```.*?^```$/m, "").scan(/^## .*$/)
+  end
+
   def test_it_stops_when_superpowers_brainstorming_is_missing
     ["`superpowers:brainstorming`", "`superpowers` plugin", "`claude-plugins-official`", "and stop"].each { |text| assert_includes before_you_start, text }
   end
 
   def test_it_checks_the_cli_and_the_sign_in_before_it_brainstorms
-    ["[the cadre skill](../cadre/SKILL.md)", %q{"Before you start"}, %q{"Install or update the CLI"}, %q{"Sign in"},
-     "then come back here", "the brainstorm stops too", "`cadre whoami --json` holds an `email`",
-     "`cadre login` printed `Signed in as <email>.`"].each { |text| assert_includes before_you_start, text }
+    ["Run only", "in that order", "[the cadre skill](../cadre/SKILL.md)", %q{"Before you start"}, %q{"Install or update the CLI"},
+     %q{"Sign in"}, "then come back here", "the brainstorm stops too",
+     %q{This step is done once "Sign in" has signed the person in.}].each { |text| assert_includes before_you_start, text }
+    refute_includes before_you_start, "holds an `email`"
     assert_operator before_you_start.index("`superpowers:brainstorming`"), :<, before_you_start.index("[the cadre skill]")
   end
 
   def test_it_stops_on_a_superpowers_older_than_7
     run = section(skill, "## Run superpowers brainstorming")
     ["no builder check", "older than 7.0", "update the `superpowers` plugin", "and stop"].each { |text| assert_includes run, text }
+    assert_operator run.index("no builder check"), :<, run.index("follow it as written")
   end
 
   def test_it_runs_superpowers_brainstorming_as_written_with_cadres_rules_on_top
@@ -1453,7 +1467,8 @@ class BrainstormingTest < Minitest::Test
   def test_it_hands_back_to_the_cadre_skill_instead_of_writing_plans
     assert_includes skill, "instead of invoking `superpowers:writing-plans`"
     handoff = section(skill, "## The handoff")
-    [%q{follow "Create a project" in [project.md](../cadre/project.md) from step 2}, "its scripts are in that file's folder"].each { |text| assert_includes handoff, text }
+    assert_includes handoff, %q{follow "Create a project" in [project.md](../cadre/project.md) from step 2, with that spec.}
+    refute_includes handoff, "scripts"
   end
 
   def test_the_split_challenge_keeps_each_part_usable
