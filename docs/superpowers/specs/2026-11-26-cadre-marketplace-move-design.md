@@ -170,7 +170,7 @@ David chose one shared runner (2026-11-26):
   - the noise and doc-block patterns.
 - The runner needs Ruby 3.2 or later, which `break-check`'s "Before you start" checks.
 
-`docs/superpowers/specs/2026-11-25-break-check-design.md` stays in colette-club. After increment 5 and before increment 8 deletes it, its unshipped work is brainstormed again with `cadre:brainstorming`, from that spec, into its own Cadre project. The new spec lives in the cadre marketplace. Roughly in this order:
+`docs/superpowers/specs/2026-11-25-break-check-design.md` stays in colette-club. After increment 5 and before increment 8 deletes it, its unshipped work is brainstormed again, from that spec, into `docs/superpowers/specs/2026-11-27-shared-break-check-runner-design.md` in the cadre marketplace, not tracked in Cadre (David's call, 2026-11-27). Roughly in this order:
 
 - the shared runner, with `.break-check.json`, its tests, and `contract.md` as its documentation;
 - cadre adopting it, replacing `script/break_check.rb`;
@@ -259,7 +259,7 @@ The cadre marketplace holds `cadre` (CLI, brainstorming, planning, PR descriptio
 - **Before deploying:**
   - every PR of increment 6 merged, and every person has run the switch commands;
   - increment 7 merged, since `colette` depends on `engineering-review`;
-  - the break-check spec's new Cadre project registered.
+  - the break-check spec's successor written: `docs/superpowers/specs/2026-11-27-shared-break-check-runner-design.md`, not tracked in Cadre (David's call, 2026-11-27).
 - **Consumers:** none left after increment 6.
 - **Code files:** 9 — `.claude-plugin/marketplace.json`, and the eight code files of `plugins/engineering-review/` (deleted)
 - [ ] Not shipped
