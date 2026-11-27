@@ -206,7 +206,7 @@ The cadre marketplace holds `cadre` (CLI, brainstorming, planning, PR descriptio
 - **Deployable alone:** `project.md` step 1 hands over to it, and `brainstorm.md` goes. Projects already registered are unaffected. `test_skill_files_call_only_superpowers_skills_and_cadre_itself` gains `cadre:brainstorming` (EP-I3: cadre now calls its own skill).
 - **Consumers:** none.
 - **Code files:** 2 — `.claude-plugin/marketplace.json`, `plugins/cadre/.claude-plugin/plugin.json`
-- [ ] Not shipped
+- [x] PR #35
 
 ### Increment 3 — `cadre:writing-plans` (cadre marketplace)
 
