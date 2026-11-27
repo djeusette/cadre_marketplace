@@ -157,6 +157,18 @@
 
 ## Install, verified
 
+2026-11-27, each in its own scratch `CLAUDE_CONFIG_DIR`, with `claude-plugins-official` added first:
+
+- Fresh install from this checkout: `claude plugin install engineering-review@cadre` installed it at 0.22.0, "(+ 3 dependencies: security-audit, cadre, superpowers)". `claude plugin list` shows all four enabled. The cache holds `cadre/cadre/0.35.1/skills/pr-description/SKILL.md`, and engineering-review has no `pr-description`.
+- Update: a clone at `fc072e1` installed engineering-review 0.21.0 "(+ 1 dependency: security-audit)". After the clone moved to `9d6e894`, `claude plugin marketplace update cadre` then `claude plugin update engineering-review@cadre` gave "updated from 0.21.0 to 0.22.0 … (+ 2 dependencies: cadre, superpowers)".
+
+## Dry runs
+
+Sonnet subagents, reading the skills from a checkout. The results are also in `evals/README.md`'s v0.22.0 note.
+
+- The description check on `pr-description-recall`'s description, scored on its four regex graders and `event-not-described`. At `fc072e1`, with the old skill, 2 of 3 runs passed; one gave no ❓ for the instruction to the AI. On this branch, with cadre's copy, 3 of 3 passed.
+- The agent's start-up. With `cadre:pr-description` in the session's list, it loads it with `Skill`. Without it, it reports the standard as not loaded and raises no description finding.
+
 ## Fable's review, folded in
 
 5 Important, 5 Minor, all folded in:
