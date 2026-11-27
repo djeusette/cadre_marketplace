@@ -2,6 +2,7 @@ require "minitest/autorun"
 require "fileutils"
 require "tmpdir"
 require "json"
+require "open3"
 require_relative "../break_check/breaks"
 
 module RepoHelper
@@ -41,6 +42,23 @@ module RepoHelper
       files.each { |path, content| write(File.join(root, path), content) }
       Dir.chdir(root) { yield root }
     end
+  end
+
+  # `with_repo`, with `files` committed to a new git repository.
+  def with_git_repo(files)
+    with_repo(files) do |root|
+      git("init", "-q")
+      git("add", ".")
+      commit("base")
+      yield root
+    end
+  end
+
+  def commit(message) = git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", message)
+
+  def git(*args)
+    _, status = Open3.capture2e("git", *args)
+    raise "git #{args.join(" ")} failed" unless status.success?
   end
 
   def write(path, content)

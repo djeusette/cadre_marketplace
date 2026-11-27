@@ -32,20 +32,20 @@ A repository with neither gets `.break-check.json` before its first break, commi
 
 ## After a task's tests are green
 
-1. `<runner> --uncovered <the task's base commit>` lists the changed lines no fresh proof covers. It lists added lines under the profile's watched paths only, so read `git diff <the task's base commit>` for deleted lines, and for branches outside those paths, too.
-2. Write one break per branch on those lines into a breaks file under `.breaks/`, such as `.breaks/task-3.json`. A proof covers every line its `from` spans, so a line holding several branches (each value in a guard list) gets a break for each. A branch the change narrows only by deleting lines (a value dropped from a guard list) gets a break too: its `from` taken from the lines around the deletion, its `to` the same lines with the deleted text put back.
+1. `<runner> --uncovered <the task's base commit>` lists the changed lines no fresh proof covers, under the profile's watched paths: each added line, and each deletion as `<file>:<line> | (deleted) <its first line>`, at the line now just after it. Read `git diff <the task's base commit>` only for branches outside those paths.
+2. Write one break per branch on those lines into a breaks file under `.breaks/`, such as `.breaks/task-3.json`. A proof covers every line its `from` spans, so a line holding several branches (each value in a guard list) gets a break for each. A branch the change narrows only by deleting lines (a value dropped from a guard list, a `(deleted)` line) gets a break too: its `from` taken from the line just above or below the deletion, its `to` the same lines with the deleted text put back.
 3. `<runner> .breaks/task-3.json`. The runner checks every swap first and runs nothing on a miss, so let it do the checking.
 4. For each `NOT CAUGHT`: write a test, add its file to the break's `tests` when it is not listed, then rerun the file: its `caught` line is the test failing on the break.
 
-Done when the run exits 0, every line `--uncovered` still lists holds no branch, and each branch `--uncovered` cannot list (narrowed only by deleting lines, or outside the watched paths) has a fresh proof. Then commit: the ledger is git-ignored and stays in this worktree.
+Done when the run exits 0, every line `--uncovered` still lists holds no branch, and each branch outside the watched paths has a fresh proof. Then commit: the ledger is git-ignored and stays in this worktree.
 
 ## Before the PR
 
 In the worktree that holds the ledger (a scratch worktree has none):
 
-1. `<runner> --stale --replay` reruns every stale proof and drops the gone ones, whose branches `--uncovered` then lists again, except a branch `--uncovered` cannot list: break it again from the `gone` line the replay printed.
-2. `<runner> --uncovered <the PR's base commit>`, and `git diff <the PR's base commit>` for the branches it cannot list (deleted lines, paths outside the watched ones) that `--table` shows no fresh proof for; break those as in steps 2–4 of "After a task's tests are green". A test added here can make other proofs stale: rerun step 1 until `<runner> --stale` ends with `0 stale`.
-3. Once `--stale` ends with `0 stale`, every line `--uncovered` lists holds no branch, and each branch `--uncovered` cannot list (narrowed only by deleting lines, or outside the watched paths) has a fresh proof, `<runner> --table` prints the Break checks part of the PR description (`cadre:pr-description`).
+1. `<runner> --stale --replay` reruns every stale proof and drops the gone ones, whose branches `--uncovered` then lists again, except a branch outside the watched paths: break it again from the `gone` line the replay printed.
+2. `<runner> --uncovered <the PR's base commit>`, and `git diff <the PR's base commit>` for the branches outside the watched paths that `--table` shows no fresh proof for; break those as in steps 2–4 of "After a task's tests are green". A test added here can make other proofs stale: rerun step 1 until `<runner> --stale` ends with `0 stale`.
+3. Once `--stale` ends with `0 stale`, every line `--uncovered` lists holds no branch, and each branch outside the watched paths has a fresh proof, `<runner> --table` prints the Break checks part of the PR description (`cadre:pr-description`).
 
 Done when the table is printed after the last break.
 
@@ -61,7 +61,7 @@ A breaks file is a JSON array, one object per branch:
 ```
 
 - `name` is the branch's identity in its file: unique among the file's breaks, and refused while a fresh proof of another swap in that file holds it: a proof that is not fresh frees its name, and the new proof replaces it. A proof of the same swap never blocks it.
-- `from` is the shortest text found exactly once in `file`, on one line unless the branch needs more: copy it from the `--uncovered` line.
+- `from` is the shortest text found exactly once in `file`, on one line unless the branch needs more: copy it from the `--uncovered` line, or for a `(deleted)` one from the line just above or below it.
 - `to` is the smallest change to that one branch, one that still compiles: flip the condition, drop the guard value, delete the cast, swap the clause order. A break that raises, empties or replaces a body proves nothing: any test catches it.
 - `tests` lists only the test files that cover the branch: the fewer, the faster.
 
@@ -77,7 +77,7 @@ A run prints one line per break as it happens, then a summary line (`<n> caught,
 | `doesn't compile  <name>` | not a valid break | write another break for that branch; on a replay the proof stays stale until it is proven again, and the new break may take its name |
 | `inconclusive  <name>  (<reason>)` | a timeout, the infrastructure, another test run, or output the runner cannot read | rerun it |
 
-`--stale` prints `replayable <file>:<line> <name>` or `gone <file>:<line> <name>` per proof, then `<n> stale`, counting both. `--uncovered` prints `<file>:<line> | <text>` per line, then `<n> changed lines have no fresh proof`.
+`--stale` prints `replayable <file>:<line> <name>` or `gone <file>:<line> <name>` per proof, then `<n> stale`, counting both. `--uncovered` prints `<file>:<line> | <text>` per added line and `<file>:<line> | (deleted) <its first line>` per deletion, then `<n> changed lines have no fresh proof`.
 
 ## Exit codes
 

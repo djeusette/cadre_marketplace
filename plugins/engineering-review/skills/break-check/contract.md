@@ -44,7 +44,7 @@ Every command reads `.break-check.json` first, and exits 2 when it is missing or
    7. anything else: `inconclusive`, with the output's last lines.
 10. **Ledger.** Each `caught` is written, with the name of the profile that ran it, once its restore is verified, so a killed run loses nothing. The ledger is rewritten whole (a temp file, then a rename).
 11. **Stale.** `--stale --replay` names the gone proofs, reruns the stale ones as the ledger holds them, and only then drops the gone ones, so a replay that cannot run loses nothing. A replay that doesn't compile leaves its proof stale, and the name free for a new break of that branch. Each reruns with the profile it records, and a line without one reads as the file's `default` profile; a profile the file no longer has, or one that needs `--partition` without it, stops the replay before anything runs. `--partition` goes to each profile that names `{partition}`. The profiles replay one after another, each checked, run green and summed up on its own, so a red baseline in a later one comes after the earlier ones' proofs are recorded.
-12. **Uncovered.** The lines added since `BASE` under the watched paths, untracked files included, minus the lines a fresh proof's `from` spans, noise lines and doc-block lines.
+12. **Uncovered.** The lines added since `BASE` under the watched paths, untracked files included, minus the lines a fresh proof's `from` spans, noise lines and doc-block lines. Then each deletion there: a hunk of `git diff -U0` that removes lines and adds none but noise or doc lines, listed at the line now just after it with its first deleted line that is neither noise nor doc (none, and it is not listed). A fresh proof whose `from` spans the line just above or below it covers it. `BASE` goes to git after `--end-of-options`, so it is never read as an option.
 13. **Table.** In the shape SKILL.md shows. A swap that holds a backtick is fenced with one backtick more than its longest run of them, with a space inside each end, so a backtick at either end stays code.
 14. **Exit codes** as SKILL.md gives them.
 
@@ -100,7 +100,7 @@ The runner's Minitest tests are in `scripts/test_break_check/`, against a stub t
 - the ledger: a proof recorded, made stale, replayed, gone and dropped;
 - a name a proof that is not fresh no longer holds, and a replay that doesn't compile;
 - a replay of two profiles, each proof with its own, and a line without one with the default;
-- `--uncovered` and `--table` on a small git repository;
+- `--uncovered` and `--table` on a small git repository: added lines, and deletions at the top, middle and end of a file, beside a rewritten comment, and of noise or doc lines;
 - `.break-check.json`: each refusal, the choice of profile, `{files}` and `{partition}`;
 - an old Ruby refused.
 
@@ -109,8 +109,7 @@ Once its tests are green, break-check the runner's own code with the runner of t
 ## Known gaps
 
 - `--table` takes no base, so it prints the proofs of every change in the worktree; `cadre:pr-description` says which rows a PR drops.
-- `--uncovered` lists added lines only, so a branch narrowed only by deleting lines never shows there; SKILL.md says to break it all the same.
 
 ## Reference implementation
 
-This plugin's `scripts/break_check.rb` and the files under `scripts/break_check/` (`breaks.rb`, `cli.rb`, `ledger.rb`, `profile.rb`, `run.rb`, `uncovered.rb`, `workspace.rb`), with their tests in `scripts/test_break_check/`, ported from cadre's runner (djeusette/cadre#159). It is Ruby 3.2 or later, with the standard library only. Read it when the contract leaves a choice open; where the two disagree, the contract wins and the runner is fixed.
+This plugin's `scripts/break_check.rb` and the files under `scripts/break_check/` (`breaks.rb`, `cli.rb`, `diff.rb`, `ledger.rb`, `profile.rb`, `run.rb`, `uncovered.rb`, `workspace.rb`), with their tests in `scripts/test_break_check/`, ported from cadre's runner (djeusette/cadre#159). It is Ruby 3.2 or later, with the standard library only. Read it when the contract leaves a choice open; where the two disagree, the contract wins and the runner is fixed.

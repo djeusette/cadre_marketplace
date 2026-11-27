@@ -2,6 +2,7 @@
 # runner's own code never loads into the running runner.
 require "optparse"
 require_relative "breaks"
+require_relative "diff"
 require_relative "ledger"
 require_relative "profile"
 require_relative "run"

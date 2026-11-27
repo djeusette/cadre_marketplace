@@ -60,6 +60,12 @@ module BreakCheck
 
     def fresh_entries = entries.select { fresh?(_1) }
 
+    # The lines a fresh proof's `from` covers in its file now.
+    def span(entry)
+      start = Breaks.occurrences(BreakCheck.read(File.join(@root, entry["file"])), entry["from"]).first
+      start..(start + entry["from"].count("\n"))
+    end
+
     # The fresh proof of this exact break, if there is one.
     def proof(brk) = fresh_entries.find { same_swap?(_1, brk) }
 
