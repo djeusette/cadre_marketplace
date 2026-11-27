@@ -50,7 +50,7 @@ class ManifestTest < Minitest::Test
   def test_marketplace_lists_cadre_last_at_the_plugin_version
     assert_equal "cadre", marketplace.fetch("plugins").last["name"]
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.34.0", manifest["version"]
+    assert_equal "0.35.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -72,9 +72,7 @@ class ManifestTest < Minitest::Test
 
   def test_readme_sums_cadre_up_and_links_its_skill
     bullet = File.read(File.join(ROOT, "README.md"))[/^- \*\*cadre\*\* — .*?(?=^#|\z)/m]
-    assert_includes bullet, "(plugins/cadre/skills/cadre/SKILL.md)"
-    assert_includes bullet, "[`cadre:brainstorming`](plugins/cadre/skills/brainstorming/SKILL.md) brainstorms a feature into a Cadre project"
-    assert_includes bullet, "[`cadre:pr-description`](plugins/cadre/skills/pr-description/SKILL.md) sets the standard for PR descriptions."
+    assert_equal "- **cadre** \u2014 runs Cadre from Claude Code: it starts milestones and links their pull requests, connects repos to Fly, Vercel or the app stores, deploys them and writes Skills tables. [`cadre:brainstorming`](plugins/cadre/skills/brainstorming/SKILL.md) brainstorms a feature into a Cadre project; [`cadre:writing-plans`](plugins/cadre/skills/writing-plans/SKILL.md) plans a milestone's pull request; [`cadre:pr-description`](plugins/cadre/skills/pr-description/SKILL.md) sets the standard for PR descriptions. It installs the `cadre` CLI and signs you in; cadre installs `superpowers` from `claude-plugins-official` with it. [The skill](plugins/cadre/skills/cadre/SKILL.md).", bullet.strip
     assert_operator bullet.split.size, :<=, 70
   end
 
