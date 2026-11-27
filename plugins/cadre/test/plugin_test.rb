@@ -1598,10 +1598,9 @@ class WritingPlansTest < Minitest::Test
     ["Read this repo's code as it is now, without asking, and estimate its part's code files, counted as \"One pull request\" says.",
      "When the part no longer ships as one pull request, propose a split to the person",
      %q{Once the person approves, land it: for a split, add the new milestone right after `<slug>/<n>` as "Change a project" in [project.md](../cadre/project.md) says, and narrow this milestone's spec to what stays in it; for a spec change, apply it.},
-     %q{Update the spec as "Update a milestone's spec" there says, then run steps 1, 2 and 4 of "Start a milestone" again.},
-     "When the person declines a split, plan the part as it is: the plan says why it can't be smaller.",
-     "This step is done when you have told the person the estimate and what you proposed is settled.",
-].each { |text| assert_includes milestone_section, text }
+     %q{Make either change through "Update a milestone's spec" there, then run only steps 1, 2 and 4 of "Start a milestone" again and come back here. When one of them says to stop, the planning stops too.},
+     "When the person declines a split, plan the part as it is: the plan says the person kept it whole.",
+     "This step is done when you have told the person the estimate and what you proposed is settled."].each { |text| assert_includes milestone_section, text }
     assert_operator milestone_section.index("cadre status <slug> --json`."), :<, milestone_section.index("Read this repo's code as it is now")
     assert_operator milestone_section.index("Read this repo's code as it is now"), :<, milestone_section.index(%q{Plan as "Run superpowers writing-plans" says})
   end
@@ -1614,7 +1613,7 @@ class WritingPlansTest < Minitest::Test
 
   def test_a_plan_above_20_code_files_says_why_or_stops
     [%q{When the plan's file structure holds more than 20 code files, counted as "One pull request" says, the plan says why it can't be smaller.},
-     %q{When it could be smaller, stop before writing the plan: propose a milestone's split as step 4 of "A Cadre milestone" says, then plan again from step 5;},
+     %q{When it could be smaller and the person hasn't kept it whole at step 4, stop before writing the plan: propose a milestone's split as step 4 of "A Cadre milestone" says, then plan again from step 5;},
      %q{take requirements on to `cadre:brainstorming`, as "Requirements with no spec" says.}].each { |text| assert_includes run_section, text }
   end
 

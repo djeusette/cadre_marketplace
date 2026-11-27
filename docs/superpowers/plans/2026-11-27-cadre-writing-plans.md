@@ -189,3 +189,11 @@ engineering-principles (4 Minor, one note) and writing-for-agents (2 Important, 
 - `stranded` no longer counts as merged: its commits never reach the default branch (`pull_request.ex`). A factual correction of round 1's list, not a change of its rule.
 - The given part names one app's plan; `skills.md` step 6 asks which branch when the person names none.
 - Two tests renamed or split so their names match what they pin; "What to plan" is pinned to hold no routing.
+
+### Round 3: `a3b7ff2..862caeb`
+
+engineering-principles (1 Important, 2 Minor) and writing-for-agents (1 Important, 3 Minor), all fixed:
+
+- The size rule skips its stop when the person kept the part whole at step 4, and that plan says the person kept it whole: the declined split no longer comes round again.
+- Step 4's re-run is "only steps 1, 2 and 4 … and come back here", and a stop in it stops the planning; one sentence makes either spec change through "Update a milestone's spec".
+- The test's stray `].each` is back on its last element.
