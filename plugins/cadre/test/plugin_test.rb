@@ -1611,9 +1611,8 @@ class WritingPlansTest < Minitest::Test
      "Its code files are counted without tests and docs: aim for 10, and prefer 20 or fewer."].each { |text| assert_includes one_pull_request, text }
   end
 
-  def test_a_plan_above_20_code_files_says_why_or_stops
-    [%q{When the plan's file structure holds more than 20 code files, counted as "One pull request" says, and the person kept the part whole at step 4 of "A Cadre milestone", the plan says so.},
-     %q{Otherwise it says why it can't be smaller; when it could be smaller, stop before writing the plan: propose a milestone's split as that step says, then plan again from step 5;},
+  def test_a_plan_above_20_code_files_says_kept_whole_or_why_or_stops
+    [%q{When the plan's file structure holds more than 20 code files, counted as "One pull request" says: when the person kept the part whole at step 4 of "A Cadre milestone", the plan says so; otherwise it says why it can't be smaller, and when it could be smaller, stop before writing the plan: propose a milestone's split as that step says, then plan again from step 5;},
      %q{take requirements on to `cadre:brainstorming`, as "Requirements with no spec" says.}].each { |text| assert_includes run_section, text }
   end
 

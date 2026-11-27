@@ -83,7 +83,7 @@
   - `test_it_asks_before_planning_after_an_unmerged_milestone`: `cadre status <slug> --json`, "an entry before `<n>`'s in `milestones`", "`state`", "neither `can_deploy` nor `deployed`", "ask whether to plan anyway".
   - `test_it_rechecks_the_milestone_against_the_code_as_it_is_now`: "Read the code as it is now, without asking", "as \"One pull request\" says", "\"Update a milestone's spec\" in [project.md](../cadre/project.md)", "pull and commit the spec copy again, as steps 1 and 4 of \"Start a milestone\" do".
   - `test_one_pull_request_ships_one_milestone`: `## One pull request` names "one feature", "the smallest step", "its consumers named", links "\"What a milestone is\" in [the brainstorming skill](../brainstorming/SKILL.md)", and holds "counted without tests and docs", "aim for 10", "20 or fewer".
-  - `test_a_plan_above_20_code_files_says_why_or_stops`: "says why it can't be smaller", "stop before writing the plan", "\"Change a project\" in [project.md](../cadre/project.md)", "`cadre:brainstorming`".
+  - `test_a_plan_above_20_code_files_says_kept_whole_or_why_or_stops`: "says why it can't be smaller", "stop before writing the plan", "\"Change a project\" in [project.md](../cadre/project.md)", "`cadre:brainstorming`".
   - The order test gains `## One pull request`.
 - [ ] **Step 2: Run.** Expected: red on each.
 - [ ] **Step 3: Write** the two steps, `## One pull request` and the size rule.
@@ -204,3 +204,9 @@ engineering-principles: clean. writing-for-agents (1 Important, 2 Minor), all fi
 
 - The size rule opens on the kept-whole case, where the plan says the person kept it whole; otherwise the plan says why it can't be smaller, or the rule stops. Step 4 is named with its section on first mention.
 - "Either spec edit, the narrowing or the spec change" goes through "Update a milestone's spec"; the split's new milestone stays with "Change a project".
+
+### Round 5: `70e794d..3afeca7`
+
+engineering-principles (2 Minor) and writing-for-agents (1 Important), all fixed:
+
+- The size rule nests both branches under its 20-file trigger, so a plan of 20 code files or fewer neither explains nor stops; the test pins the two branches as one string, in order, under a name that says all three outcomes.
