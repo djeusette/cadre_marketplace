@@ -165,3 +165,17 @@ Left as they are, outside this increment: `milestone.md` step 3 names no command
 - Tests for the opening, the cases and the stale "this skill" lines; the two start-a-milestone tests the move breaks; the order test grows per task; the README bullet is pinned whole.
 - The dry runs cover the return to plan milestone 1, a spec without Increments, a plain "plan this spec", and a tracked spec; they read the worktree's files, not the installed 0.34.0 plugin, and stop at the args handed to superpowers.
 - The increment rules are named in the pointer and defined in the brainstorming skill; the delta-review rule stays, recorded in the spec as David's 2026-11-27 choice.
+
+## Reviews, folded in
+
+### Round 1: `origin/main...b08e463`, full branch
+
+engineering-principles (2 Important, 3 Minor) and writing-for-agents (3 Important, 4 Minor), all fixed:
+
+- The earlier-milestone check reads this repo's step and its pull requests' `status` (`merged`, `stranded` or `deployed`), not the milestone's `state`, which Cadre sets from the next step.
+- "Before you start" step 4 follows the case's section, so the cadre checks run before a named milestone's steps 1 to 4; the handover lists all it hands over, and isn't told back to the person.
+- Step 4 estimates the code files, proposes a split or a spec change, says how each lands (a new milestone, the narrowed spec, the copy pulled again) and ends when what was proposed is settled; the size rule reuses it.
+- The plan holds a final review task where each round records what it reviewed and its rulings.
+- "One pull request" ships one increment, as "What a milestone is" defines a milestone; the rules handed to superpowers name the given part, not "this skill"; "the size rule … stops the plan" replaces "the planner".
+- `skills.md` step 6 commits on the milestone's branch while planning a milestone, otherwise on the branch the person names; the router says "when `cadre:writing-plans` plans".
+- Trailing spaces gone from the test file.
