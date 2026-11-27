@@ -175,7 +175,7 @@ The stacks: ExUnit (cadre, colette-api, kinfield's umbrella with its two partiti
 - **Deployable alone:** a ledger line without a profile reads as the default, so existing ledgers keep working.
 - **Consumers:** cadre (adopted in 2). `cadre:pr-description` is unchanged.
 - **Code files:** about 6 — the runner's library files the gaps touch, `plugin.json`, `marketplace.json`.
-- [ ] Not shipped
+- [x] PR #45
 
 ### Increment 4 — Plans run the break check (cadre marketplace)
 
