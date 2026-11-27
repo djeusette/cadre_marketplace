@@ -7,3 +7,6 @@
 
 # Worktrees (superpowers:using-git-worktrees)
 .worktrees/
+
+# Break checks (engineering-review:break-check)
+.breaks/
