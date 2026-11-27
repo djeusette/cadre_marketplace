@@ -90,7 +90,7 @@ At the repository root, committed. It holds one or more profiles: what cadre's `
 }
 ```
 
-- `command` is an argument list; `{files}` expands to the break's test files, `{partition}` to `--partition N`. A profile whose command or env names `{partition}` requires `--partition`; one that doesn't, refuses it.
+- `command` is an argument list; `{files}` expands to the break's test files, `{partition}` to the N of `--partition N`. A profile whose command or env names `{partition}` requires `--partition`; one that doesn't, refuses it.
 - The patterns are Ruby regular expressions as strings. `failing_test` captures the failing test's name in its first group and may span lines.
 - `infrastructure`, `refusal`, `doc_open` and `doc_close` are optional.
 - `"default": "<profile>"` names the profile used when `--profile` is left out. It is required when the file holds more than one profile *(my call)*.
@@ -159,7 +159,7 @@ The stacks: ExUnit (cadre, colette-api, kinfield's umbrella with its two partiti
 - **Deployable alone:** no repo has a `.break-check.json` yet, and a committed repo runner still wins. cadre keeps using its own.
 - **Consumers:** none.
 - **Code files:** about 10 — `plugins/engineering-review/scripts/break_check.rb`, the six files under `scripts/break_check/`, `plugins/engineering-review/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.github/workflows/<checks>.yml`, and this repo's `.break-check.json`. The port is larger than the preferred ten files' worth of lines, and can't be smaller: the runner works as one unit.
-- [ ] Not shipped
+- [x] PR #43
 
 ### Increment 2 — cadre uses the shared runner (cadre)
 

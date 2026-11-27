@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "minitest": {
+      "command": ["ruby", "-e", "ARGV.each { require File.expand_path(_1) }", "{files}"],
+      "failing_test": "^\\s+\\d+\\) (?:Failure|Error):\\n(\\S+#test_\\w+)",
+      "compile_error": "SyntaxError",
+      "timeout": 120,
+      "watched": ["plugins/engineering-review/scripts/break_check.rb", "plugins/engineering-review/scripts/break_check"],
+      "noise": "\\A\\s*(?:#(?!\\{).*|end|\\)|\\]|\\}|)\\s*\\z"
+    }
+  }
+}

@@ -8,6 +8,9 @@ Run each before a commit:
 - `python3 -m unittest discover -s plugins/engineering-review/scripts -p 'test_*.py'`
 - `python3 plugins/engineering-review/scripts/check_plugin.py plugin plugins/engineering-review`
 - `ruby test/check_version_bumps_test.rb`
+- `ruby plugins/engineering-review/scripts/test_break_check/all.rb`
+
+Every break-check command on the runner's own code uses this checkout's runner, not the installed one: `ruby plugins/engineering-review/scripts/break_check.rb`.
 
 `plugin_test.rb` and `test_check_plugin.py` pin their plugin's exact wording: change the test first, watch it go red, then the text.
 

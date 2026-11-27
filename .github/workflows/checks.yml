@@ -38,6 +38,41 @@ jobs:
       - name: check_plugin.py on engineering-review
         run: python3 plugins/engineering-review/scripts/check_plugin.py plugin plugins/engineering-review
 
+  break-check:
+    name: The break-check runner's tests on Ruby ${{ matrix.ruby-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ruby-version: ["3.2", "3.4"]
+    env:
+      LANG: C.UTF-8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+      - name: The break-check runner's tests
+        run: ruby plugins/engineering-review/scripts/test_break_check/all.rb
+
+  old-ruby:
+    name: The break-check runner refuses Ruby ${{ matrix.ruby-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ruby-version: ["2.6", "3.1"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+      - name: Exit 2, naming the Ruby it needs
+        run: |
+          set +e
+          output=$(ruby plugins/engineering-review/scripts/break_check.rb --help)
+          code=$?
+          echo "$output"
+          test "$code" = 2 && test "$output" = "break_check.rb needs Ruby 3.2 or later; this is Ruby $(ruby -e "print RUBY_VERSION")"
+
   version-bumps:
     name: Each changed plugin bumps its version
     if: github.event_name == 'pull_request'
