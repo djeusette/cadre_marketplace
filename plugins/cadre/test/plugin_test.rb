@@ -50,7 +50,7 @@ class ManifestTest < Minitest::Test
   # No place in the list is pinned: the marketplace lists other plugins too.
   def test_marketplace_lists_cadre_at_the_plugin_version
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.35.0", manifest["version"]
+    assert_equal "0.35.1", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 

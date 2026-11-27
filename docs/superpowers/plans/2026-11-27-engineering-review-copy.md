@@ -149,6 +149,10 @@ The seam is the script's command line, run in a throwaway git repo (global and s
 - [ ] **Step 3:** push, open the PR titled as above and described to `plugins/cadre/skills/pr-description/SKILL.md`, saying why cadre bumps to 0.35.1 and engineering-review stays 0.21.0.
 - [ ] **Step 4:** Increment 4's status line in the spec becomes `- [x] PR #<n>`, and its Code files line says 11 with the two added; commit, push.
 
+## Install, verified
+
+2026-11-27, `CLAUDE_CONFIG_DIR` set to a scratch dir: `claude plugin marketplace add <this checkout>` then `claude plugin install engineering-review@cadre` installed `engineering-review@cadre` 0.21.0 "(+ 1 dependency: security-audit)"; `claude plugin list` shows both enabled, `security-audit` at `c1c8a8c14710`.
+
 ## Fable's review, folded in
 
 4 Important, 6 Minor, all folded in:
