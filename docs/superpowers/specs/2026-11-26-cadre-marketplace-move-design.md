@@ -222,8 +222,8 @@ The cadre marketplace holds `cadre` (CLI, brainstorming, planning, PR descriptio
 - **Delivers:** `engineering-review@cadre` installs the principles, the review companion, `pr-description` and the break check, with `security-audit`. CI runs both suites.
 - **Deployable alone:** a verbatim copy. No team repo enables it yet.
 - **Consumers:** none.
-- **Code files:** 9 — `.claude-plugin/marketplace.json`, `.github/workflows/<checks>.yml`, `plugins/engineering-review/.claude-plugin/plugin.json`, `plugins/engineering-review/hooks/hooks.json`, `plugins/engineering-review/scripts/check_plugin.py`, `plugins/engineering-review/scripts/guard_reader_bash.py`, and the three `plugins/engineering-review/agents/*.md` files. It cannot be smaller: the plugin installs as one unit.
-- [ ] Not shipped
+- **Code files:** 11 — `.claude-plugin/marketplace.json`, `.github/workflows/<checks>.yml`, `script/check_version_bumps.rb`, `plugins/cadre/.claude-plugin/plugin.json` (the release), `plugins/engineering-review/.claude-plugin/plugin.json`, `plugins/engineering-review/hooks/hooks.json`, `plugins/engineering-review/scripts/check_plugin.py`, `plugins/engineering-review/scripts/guard_reader_bash.py`, and the three `plugins/engineering-review/agents/*.md` files. It cannot be smaller: the plugin installs as one unit.
+- [x] PR #37
 
 ### Increment 5 — `engineering-review` uses `cadre:pr-description` (cadre marketplace)
 
