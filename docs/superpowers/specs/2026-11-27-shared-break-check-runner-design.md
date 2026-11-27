@@ -159,7 +159,7 @@ The stacks: ExUnit (cadre, colette-api, kinfield's umbrella with its two partiti
 - **Deployable alone:** no repo has a `.break-check.json` yet, and a committed repo runner still wins. cadre keeps using its own.
 - **Consumers:** none.
 - **Code files:** about 10 — `plugins/engineering-review/scripts/break_check.rb`, the six files under `scripts/break_check/`, `plugins/engineering-review/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.github/workflows/<checks>.yml`, and this repo's `.break-check.json`. The port is larger than the preferred ten files' worth of lines, and can't be smaller: the runner works as one unit.
-- [ ] Not shipped
+- [x] PR #43
 
 ### Increment 2 — cadre uses the shared runner (cadre)
 
