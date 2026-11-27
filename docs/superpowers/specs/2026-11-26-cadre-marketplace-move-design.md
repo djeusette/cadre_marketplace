@@ -249,7 +249,7 @@ The cadre marketplace holds `cadre` (CLI, brainstorming, planning, PR descriptio
 - **Before deploying:** every PR of increment 6 merged, and every person has run the switch commands.
 - **Consumers:** none left after increment 6.
 - **Code files:** 2 — `.claude-plugin/marketplace.json`, `plugins/colette/.claude-plugin/plugin.json` (deleted)
-- [ ] Not shipped
+- [x] PR colette-club/colette-marketplace#50
 
 ### Increment 8 — colette-club holds only conventions (colette-marketplace)
 
