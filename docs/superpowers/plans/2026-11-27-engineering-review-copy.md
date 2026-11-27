@@ -92,7 +92,7 @@
 **Interfaces:**
 - Produces: `ruby script/check_version_bumps.rb <base>`. The plugins are the `plugins/<name>/` that `git diff --name-only --no-renames -z <base>...HEAD -- plugins/` touches. Each one whose `.claude-plugin/plugin.json` exists at `HEAD` must have a version `Gem::Version` reads there, higher than the base's when the base has one. A plugin gone at `HEAD` passes. Files are read as UTF-8. Output, exactly:
   - `OK`, exit 0;
-  - per failing plugin, exit 1: `plugins/<name> changed but its version stayed <v> (or went down)` when it isn't higher, `plugins/<name> has no version in .claude-plugin/plugin.json` when it has none or an unreadable one;
+  - per failing plugin, exit 1: `plugins/<name> changed but its version <v> is not above <base v>`, `plugins/<name> has no version in .claude-plugin/plugin.json`, or `plugins/<name> has version "<v>" in .claude-plugin/plugin.json, which is not a version number`;
   - usage with no argument, or git's message when git fails (an unknown base, no merge base), exit 2.
 
 The seam is the script's command line, run in a throwaway git repo (global and system config off, a fixed author). Nothing is tested inside it.
