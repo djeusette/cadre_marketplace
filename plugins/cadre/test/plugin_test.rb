@@ -1512,7 +1512,7 @@ class WritingPlansTest < Minitest::Test
   end
 
   def test_its_sections_come_in_order
-    assert_equal ["## Before you start", "## What to plan", "## A Cadre milestone", "## A spec not tracked in Cadre", "## One pull request", "## Run superpowers writing-plans"],
+    assert_equal ["## Before you start", "## What to plan", "## A Cadre milestone", "## A spec not tracked in Cadre", "## Requirements with no spec", "## One pull request", "## Run superpowers writing-plans"],
                  skill.gsub(/^ *```.*?^ *```$/m, "").scan(/^## .*$/)
   end
 
@@ -1619,5 +1619,18 @@ class WritingPlansTest < Minitest::Test
       assert_includes spec_section, text
     end
     assert_includes what_to_plan, "A tracked spec's status lines, when it has some, are ignored: Cadre shows where each milestone stands."
+  end
+  
+  def test_requirements_are_one_pull_request_or_a_brainstorm_first
+    requirements = section(skill, "## Requirements with no spec")
+    [%q{Read the code without asking, then decide whether the requirements ship as one pull request, as "One pull request" says.},
+     "tell the person the work is one pull request, and why",
+     %q{Plan it as "Run superpowers writing-plans" says, with the requirements and no spec file.},
+     "Cadre doesn't track it, so the plan has no tracking line and its pull request no `Cadre:` line.",
+     "when the planner stops on the size rule", "load `cadre:brainstorming` and brainstorm the feature from the requirements, as it says",
+     %q{Once "Create a project" has registered the project, come back here and plan milestone `<slug>/1` as "A Cadre milestone" says, from its step 2.}].each do |text|
+      assert_includes requirements, text
+    end
+    assert_includes run_section, %q{take requirements on to `cadre:brainstorming`, as "Requirements with no spec" says}
   end
 end

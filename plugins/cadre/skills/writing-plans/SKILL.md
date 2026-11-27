@@ -42,6 +42,13 @@ When none fits, ask the person what to plan: a milestone, a spec or requirements
 
 Register it first: follow "Create a project" in [project.md](../cadre/project.md) from step 1, with that spec. It brainstorms the spec's End goal and Increments through `cadre:brainstorming` when the spec lacks either. Once `cadre project create` has registered the project, plan milestone `<slug>/1` as "A Cadre milestone" says, from its step 2.
 
+## Requirements with no spec
+
+Read the code without asking, then decide whether the requirements ship as one pull request, as "One pull request" says.
+
+- **One pull request:** tell the person the work is one pull request, and why. Plan it as "Run superpowers writing-plans" says, with the requirements and no spec file. Cadre doesn't track it, so the plan has no tracking line and its pull request no `Cadre:` line.
+- **More than one,** or when the planner stops on the size rule: load `cadre:brainstorming` and brainstorm the feature from the requirements, as it says. Once "Create a project" has registered the project, come back here and plan milestone `<slug>/1` as "A Cadre milestone" says, from its step 2.
+
 ## One pull request
 
 A plan is one pull request that ships one milestone: one feature, the smallest step that can be deployed and used on its own, and its consumers named, as "What a milestone is" in [the brainstorming skill](../brainstorming/SKILL.md) defines them. Read only that section there. Its code files are counted without tests and docs: aim for 10, and prefer 20 or fewer.
@@ -51,7 +58,7 @@ A plan is one pull request that ships one milestone: one feature, the smallest s
 1. Read the repo's Skills table, check its rows and load the skills the work calls for, as [skills.md](../cadre/skills.md) says.
 2. Invoke `superpowers:writing-plans` with the spec copy's path or the requirements, and these rules on top. Where they differ from it, they win:
    - **One plan, one pull request.** Plan only the part this skill chose, as one plan and one pull request: the spec-coverage check covers that part alone.
-   - **Size.** When the plan's file structure holds more than 20 code files, counted as "One pull request" says, the plan says why it can't be smaller. When it could be smaller, stop before writing the plan, and propose the split of a milestone to the person, as "Change a project" in [project.md](../cadre/project.md) adds a milestone.
+   - **Size.** When the plan's file structure holds more than 20 code files, counted as "One pull request" says, the plan says why it can't be smaller. When it could be smaller, stop before writing the plan, and propose the split of a milestone to the person, as "Change a project" in [project.md](../cadre/project.md) adds a milestone, or take requirements on to `cadre:brainstorming`, as "Requirements with no spec" says.
    - **Skills per task.** Each task names the skills it needs (from the table when the repo has one), since a subagent executing it loads only those.
    - **The final review.** When the final review runs in rounds, each round fixes what it finds and the next reviews the fixes. The first round reviews the whole branch; each later round reviews only `git diff <last-reviewed-sha>..HEAD`, and its brief lists every earlier ruling as a standing decision. Each round records the commit it reviewed up to and its rulings under the plan's final review task, where the next round reads them. The review ends when a round is clean.
    - **The pull request task.** The plan ends with a pull request task, which names `cadre:pr-description` among the skills it loads: it holds the rules for the title, the `Cadre:` line and the `## Before deploying` section. It pushes the branch and opens the pull request, never a local merge.
