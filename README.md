@@ -17,6 +17,8 @@ Or commit them to a repo's `.claude/settings.json` so the whole team gets them a
 ## Plugins
 
 - **cadre** — runs Cadre from Claude Code: it starts milestones and links their pull requests, connects repos to Fly, Vercel or the app stores, deploys them and writes Skills tables. [`cadre:brainstorming`](plugins/cadre/skills/brainstorming/SKILL.md) brainstorms a feature into a Cadre project; [`cadre:writing-plans`](plugins/cadre/skills/writing-plans/SKILL.md) plans a milestone's pull request; [`cadre:pr-description`](plugins/cadre/skills/pr-description/SKILL.md) sets the standard for PR descriptions. It installs the `cadre` CLI and signs you in; cadre installs `superpowers` from `claude-plugins-official` with it. [The skill](plugins/cadre/skills/cadre/SKILL.md).
+- **engineering-review** — language-agnostic engineering principles, `break-check`, which proves each branch a change adds or changes has a test, and `review-companion`, which reviews a change in any language and writes a report for the human reviewer, who decides. The review loads the skills the repository's `AGENTS.md` Skills table lists, runs the repository's tests and checks, and runs Cloudflare's `security-audit` skill as its security layer. Installing it installs `security-audit`. Start a review with `/engineering-review:review-companion`.
+- **security-audit** — Cloudflare's [security-audit skill](https://github.com/cloudflare/security-audit-skill), pinned to one commit.
 
 ## Development
 
