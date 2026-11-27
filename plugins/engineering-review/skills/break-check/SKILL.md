@@ -28,7 +28,7 @@ Look for a committed runner (a `break_check` script its `AGENTS.md` or a README 
 
 Otherwise, `<runner>` is `ruby <this skill's base directory>/../../scripts/break_check.rb`, run from the repository root; the session shows the base directory when this skill loads. It reads the repository's profiles from `.break-check.json` at the root; before changing the runner itself, read [contract.md](contract.md), which says what it does. `<runner> --help` lists its flags: `--profile NAME` picks a profile other than the file's `default`, and `--partition N` is required by a profile whose `command` or `env` names `{partition}`, so its tests run beside other sessions': pick an N no other session uses. A repository with more than one profile (such as the app's and a script folder's) runs `--uncovered` and its breaks once for each profile whose watched paths the change touches, naming it with `--profile`; `--stale --replay` runs once and replays each proof with the profile that made it.
 
-A repository with neither gets `.break-check.json` before its first break, committed with `.breaks/` in its `.gitignore`. Write one profile per test suite, in the fields [contract.md's `.break-check.json`](contract.md#break-checkjson) gives, its patterns copied from what its tests really print: run one failing test and one that doesn't compile, and read the output. Each profile's check is one break of a branch that already has a test, run with `--profile <name>`: `caught` shows the profile reads its suite. Breaks go through the runner, since only it records a proof a later step or a review can read. The PR description's Break checks part, as `cadre:pr-description` gives it, comes from the runner's `--table`.
+A repository with neither gets `.break-check.json` before its first break, committed with `.breaks/` in its `.gitignore`. Write one profile per test suite, in the fields [contract.md's `.break-check.json`](contract.md#break-checkjson) gives, its patterns copied from what its tests really print: run one failing test and one that doesn't compile, and read the output. Each profile's check is one break of a branch that already has a test, run with `--profile <name>`: `caught` shows the profile reads its suite. Breaks go through the runner, since only it records a proof a later step or a review can read. The PR description's Break checks part, as `cadre:pr-description` gives it, comes from the runner's `--table` given the PR's base commit.
 
 ## After a task's tests are green
 
@@ -44,8 +44,8 @@ Done when the run exits 0, every line `--uncovered` still lists holds no branch,
 In the worktree that holds the ledger (a scratch worktree has none):
 
 1. `<runner> --stale --replay` reruns every stale proof and drops the gone ones, whose branches `--uncovered` then lists again, except a branch outside the watched paths: break it again from the `gone` line the replay printed.
-2. `<runner> --uncovered <the PR's base commit>`, and `git diff <the PR's base commit>` for the branches outside the watched paths that `--table` shows no fresh proof for; break those as in steps 2–4 of "After a task's tests are green". A test added here can make other proofs stale: rerun step 1 until `<runner> --stale` ends with `0 stale`.
-3. Once `--stale` ends with `0 stale`, every line `--uncovered` lists holds no branch, and each branch outside the watched paths has a fresh proof, `<runner> --table` prints the Break checks part of the PR description (`cadre:pr-description`).
+2. `<runner> --uncovered <the PR's base commit>`, and `git diff <the PR's base commit>` for the branches outside the watched paths that `<runner> --table <the PR's base commit>` shows no fresh proof for; break those as in steps 2–4 of "After a task's tests are green". A test added here can make other proofs stale: rerun step 1 until `<runner> --stale` ends with `0 stale`.
+3. Once `--stale` ends with `0 stale`, every line `--uncovered` lists holds no branch, and each branch outside the watched paths has a fresh proof, `<runner> --table <the PR's base commit>` prints the Break checks part of the PR description (`cadre:pr-description`), with this change's proofs only.
 
 Done when the table is printed after the last break.
 
@@ -100,7 +100,7 @@ A run prints one line per break as it happens, then a summary line (`<n> caught,
 
 `line` is where `from` was when the break ran. `hashes` holds the SHA-256 of `file` and of each test file, which tells fresh from stale. `profile` names the profile that ran the break; a line without one reads as the file's `default` profile. A newer proof replaces the one with the same swap in the same file, and one with the same `file` and name that is not fresh.
 
-A proof **belongs** to a change when its `from` spans a line the change adds or changes, or sits next to a line it deletes. `<runner> --table` prints every fresh proof in this worktree, whichever change it belongs to, in this shape, `|` escaped as `\|`, a newline as `⏎`, and a swap that holds a backtick fenced with more backticks than it holds:
+A proof **belongs** to a change when its `from` spans a line the change adds or changes, or sits on the line just above or below a line it deletes. `<runner> --table <base>` prints the fresh proofs that belong to the change since `<base>`, and `<runner> --table` every fresh proof in this worktree, in this shape, `|` escaped as `\|`, a newline as `⏎`, and a swap that holds a backtick fenced with more backticks than it holds:
 
 ```markdown
 <details><summary>Break checks (1)</summary>

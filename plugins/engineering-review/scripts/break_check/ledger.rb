@@ -69,14 +69,20 @@ module BreakCheck
     # The fresh proof of this exact break, if there is one.
     def proof(brk) = fresh_entries.find { same_swap?(_1, brk) }
 
-    def table
-      fresh = fresh_entries
-      rows = fresh.map do |entry|
+    # The fresh proofs whose `from` spans a line `change` touches in their
+    # file: one it adds or changes, or one just above or below a deletion.
+    def belonging(change)
+      touched = change.touched
+      fresh_entries.select { |entry| span(entry).any? { touched.include?([entry["file"], _1]) } }
+    end
+
+    def table(entries = fresh_entries)
+      rows = entries.map do |entry|
         swap = "#{code(entry["from"])} → #{code(entry["to"])}"
         "| #{entry["file"]}:#{entry["line"]} | #{swap} | #{cell(entry["tests_failed"].join(", "))} |"
       end
       <<~MARKDOWN
-        <details><summary>Break checks (#{fresh.size})</summary>
+        <details><summary>Break checks (#{entries.size})</summary>
 
         | Branch | Swap | Caught by |
         |---|---|---|

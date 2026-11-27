@@ -17,7 +17,7 @@ module BreakCheck
       Usage: ruby break_check.rb BREAKS.json [--partition N]                  break each branch, record what is caught
              ruby break_check.rb --stale [--replay [--partition N]]            list stale proofs, or rerun them
              ruby break_check.rb --uncovered BASE                              changed lines since BASE with no fresh proof
-             ruby break_check.rb --table                                       the fresh proofs as the PR's table
+             ruby break_check.rb --table [BASE]                                the fresh proofs as the PR's table: with BASE, only the change's since BASE
       Run from the repository root; profiles come from its .break-check.json.
       --profile NAME picks one other than its default; a replay uses each proof's own.
     TEXT
@@ -44,7 +44,10 @@ module BreakCheck
         parser.on("--profile NAME", "picks a profile of .break-check.json other than its default") { options[:profile] = _1 }
         parser.on("--stale") { options[:stale] = true }
         parser.on("--replay") { options[:replay] = true }
-        parser.on("--table") { options[:table] = true }
+        parser.on("--table [BASE]") do
+          options[:table] = true
+          options[:base] = _1
+        end
         parser.on("--uncovered BASE") { options[:uncovered] = _1 }
       end.parse(argv)
       raise Usage, "one breaks file at a time" if rest.size > 1
@@ -67,7 +70,7 @@ module BreakCheck
       workspace = Workspace.new(Dir.pwd, out:)
 
       if options[:table]
-        workspace.lock_and_recover { out.print ledger.table }
+        workspace.lock_and_recover { out.print ledger.table(table_rows(ledger, options[:base])) }
         0
       elsif options[:uncovered]
         uncovered = Uncovered.new(Dir.pwd, profile)
@@ -116,6 +119,10 @@ module BreakCheck
         by.each_key { _1.command.call([]) }
       end
     end
+
+    # Every fresh proof, or with a base only those that belong to the
+    # change since it.
+    def self.table_rows(ledger, base) = base ? ledger.belonging(Diff.since(Dir.pwd, base)) : ledger.fresh_entries
 
     def self.print_uncovered(lines, out)
       lines.each { out.puts "#{_1[:file]}:#{_1[:line]} | #{_1[:text]}" }
