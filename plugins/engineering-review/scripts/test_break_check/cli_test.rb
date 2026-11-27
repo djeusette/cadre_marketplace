@@ -300,6 +300,9 @@ class CliTest < Minitest::Test
       assert_equal "mode=pass\n", File.read("lib/b.ex")
       assert_empty Dir["#{root}/.breaks/journal/*"]
       refute File.exist?("#{root}/.breaks/child")
+      # The killed group's leader stays a zombie until init reaps it, which
+      # on Linux can come after the runner has exited.
+      wait_for { group_gone?(test_run) }
       assert_raises(Errno::ESRCH) { Process.kill(0, -test_run) }
     end
   end
@@ -361,6 +364,13 @@ class CliTest < Minitest::Test
   def run_cli(argv)
     out = StringIO.new
     [BreakCheck::CLI.run(argv, out:), out.string]
+  end
+
+  def group_gone?(group)
+    Process.kill(0, -group)
+    false
+  rescue Errno::ESRCH
+    true
   end
 
   def wait_for(seconds: 15)
