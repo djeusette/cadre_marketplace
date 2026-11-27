@@ -243,7 +243,7 @@ The description's EP-F5 findings are acted on by role. What would be posted or a
   ```
 
   **Required** holds the 🟠 ones of those gaps, **Suggested** the 🟡 ones; an empty list is left out. Title findings go in the lists too. It is a comment, never a review. With a pasted description and no PR, there is nothing to post to: the findings stay in the report.
-- **Author: a redraft.** Section 6 holds the new title and description in full, written as "Rewriting a description" in `pr-description` says, and `writes.pr_update: approve` applies them.
+- **Author: a redraft.** Section 6 holds the new title and description in full, written as "Rewriting a description" in `cadre:pr-description` says, and `writes.pr_update: approve` applies them.
   - Applying reads the PR again first. When its title or body differs from what was read or pasted, or the read fails, edit nothing and say why in the chat summary. Line endings and trailing whitespace are not differences.
   - Applying runs `gh pr view <n> --json title,body`, then `gh pr edit <n> --title '<title>' --body-file <file outside the repository>`. The title goes in single quotes, each `'` in it written as `'\''`, so the shell never reads it: a title can hold backticks and `$`, and it comes from the PR's own text.
   - When the description could not be read, no redraft is offered: replacing a description you have not seen would drop what it holds.

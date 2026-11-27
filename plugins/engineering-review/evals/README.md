@@ -87,6 +87,9 @@ bash "$here/../_lib/make-repo.sh" "$here/../_fixtures/<fixture>"
   directory (`<case>/team-stack/`) and list it in the prompt frontmatter together with the plugin under test:
   `plugins: ["../..", "team-stack"]`. A `plugins:` list replaces the plugin under test, so `../..` is required,
   and a shipped plugin must sit in its own subdirectory of the case.
+  The `pr-description-*` cases also list `../../../cadre`, this repository's cadre plugin, for `cadre:pr-description`:
+  besides `../..`, the one plugin a case lists from outside its directory. Not verified: whether a run loads a plugin
+  from there, and whether it resolves cadre's `superpowers` dependency.
 - No stops: the companion runs to the end of the review and writes the report. A fenced `review-answers`
   block in the prompt answers questions in advance and approves commands and posts. The chat summary
   holds only the three most important findings, so a recall grader must read the report file.
@@ -265,3 +268,17 @@ runner, 0 of 3 wrote one before (all broke by hand, 2 would have written the tab
 that replaces a body fell from 2 of 3 to 1 of 3; none counted the TDD red step as a proof either way. `clean-change`,
 `pr-description-clean` and `deadlocks-clean` now also get a "no break check found" 🟡 and are not updated, being
 unrunnable here.
+
+v0.22.0 (2026-11-27): `pr-description` moved to the cadre plugin as `cadre:pr-description`, and engineering-review
+depends on `cadre`. The `review-companion` agent no longer preloads it and loads it with `Skill`. How cadre's copy
+differs: it cites no EP IDs; a Cadre line may name its app (`Cadre: <slug>/<n> <app>`), which pass 5 now accepts;
+consumers are named in deploy order; the Deploy line shows the change works beside the previous version, keeps
+unfinished work out of users' reach and loses no data on rollback; and it says in its own words which Break checks rows
+belong to the change. The eight `pr-description-*` cases list `../../../cadre`; every other case loads only
+engineering-review. Not measured: evals cannot run on the Mac used (see Prerequisites), and it is not verified that a
+plugin listed from outside the case directory loads, nor that every other case's run reports `cadre:pr-description` as
+not loaded. Dry runs instead, sonnet, reading the skills from the checkout. Pass 5 and pass 6's behind the scenes on
+`pr-description-recall`'s description: before the move (the old skill), 2 of 3 runs passed its four regex graders and
+`event-not-described` (one run gave no ❓ for the instruction to the AI); after (cadre's copy), 3 of 3. The agent's
+start-up, given the skills a session lists: with `cadre` it loads `cadre:pr-description` with `Skill`; without it, it
+reports the standard as not loaded and raises no description finding.

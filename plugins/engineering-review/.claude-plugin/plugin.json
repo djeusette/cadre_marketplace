@@ -1,6 +1,6 @@
 {
   "name": "engineering-review",
-  "version": "0.21.0",
+  "version": "0.22.0",
   "description": "Language-agnostic engineering principles, a break check that proves each branch a change adds or changes has a test, and a review companion that supports human code review with explained findings, recommendations and diagrams.",
   "author": {
     "name": "Colette Club",
@@ -10,5 +10,5 @@
   "repository": "https://github.com/djeusette/cadre_marketplace",
   "license": "MIT",
   "keywords": ["code-review", "clean-code", "concurrency", "testing", "documentation", "database", "conventions"],
-  "dependencies": ["security-audit"]
+  "dependencies": ["security-audit", "cadre"]
 }

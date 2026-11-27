@@ -4,6 +4,7 @@ tags: [precision]
 max_turns: 80
 timeout_seconds: 1500
 allowed_tools: [Read, Glob, Grep, Skill, Bash, Write]
+plugins: ["../..", "../../../cadre"]
 ---
 
 /engineering-review:review-companion feature

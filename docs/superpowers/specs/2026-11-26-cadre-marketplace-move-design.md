@@ -230,8 +230,8 @@ The cadre marketplace holds `cadre` (CLI, brainstorming, planning, PR descriptio
 - **Delivers:** the review companion and EP-F5 point at `cadre:pr-description`, and installing `engineering-review@cadre` installs `cadre`.
 - **Deployable alone:** `cadre:pr-description` has existed since increment 1. No team repo enables `engineering-review@cadre` yet.
 - **Consumers:** none.
-- **Code files:** 4 — `.claude-plugin/marketplace.json`, `plugins/engineering-review/.claude-plugin/plugin.json`, `plugins/engineering-review/agents/review-companion.md`, `plugins/engineering-review/scripts/check_plugin.py` (if a check names `pr-description`)
-- [ ] Not shipped
+- **Code files:** 3 — `.claude-plugin/marketplace.json`, `plugins/engineering-review/.claude-plugin/plugin.json`, `plugins/engineering-review/agents/review-companion.md`. `check_plugin.py` is unchanged: no check names `pr-description`.
+- [x] PR #38
 
 ### Increment 6 — the team repos install from the cadre marketplace (colette-api, colette-app, rooms-app, admin-app, kinfield, cadre, colette-marketplace, cadre_marketplace)
 
