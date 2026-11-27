@@ -31,15 +31,16 @@ module BreakCheck
         "name" => brk.name, "file" => brk.file, "line" => line, "from" => brk.from, "to" => brk.to,
         "tests_failed" => tests_failed, "hashes" => hashes([brk.file, *brk.tests]), "profile" => profile
       }
-      kept = entries.reject { same_swap?(_1, brk) || (same_name?(_1, brk) && !once?(_1)) }
+      kept = entries.reject { same_swap?(_1, brk) || (same_name?(_1, brk) && !fresh?(_1)) }
       write(kept + [entry])
     end
 
     # A name is a branch's identity in its file, so a new break may take
-    # a name only from a gone proof.
+    # a name only from a proof that is not fresh, whose new proof then
+    # replaces it.
     def name_conflicts(breaks)
       breaks.filter_map do |brk|
-        next unless entries.any? { same_name?(_1, brk) && !same_swap?(_1, brk) && once?(_1) }
+        next unless entries.any? { same_name?(_1, brk) && !same_swap?(_1, brk) && fresh?(_1) }
 
         "#{brk.name}: a proof in #{brk.file} already has this name"
       end

@@ -64,6 +64,18 @@ class LedgerTest < Minitest::Test
     end
   end
 
+  def test_a_name_a_stale_proof_holds_is_free
+    with_repo(FILES) do |root|
+      ledger = recorded(root)
+      File.write("test/a_test.exs", "test, edited")
+      again = brk(to: "a < 1")
+
+      assert_empty ledger.name_conflicts([again])
+      ledger.record(again, line: 1, tests_failed: ["t"], profile: "exunit")
+      assert_equal ["a < 1"], ledger.entries.map { _1["to"] }
+    end
+  end
+
   def test_a_missing_test_file_makes_the_entry_gone
     with_repo(FILES) do |root|
       ledger = recorded(root)

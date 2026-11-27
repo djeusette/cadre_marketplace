@@ -26,7 +26,7 @@ Whoever wrote the code runs its breaks, in the same session: a fresh agent's sta
 
 Look for a committed runner (a `break_check` script its `AGENTS.md` or a README names) first: while a repository still keeps one, a committed runner of the repository's own wins, and `<runner>` below is that one, called as its `AGENTS.md` or README says.
 
-Otherwise, `<runner>` is `ruby <this skill's base directory>/../../scripts/break_check.rb`, run from the repository root; the session shows the base directory when this skill loads. It reads the repository's profiles from `.break-check.json` at the root. `<runner> --help` lists its flags: `--profile NAME` picks a profile other than the file's `default`, and `--partition N` is required by a profile whose `command` or `env` names `{partition}`, so its tests run beside other sessions': pick an N no other session uses. A repository with more than one profile (such as the app's and a script folder's) runs `--uncovered` and its breaks once for each profile whose watched paths the change touches, naming it with `--profile`; `--stale --replay` runs once and replays each proof with the profile that made it.
+Otherwise, `<runner>` is `ruby <this skill's base directory>/../../scripts/break_check.rb`, run from the repository root; the session shows the base directory when this skill loads. It reads the repository's profiles from `.break-check.json` at the root; before changing the runner itself, read [contract.md](contract.md), which says what it does. `<runner> --help` lists its flags: `--profile NAME` picks a profile other than the file's `default`, and `--partition N` is required by a profile whose `command` or `env` names `{partition}`, so its tests run beside other sessions': pick an N no other session uses. A repository with more than one profile (such as the app's and a script folder's) runs `--uncovered` and its breaks once for each profile whose watched paths the change touches, naming it with `--profile`; `--stale --replay` runs once and replays each proof with the profile that made it.
 
 A repository with neither gets `.break-check.json` before its first break, committed with `.breaks/` in its `.gitignore`. Write one profile per test suite, in the fields [contract.md's `.break-check.json`](contract.md#break-checkjson) gives, its patterns copied from what its tests really print: run one failing test and one that doesn't compile, and read the output. Each profile's check is one break of a branch that already has a test, run with `--profile <name>`: `caught` shows the profile reads its suite. Breaks go through the runner, since only it records a proof a later step or a review can read. The PR description's Break checks part, as `cadre:pr-description` gives it, comes from the runner's `--table`.
 
@@ -60,7 +60,7 @@ A breaks file is a JSON array, one object per branch:
   "tests": ["test/cadre/source_control/change_requests_test.exs"]}]
 ```
 
-- `name` is the branch's identity in its file: unique among the file's breaks, and refused while a proof of another swap in that file holds it, unless that proof's `from` no longer occurs exactly once. A proof of the same swap never blocks it.
+- `name` is the branch's identity in its file: unique among the file's breaks, and refused while a fresh proof of another swap in that file holds it: a proof that is not fresh frees its name, and the new proof replaces it. A proof of the same swap never blocks it.
 - `from` is the shortest text found exactly once in `file`, on one line unless the branch needs more: copy it from the `--uncovered` line.
 - `to` is the smallest change to that one branch, one that still compiles: flip the condition, drop the guard value, delete the cast, swap the clause order. A break that raises, empties or replaces a body proves nothing: any test catches it.
 - `tests` lists only the test files that cover the branch: the fewer, the faster.
@@ -74,7 +74,7 @@ A run prints one line per break as it happens, then a summary line (`<n> caught,
 | `caught  <name>  ← <tests>` | a proof, now in the ledger | nothing |
 | `proven  <name>  (fresh in the ledger)` | a fresh proof of this exact swap was already there; nothing ran | nothing |
 | `NOT CAUGHT  <name>` | no test notices the break | write the test, list its file in the break's `tests`, and rerun the file, so the runner shows it failing on the break; on a replay, put the proof's swap in a breaks file with the test files that now cover it, and its new proof replaces the old |
-| `doesn't compile  <name>` | not a valid break | write another break for that branch; on a replay, see the known gaps in [contract.md](contract.md) |
+| `doesn't compile  <name>` | not a valid break | write another break for that branch; on a replay the proof stays stale until it is proven again, and the new break may take its name |
 | `inconclusive  <name>  (<reason>)` | a timeout, the infrastructure, another test run, or output the runner cannot read | rerun it |
 
 `--stale` prints `replayable <file>:<line> <name>` or `gone <file>:<line> <name>` per proof, then `<n> stale`, counting both. `--uncovered` prints `<file>:<line> | <text>` per line, then `<n> changed lines have no fresh proof`.
@@ -98,7 +98,7 @@ A run prints one line per break as it happens, then a summary line (`<n> caught,
  "profile": "exunit"}
 ```
 
-`line` is where `from` was when the break ran. `hashes` holds the SHA-256 of `file` and of each test file, which tells fresh from stale. `profile` names the profile that ran the break; a line without one reads as the file's `default` profile. A newer proof replaces the one with the same swap in the same file, and one with the same `file` and name whose `from` no longer occurs exactly once.
+`line` is where `from` was when the break ran. `hashes` holds the SHA-256 of `file` and of each test file, which tells fresh from stale. `profile` names the profile that ran the break; a line without one reads as the file's `default` profile. A newer proof replaces the one with the same swap in the same file, and one with the same `file` and name that is not fresh.
 
 A proof **belongs** to a change when its `from` spans a line the change adds or changes, or sits next to a line it deletes. `<runner> --table` prints every fresh proof in this worktree, whichever change it belongs to, in this shape, `|` escaped as `\|`, a newline as `⏎`, and a swap that holds a backtick fenced with more backticks than it holds:
 

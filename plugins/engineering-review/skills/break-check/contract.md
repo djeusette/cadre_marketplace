@@ -43,7 +43,7 @@ Every command reads `.break-check.json` first, and exits 2 when it is missing or
    6. a passing exit: `NOT CAUGHT`;
    7. anything else: `inconclusive`, with the output's last lines.
 10. **Ledger.** Each `caught` is written, with the name of the profile that ran it, once its restore is verified, so a killed run loses nothing. The ledger is rewritten whole (a temp file, then a rename).
-11. **Stale.** `--stale --replay` names the gone proofs, reruns the stale ones as the ledger holds them, and only then drops the gone ones, so a replay that cannot run loses nothing. Each reruns with the profile it records, and a line without one reads as the file's `default` profile; a profile the file no longer has, or one that needs `--partition` without it, stops the replay before anything runs. `--partition` goes to each profile that names `{partition}`. The profiles replay one after another, each checked, run green and summed up on its own, so a red baseline in a later one comes after the earlier ones' proofs are recorded.
+11. **Stale.** `--stale --replay` names the gone proofs, reruns the stale ones as the ledger holds them, and only then drops the gone ones, so a replay that cannot run loses nothing. A replay that doesn't compile leaves its proof stale, and the name free for a new break of that branch. Each reruns with the profile it records, and a line without one reads as the file's `default` profile; a profile the file no longer has, or one that needs `--partition` without it, stops the replay before anything runs. `--partition` goes to each profile that names `{partition}`. The profiles replay one after another, each checked, run green and summed up on its own, so a red baseline in a later one comes after the earlier ones' proofs are recorded.
 12. **Uncovered.** The lines added since `BASE` under the watched paths, untracked files included, minus the lines a fresh proof's `from` spans, noise lines and doc-block lines.
 13. **Table.** In the shape SKILL.md shows. A swap that holds a backtick is fenced with one backtick more than its longest run of them, with a space inside each end, so a backtick at either end stays code.
 14. **Exit codes** as SKILL.md gives them.
@@ -98,6 +98,7 @@ The runner's Minitest tests are in `scripts/test_break_check/`, against a stub t
 - a run killed mid-break, then recovered by the next command;
 - the lock held by another run;
 - the ledger: a proof recorded, made stale, replayed, gone and dropped;
+- a name a proof that is not fresh no longer holds, and a replay that doesn't compile;
 - a replay of two profiles, each proof with its own, and a line without one with the default;
 - `--uncovered` and `--table` on a small git repository;
 - `.break-check.json`: each refusal, the choice of profile, `{files}` and `{partition}`;
@@ -107,7 +108,6 @@ Once its tests are green, break-check the runner's own code with the runner of t
 
 ## Known gaps
 
-- A stale proof whose replay prints `doesn't compile` stays stale: its branch needs a new break, which cannot take the old name while the old `from` still occurs once, and nothing replaces the old proof. `--stale` then never reaches `0 stale`. Until runners free a name held by a proof that is not fresh, and let the new proof replace it, the old line is dropped by deleting it from the ledger by hand. This is the only hand edit a ledger gets.
 - `--table` takes no base, so it prints the proofs of every change in the worktree; `cadre:pr-description` says which rows a PR drops.
 - `--uncovered` lists added lines only, so a branch narrowed only by deleting lines never shows there; SKILL.md says to break it all the same.
 

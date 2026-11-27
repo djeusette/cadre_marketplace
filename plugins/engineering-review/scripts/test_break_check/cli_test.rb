@@ -245,6 +245,26 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_a_replay_that_does_not_compile_keeps_the_proof_and_frees_its_name
+    with_repo(FILES) do |root|
+      cli([write_breaks([mode_break("compile_when_marked", name: "guard")])])
+      File.write(".compile_marker", "")
+      File.write("lib/a.ex", "mode=pass\n# edited\n")
+
+      code, out = run_cli(["--stale", "--replay"])
+
+      assert_equal 1, code
+      assert_includes out, "doesn't compile  guard"
+      assert_includes cli(["--stale"]).last, "replayable lib/a.ex:1 guard"
+
+      code, out = cli([write_breaks([mode_break("fail", name: "guard")], "again.json")])
+
+      assert_equal 0, code, out
+      assert_equal [["guard", "mode=fail"]], BreakCheck::Ledger.new(root).entries.map { [_1["name"], _1["to"]] }
+      assert_equal [0, "0 stale\n"], cli(["--stale"])
+    end
+  end
+
   def test_replay_with_a_profile_refuses
     with_repo(FILES) do
       code, out = run_cli(["--stale", "--replay", "--profile", "fake"])

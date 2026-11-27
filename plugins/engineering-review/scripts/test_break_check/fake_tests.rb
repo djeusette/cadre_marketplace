@@ -29,6 +29,9 @@ when "lock_file"
   File.chmod(0o444, "lib/a.ex")
   puts "  1) test big (ATest)"
   exit 1
+when "compile_when_marked"
+  puts(File.exist?(".compile_marker") ? "== Compilation error in file lib/a.ex ==" : "  1) test big (ATest)")
+  exit 1
 when "compile"
   puts "== Compilation error in file lib/a.ex =="
   exit 1

@@ -2053,7 +2053,9 @@ class BreakCheckTest(unittest.TestCase):
                      "Look for a committed runner", "a committed runner of the repository's own wins", "ruby --version", "Ruby 3.2", "../../scripts/break_check.rb", "`.break-check.json`",
                      "once for each profile whose watched paths the change touches", "`--stale --replay` runs once and replays each proof with the profile that made it",
                      "narrows only by deleting lines", "its `to` the same lines with the deleted text put back", "and each branch `--uncovered` cannot list (narrowed only by deleting lines, or outside the watched paths) has a fresh proof", "read `git diff <the task's base commit>` for deleted lines, and for branches outside those paths, too", "break it again from the `gone` line the replay printed", "Once `--stale` ends with `0 stale`", "A proof **belongs** to a change when its `from` spans a line the change adds or changes, or sits next to a line it deletes",
-                     "on a replay, put the proof's swap in a breaks file"):
+                     "on a replay, put the proof's swap in a breaks file",
+                     "refused while a fresh proof of another swap in that file holds it: a proof that is not fresh frees its name, and the new proof replaces it",
+                     "on a replay the proof stays stale until it is proven again, and the new break may take its name"):
             self.assertIn(text, skill)
         for result in ("`caught  <name>  ← <tests>`", "`proven  <name>  (fresh in the ledger)`", "`NOT CAUGHT  <name>`",
                        "`doesn't compile  <name>`", "`inconclusive  <name>  (<reason>)`", "`0 stale`", "`.breaks/`"):
@@ -2062,7 +2064,7 @@ class BreakCheckTest(unittest.TestCase):
             self.assertIn(code, skill.split("## Exit codes", 1)[1].split("\n## ", 1)[0])
         for heading in ("## Contents", "## The command line", "## Internals", "## .break-check.json", "## Its tests", "## Reference implementation"):
             self.assertIn(f"\n{heading}\n", contract)
-        for text in ("RESTORED <file> FROM A KILLED RUN", "[.break-check.json](#break-checkjson)", "`{files}`", "`{partition}`", "`default`", "`scripts/break_check/`", "`scripts/test_break_check/`", "djeusette/cadre#159", "git-ignores", "## Known gaps", "This is the only hand edit a ledger gets", "a line without one reads as the file's `default` profile"):
+        for text in ("RESTORED <file> FROM A KILLED RUN", "[.break-check.json](#break-checkjson)", "`{files}`", "`{partition}`", "`default`", "`scripts/break_check/`", "`scripts/test_break_check/`", "djeusette/cadre#159", "git-ignores", "## Known gaps", "a line without one reads as the file's `default` profile"):
             self.assertIn(text, contract)
 
     def test_ep_g4_requires_a_proof_per_branch_and_points_to_break_check(self):
