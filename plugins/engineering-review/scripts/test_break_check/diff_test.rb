@@ -75,6 +75,26 @@ class DiffTest < Minitest::Test
     end
   end
 
+  def test_a_path_git_quotes_refuses_rather_than_reading_as_unchanged
+    with_git_repo("lib/a\"b.ex" => "a\nif x\n") do |root|
+      File.write("lib/a\"b.ex", "a\n")
+
+      error = assert_raises(BreakCheck::Error) { since(root) }
+      assert_includes error.message, "lib/a"
+    end
+  end
+
+  def test_untracked_paths_that_are_not_files_hold_no_lines
+    with_git_repo("lib/a.ex" => "a\n") do |root|
+      File.symlink("missing.ex", "lib/dangling.ex")
+      Dir.mkdir("nested")
+      Dir.chdir("nested") { git("init", "-q") }
+      File.write("lib/new.ex", "n\n")
+
+      assert_equal [["lib/new.ex", 1]], since(root).added.map { [_1[:file], _1[:line]] }
+    end
+  end
+
   private
 
   def since(root) = BreakCheck::Diff.since(root, "HEAD")

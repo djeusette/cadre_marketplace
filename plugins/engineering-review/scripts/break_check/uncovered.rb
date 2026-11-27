@@ -17,7 +17,7 @@ module BreakCheck
     def call(base)
       change = Diff.since(@root, base, @profile.watched)
       covered = covered_lines
-      added = change.added.reject { |line| covered.include?([line[:file], line[:line]]) || blank?(line) }
+      added = change.added.reject { |line| covered.include?([line[:file], line[:line]]) || branchless?(line) }
       deletions = change.hunks.filter_map { deletion(_1, covered) }
       (added + deletions).sort_by { [_1[:file], _1[:line]] }
     end
@@ -25,14 +25,14 @@ module BreakCheck
     private
 
     # A line that holds no branch: noise, or inside a doc block.
-    def blank?(line) = line[:text].match?(@profile.noise) || doc_lines(line[:file]).include?(line[:line])
+    def branchless?(line) = line[:text].match?(@profile.noise) || doc_lines(line[:file]).include?(line[:line])
 
     # A hunk that deletes a line holding a branch and adds none, as the
     # line now just after it; a fresh proof on either line around it
     # covers it.
     def deletion(hunk, covered)
-      return if hunk.added.any? { !blank?(_1) }
-      return if [hunk.above, hunk.below].any? { covered.include?([hunk.file, _1]) }
+      return if hunk.added.any? { !branchless?(_1) }
+      return if hunk.around.any? { covered.include?([hunk.file, _1]) }
 
       inside, = doc_scan(lines_of(hunk.file).first(hunk.above))
       _, docs = doc_scan(hunk.deleted, inside:)

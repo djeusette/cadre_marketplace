@@ -76,13 +76,13 @@ module BreakCheck
       fresh_entries.select { |entry| span(entry).any? { touched.include?([entry["file"], _1]) } }
     end
 
-    def table(entries = fresh_entries)
-      rows = entries.map do |entry|
+    def table(proofs = fresh_entries)
+      rows = proofs.map do |entry|
         swap = "#{code(entry["from"])} → #{code(entry["to"])}"
         "| #{entry["file"]}:#{entry["line"]} | #{swap} | #{cell(entry["tests_failed"].join(", "))} |"
       end
       <<~MARKDOWN
-        <details><summary>Break checks (#{entries.size})</summary>
+        <details><summary>Break checks (#{proofs.size})</summary>
 
         | Branch | Swap | Caught by |
         |---|---|---|

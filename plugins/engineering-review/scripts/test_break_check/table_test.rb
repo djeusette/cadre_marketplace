@@ -60,6 +60,8 @@ class TableTest < Minitest::Test
 
   def test_a_proof_in_a_file_the_change_only_renames_is_not_a_row
     with_git_repo(SETTINGS.merge("lib/old.ex" => "keep = 1\nkeep = 2\nkeep = 3\n")) do |root|
+      # -M finds the rename, whatever the repository sets.
+      git("config", "diff.renames", "false")
       git("mv", "lib/old.ex", "lib/moved.ex")
       commit("move")
       prove(root, "moved", "lib/moved.ex", "keep = 2")
