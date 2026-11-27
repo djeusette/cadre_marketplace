@@ -204,4 +204,8 @@ engineering-principles: clean. writing-for-agents (1 Minor), fixed: Round 3's re
 
 ### Round 5: `2122be6..ea8b132`
 
-engineering-principles: clean. writing-for-agents (2 Minor), fixed: the record names each bullet it means.
+engineering-principles: clean. writing-for-agents (2 Minor), fixed: Rounds 2 and 3 name Round 1's first bullet.
+
+### Round 6: `ea8b132..5dfb21f`
+
+engineering-principles: clean. writing-for-agents (1 Minor), fixed: Round 5's entry names the lines it changed.
