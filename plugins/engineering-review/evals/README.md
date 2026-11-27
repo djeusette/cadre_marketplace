@@ -270,14 +270,15 @@ that replaces a body fell from 2 of 3 to 1 of 3; none counted the TDD red step a
 unrunnable here.
 
 v0.22.0 (2026-11-27): `pr-description` moved to the cadre plugin as `cadre:pr-description`, and engineering-review
-depends on `cadre`. The `review-companion` agent no longer preloads it and loads it with `Skill`. How cadre's copy differs:
-it cites no EP IDs; a Cadre line may name its app (`Cadre: <slug>/<n> <app>`), which pass 5 now accepts; consumers are
-named in deploy order; the Deploy line shows the change works beside the previous version, keeps unfinished work out of
-users' reach and loses no data on rollback; and it says in its own words which Break checks rows belong to the change.
-The eight `pr-description-*` cases list `../../../cadre`; every other case loads only engineering-review, so its run
-reports `cadre:pr-description` as not loaded. Not measured: evals cannot run on the Mac used (see Prerequisites), and
-a plugin listed from outside the case directory is not verified. Dry runs instead, sonnet, reading the skills from the
-checkout. Pass 5 and pass 6's behind the scenes on `pr-description-recall`'s description: before the move (the old
-skill), 2 of 3 runs passed its four regex graders and `event-not-described` (one run gave no ❓ for the instruction to
-the AI); after (cadre's copy), 3 of 3. The agent's start-up, given the skills a session lists: with `cadre` it loads
-`cadre:pr-description` with `Skill`; without it, it reports the standard as not loaded and raises no description finding.
+depends on `cadre`. The `review-companion` agent no longer preloads it and loads it with `Skill`. How cadre's copy
+differs: it cites no EP IDs; a Cadre line may name its app (`Cadre: <slug>/<n> <app>`), which pass 5 now accepts;
+consumers are named in deploy order; the Deploy line shows the change works beside the previous version, keeps
+unfinished work out of users' reach and loses no data on rollback; and it says in its own words which Break checks rows
+belong to the change. The eight `pr-description-*` cases list `../../../cadre`; every other case loads only
+engineering-review. Not measured: evals cannot run on the Mac used (see Prerequisites), and two things are not verified:
+a plugin listed from outside the case directory, and that every other case's run reports `cadre:pr-description` as not
+loaded. Dry runs instead, sonnet, reading the skills from the checkout. Pass 5 and pass 6's behind the scenes on
+`pr-description-recall`'s description: before the move (the old skill), 2 of 3 runs passed its four regex graders and
+`event-not-described` (one run gave no ❓ for the instruction to the AI); after (cadre's copy), 3 of 3. The agent's
+start-up, given the skills a session lists: with `cadre` it loads `cadre:pr-description` with `Skill`; without it, it
+reports the standard as not loaded and raises no description finding.

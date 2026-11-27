@@ -21,7 +21,7 @@ Whoever wrote the code runs its breaks, in the same session: a fresh agent's sta
 
 `<runner>` below is the repository's committed runner, as its `AGENTS.md` or a README names it, the runner's own README included. `<runner> --help` lists its flags, including whatever the repository's tests need to run beside other sessions. A runner with more than one profile (one per test suite, such as the app's and the runner's own) runs each recipe below once for each profile whose watched paths the change touches; when stale proofs of two suites stop a replay, see the known gaps in [contract.md](contract.md).
 
-Look for a committed runner (a `break_check` script, its README) before deciding there is none. A repository with no runner gets one before its first break: write it in the language the repository's people prefer, following [contract.md](contract.md), with its tests, and commit it. Breaks go through the runner, since only it records a proof a later step or a review can read, and the PR's table comes from its `--table` (`cadre:pr-description`).
+Look for a committed runner (a `break_check` script, its README) before deciding there is none. A repository with no runner gets one before its first break: write it in the language the repository's people prefer, following [contract.md](contract.md), with its tests, and commit it. Breaks go through the runner, since only it records a proof a later step or a review can read, and the PR description's Break checks part, as `cadre:pr-description` gives it, comes from its `--table`.
 
 ## After a task's tests are green
 

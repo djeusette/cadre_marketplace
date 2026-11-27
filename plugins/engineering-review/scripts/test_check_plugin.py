@@ -932,9 +932,8 @@ class SkillContentTest(unittest.TestCase):
             self.assertIn(text, parts)
         self.assertIn("\n\nCadre: <slug>/<n>\n````\n", template)
         self.assertIn("ends with the Cadre line when the PR's milestone is tracked in Cadre", rewrite)
-        for text in ("`Cadre: <slug>/<n>`", "`cadre:cadre`"):
-            self.assertIn(text, rule)
-        self.assertIn("`Cadre: <slug>/<n>`", agent)
+        self.assertIn("`Cadre: <slug>/<n>` in a form `cadre:pr-description` gives", rule)
+        self.assertIn("`Cadre: <slug>/<n>` line, in a form `cadre:pr-description` gives", agent)
         cadre_line = next(line for line in passes.splitlines() if line.startswith("- **Cadre line (EP-F5).**"))
         self.assertIn("and no line of the description is a Cadre line in a form `cadre:pr-description` gives", cadre_line)
         self.assertNotIn("reads exactly", cadre_line)
@@ -1364,6 +1363,21 @@ class PrStandardTest(unittest.TestCase):
             self.assertNotIn("engineering-review:pr-description", text, path)
         for name in self.POINTERS:
             self.assertIn("`cadre:pr-description`", (PLUGIN_DIR / name).read_text(encoding="utf-8"), name)
+        companion = (PLUGIN_DIR / "skills" / "review-companion" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("from the `cadre` plugin, `cadre:pr-description`", companion)
+        runtime = next(line for line in companion.splitlines() if line.startswith("  - Load these skills with `Skill`:"))
+        self.assertIn("and `cadre:pr-description`.", runtime)
+        self.assertIn("as `cadre:pr-description` gives it, comes from its `--table`", (PLUGIN_DIR / "skills" / "break-check" / "SKILL.md").read_text(encoding="utf-8"))
+
+    def test_every_skill_or_agent_named_by_its_plugin_exists(self):
+        files = sorted((PLUGIN_DIR / "skills").rglob("*.md")) + sorted((PLUGIN_DIR / "agents").glob("*.md"))
+        names = {match for path in files for match in re.findall(r"`(cadre|engineering-review):([a-z-]+)`", path.read_text(encoding="utf-8"))}
+
+        self.assertIn(("cadre", "pr-description"), names)
+        for plugin, name in sorted(names):
+            plugin_dir = PLUGIN_DIR.parent / plugin
+            self.assertTrue((plugin_dir / "skills" / name / "SKILL.md").exists() or (plugin_dir / "agents" / f"{name}.md").exists(),
+                            f"{plugin}:{name}")
 
     def test_the_sections_the_review_cites_are_in_cadres_pr_standard(self):
         standard = PR_STANDARD.read_text(encoding="utf-8")
@@ -1385,8 +1399,8 @@ class PrStandardTest(unittest.TestCase):
         readme = (PLUGIN_DIR.parent.parent / "README.md").read_text(encoding="utf-8")
         bullet = next(line for line in readme.splitlines() if line.startswith("- **engineering-review** — "))
 
-        self.assertIn("Installing it installs `cadre`, whose `cadre:pr-description` is the standard the review checks a pull "
-                      "request's title and description against, and `security-audit`.", bullet)
+        self.assertIn("Installing it installs `security-audit` and `cadre`, whose `cadre:pr-description` the review checks PR titles "
+                      "and descriptions against.", bullet)
 
     def test_the_pr_standard_is_cadres(self):
         agent = (PLUGIN_DIR / "agents" / "review-companion.md").read_text(encoding="utf-8")
@@ -1394,6 +1408,7 @@ class PrStandardTest(unittest.TestCase):
         self.assertFalse((PLUGIN_DIR / "skills" / "pr-description").exists())
         self.assertNotIn("  - pr-description\n", agent)
         self.assertIn("Load `cadre:pr-description` with the `Skill` tool", agent)
+        self.assertIn("so `skills:` above does not preload it", agent)
 
 
 class EvalGraderTest(unittest.TestCase):

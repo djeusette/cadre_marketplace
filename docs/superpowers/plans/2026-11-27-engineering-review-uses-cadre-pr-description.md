@@ -164,10 +164,7 @@
 
 ## Dry runs
 
-Sonnet subagents, reading the skills from a checkout. The results are also in `evals/README.md`'s v0.22.0 note.
-
-- The description check on `pr-description-recall`'s description, scored on its four regex graders and `event-not-described`. At `fc072e1`, with the old skill, 2 of 3 runs passed; one gave no ❓ for the instruction to the AI. On this branch, with cadre's copy, 3 of 3 passed.
-- The agent's start-up. With `cadre:pr-description` in the session's list, it loads it with `Skill`. Without it, it reports the standard as not loaded and raises no description finding.
+Sonnet subagents, reading the skills from a checkout. Results: `evals/README.md`, v0.22.0.
 
 ## Fable's review, folded in
 
@@ -182,3 +179,15 @@ Sonnet subagents, reading the skills from a checkout. The results are also in `e
 - 0.22.0 stands. cadre does not bump, since nothing under `plugins/cadre/` changes.
 
 ## Reviews, folded in
+
+### Round 1: `origin/main...1165ab6`, full branch
+
+engineering-principles (4 Minor) and writing-for-agents (2 Important, 5 Minor), all fixed:
+
+- EP-F5 and the agent's checklist name the Cadre line as "`Cadre: <slug>/<n>` in a form `cadre:pr-description` gives", so the forms live in cadre's skill alone. This supersedes writing-for-agents' fix, which spelled out the app form in both.
+- The agent's load sentence loads `cadre:pr-description` with the other skills (item 9) and says why `skills:` does not preload it.
+- Item 9 groups the four skills by plugin. The Runtime notes open "Load these skills with `Skill`", and a test pins `cadre:pr-description` on that line.
+- break-check's first pointer says what it points at: the Break checks part, as `cadre:pr-description` gives it.
+- README's bullet reads "Installing it installs `security-audit` and `cadre`, whose `cadre:pr-description` the review checks PR titles and descriptions against."
+- A test checks that every backticked `cadre:<name>` and `engineering-review:<name>` under `skills/` and `agents/` is a skill or an agent that exists.
+- The v0.22.0 note marks as not verified that the other cases' runs report `cadre:pr-description` as not loaded. The plan's "Dry runs" points to that note instead of repeating it.
