@@ -31,8 +31,10 @@ module BreakCheck
       diff = git(root, "diff", "--no-color", "--no-ext-diff", "-M", "--src-prefix=a/", "--dst-prefix=b/", "-U0",
         "--end-of-options", base, "--", *paths)
       # -z: names come back as they are, never quoted.
-      untracked = git(root, "ls-files", "-z", "--others", "--exclude-standard", "--", *paths).split("\0")
+      untracked = git(root, "ls-files", "-z", "--others", "--exclude-standard", "--", *paths).each_line("\0", chomp: true)
         .select { File.file?(File.join(root, _1)) }
+      # Only the diff text is scrubbed: an untracked name stays as git gives
+      # it, so a name that is not UTF-8 still opens its file.
       Change.new(hunks: parse(diff.scrub), untracked: untracked.flat_map { whole_file(root, _1) })
     end
 
@@ -40,8 +42,8 @@ module BreakCheck
       BreakCheck.read(File.join(root, file)).each_line(chomp: true).with_index(1).map { |text, line| {file:, line:, text:} }
     end
 
-    # Paths come back as they are: no quoting of accented names, and no
-    # scrubbing, so a name that is not UTF-8 still opens its file.
+    # Paths come back as they are: no quoting of accented names, no
+    # scrubbing.
     def self.git(root, *args)
       output, status = Open3.capture2e("git", "-c", "core.quotePath=false", *args, chdir: root)
       raise Error, "git #{args.first} failed: #{output.strip}" unless status.success?
