@@ -50,7 +50,7 @@ Tell the person the repo has no Skills table, and ask whether to draft it now or
    - enable each plugin in `.claude/settings.json` under `enabledPlugins`, and add its marketplace under `extraKnownMarketplaces` when it isn't `claude-plugins-official`;
    - add the line `@AGENTS.md` to `CLAUDE.md`, creating it when the repo has none.
 5. Read the table again, fixing what it names, until the script reports no `problems`, then name any `unlisted` folders to the person and show them the diff.
-6. When the person says, commit only those files: while planning a milestone, on the milestone's branch, so the table ships with its pull request; otherwise on the branch the person names. Then, while planning, go on to "Check each row".
+6. When the person says, commit only those files: while planning a milestone, on the milestone's branch, so the table ships with its pull request; otherwise on the branch the person names, asking which when they name none. Then, while planning, go on to "Check each row".
 
 ## The table's shape
 

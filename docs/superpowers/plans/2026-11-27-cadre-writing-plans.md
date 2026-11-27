@@ -179,3 +179,13 @@ engineering-principles (2 Important, 3 Minor) and writing-for-agents (3 Importan
 - "One pull request" ships one increment, as "What a milestone is" defines a milestone; the rules handed to superpowers name the given part, not "this skill"; "the size rule … stops the plan" replaces "the planner".
 - `skills.md` step 6 commits on the milestone's branch while planning a milestone, otherwise on the branch the person names; the router says "when `cadre:writing-plans` plans".
 - Trailing spaces gone from the test file.
+
+### Round 2: `b08e463..a3b7ff2`
+
+engineering-principles (4 Minor, one note) and writing-for-agents (2 Important, 3 Minor), all fixed:
+
+- A declined split no longer loops: the part is planned as it is, and the plan says why it can't be smaller; the size rule proposes the split through step 4, then plans again from step 5.
+- A split's new milestone goes right after `<slug>/<n>`; step 4 lands a split and a spec change each in their own words, then runs steps 1, 2 and 4 of "Start a milestone" again, so this repo's part is found again.
+- `stranded` no longer counts as merged: its commits never reach the default branch (`pull_request.ex`). A factual correction of round 1's list, not a change of its rule.
+- The given part names one app's plan; `skills.md` step 6 asks which branch when the person names none.
+- Two tests renamed or split so their names match what they pin; "What to plan" is pinned to hold no routing.

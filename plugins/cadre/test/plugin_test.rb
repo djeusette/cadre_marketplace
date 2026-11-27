@@ -674,7 +674,7 @@ class SkillTest < Minitest::Test
     ["exits non-zero", "show the person its output and stop", %q{go on to "Check each row"}].each { |text| assert_includes read_table, text }
     assert_includes check_rows, %q{go on to "Load what the work needs"}
     assert_includes no_table, %q{go on to "Load what the work needs"}
-    [%q{go on to "Check each row"}, "while planning a milestone, on the milestone's branch", "otherwise on the branch the person names", "commit only those files", "while planning"].each { |text| assert_includes draft_table, text }
+    [%q{go on to "Check each row"}, "while planning a milestone, on the milestone's branch", "otherwise on the branch the person names, asking which when they name none", "commit only those files", "while planning"].each { |text| assert_includes draft_table, text }
     refute_includes draft_table, "while starting a milestone"
     refute_includes draft_table, "on their own"
   end
@@ -1520,7 +1520,11 @@ class WritingPlansTest < Minitest::Test
 
   def test_it_says_what_it_chose_and_why
     assert_includes before_you_start, %q{Find what to plan, as "What to plan" says. Except when handed over, tell the person what you chose and why.}
+  end
+
+  def test_before_you_start_routes_to_the_case_section
     assert_includes before_you_start, %q{4. Follow the section named for the case; when handed over, go to step 3 of "A Cadre milestone".}
+    refute_includes what_to_plan, "go to step 3"
   end
 
   def test_it_checks_the_cli_and_the_sign_in_for_cadre_work
@@ -1566,7 +1570,7 @@ class WritingPlansTest < Minitest::Test
 
   def test_it_runs_superpowers_writing_plans_with_cadres_rules_on_top
     ["Invoke `superpowers:writing-plans` with the spec copy's path or the requirements, and these rules on top. Where they differ from it, they win:",
-     "Plan only the given part, this repo's part of the milestone or the requirements, as one plan and one pull request: the spec-coverage check covers that part alone.",
+     "Plan only the given part (this repo's part of the milestone, or its one app, or the requirements) as one plan and one pull request: the spec-coverage check covers that part alone.",
      "Each task names the skills it needs (from the table when the repo has one), since a subagent executing it loads only those."].each { |text| assert_includes run_section, text }
   end
 
@@ -1586,22 +1590,23 @@ class WritingPlansTest < Minitest::Test
 
   def test_it_asks_before_planning_after_an_unmerged_milestone
     ["Run `cadre status <slug> --json`.", "lists the project's milestones in order, not by number",
-     "When an entry before `<n>`'s has a step whose `repo` is this repo and whose `pull_requests` hold none with `status` `merged`, `stranded` or `deployed`",
+     "When an entry before `<n>`'s has a step whose `repo` is this repo and whose `pull_requests` hold none with `status` `merged` or `deployed`",
      "that milestone's work here isn't merged yet, so this branch lacks it: name it to the person and ask whether to plan anyway"].each { |text| assert_includes milestone_section, text }
   end
 
   def test_it_rechecks_the_milestone_against_the_code_as_it_is_now
     ["Read this repo's code as it is now, without asking, and estimate its part's code files, counted as \"One pull request\" says.",
      "When the part no longer ships as one pull request, propose a split to the person",
-     %q{add a split's new milestone as "Change a project" in [project.md](../cadre/project.md) says},
-     %q{update this milestone's spec to what stays in it as "Update a milestone's spec" there says},
+     %q{Once the person approves, land it: for a split, add the new milestone right after `<slug>/<n>` as "Change a project" in [project.md](../cadre/project.md) says, and narrow this milestone's spec to what stays in it; for a spec change, apply it.},
+     %q{Update the spec as "Update a milestone's spec" there says, then run steps 1, 2 and 4 of "Start a milestone" again.},
+     "When the person declines a split, plan the part as it is: the plan says why it can't be smaller.",
      "This step is done when you have told the person the estimate and what you proposed is settled.",
-     %q{pull and commit the spec copy again, as steps 1 and 4 of "Start a milestone" do}].each { |text| assert_includes milestone_section, text }
+].each { |text| assert_includes milestone_section, text }
     assert_operator milestone_section.index("cadre status <slug> --json`."), :<, milestone_section.index("Read this repo's code as it is now")
     assert_operator milestone_section.index("Read this repo's code as it is now"), :<, milestone_section.index(%q{Plan as "Run superpowers writing-plans" says})
   end
 
-  def test_one_pull_request_ships_one_milestone
+  def test_one_pull_request_ships_one_increment
     ["A plan is one pull request that ships one increment: one feature, the smallest step that can be deployed and used on its own, and its consumers named",
      %q{as "What a milestone is" in [the brainstorming skill](../brainstorming/SKILL.md) defines a milestone. Read only that section there.},
      "Its code files are counted without tests and docs: aim for 10, and prefer 20 or fewer."].each { |text| assert_includes one_pull_request, text }
@@ -1609,7 +1614,7 @@ class WritingPlansTest < Minitest::Test
 
   def test_a_plan_above_20_code_files_says_why_or_stops
     [%q{When the plan's file structure holds more than 20 code files, counted as "One pull request" says, the plan says why it can't be smaller.},
-     %q{When it could be smaller, stop before writing the plan: split a milestone as step 4 of "A Cadre milestone" says, then plan it again from step 5;},
+     %q{When it could be smaller, stop before writing the plan: propose a milestone's split as step 4 of "A Cadre milestone" says, then plan again from step 5;},
      %q{take requirements on to `cadre:brainstorming`, as "Requirements with no spec" says.}].each { |text| assert_includes run_section, text }
   end
 
