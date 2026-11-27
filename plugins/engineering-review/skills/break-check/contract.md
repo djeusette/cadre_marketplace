@@ -19,7 +19,7 @@ Run from the repository root:
 - `<runner> --stale` lists stale and gone proofs; `--stale --replay` reruns the stale ones from the ledger.
 - `<runner> --uncovered BASE` lists the changed lines since `BASE` that no fresh proof covers.
 - `<runner> --table` prints the fresh proofs as the PR's table.
-- `--profile NAME`, on any command, picks a profile other than the file's `default`; `--partition N` is for a profile whose `command` or `env` names `{partition}`, checked only when a test runs.
+- `--profile NAME`, on any command, picks a profile other than the file's `default`; `--partition N` is for a profile whose `command` or `env` names `{partition}`: required only when a test runs, and refused on any command by a profile that doesn't name it.
 - `<runner> --help` lists every flag.
 
 Every command reads `.break-check.json` first, and exits 2 when it is missing or invalid, or names no such profile, so a run outside the root never reads as an all-clear. The runner exits 2 on Ruby older than 3.2 too, before it loads anything else. Everything the runner keeps is under `.breaks/`, in the repository it runs in and never beside the runner itself, and the change that adopts the runner git-ignores it. One command at a time.

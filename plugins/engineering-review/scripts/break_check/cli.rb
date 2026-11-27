@@ -39,8 +39,8 @@ module BreakCheck
     def self.parse(argv)
       options = {}
       rest = OptionParser.new(BANNER) do |parser|
-        parser.on("--partition N", Integer, "replaces {partition}; required by a profile that names it") { options[:partition] = _1 }
-        parser.on("--profile NAME", "a profile of .break-check.json other than its default") { options[:profile] = _1 }
+        parser.on("--partition N", Integer, "the N that {partition} becomes; required by a profile whose command or env names {partition}") { options[:partition] = _1 }
+        parser.on("--profile NAME", "picks a profile of .break-check.json other than its default") { options[:profile] = _1 }
         parser.on("--stale") { options[:stale] = true }
         parser.on("--replay") { options[:replay] = true }
         parser.on("--table") { options[:table] = true }

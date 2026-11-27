@@ -77,7 +77,7 @@ The rules, each its own red → green slice in `profile_test.rb`, in this order:
 8. `command.call(files)`: the `{files}` element becomes the files; `{partition}` in any command or env string becomes N. The ported `test_the_ex_unit_command_runs_one_partition_in_a_fixed_order` asserts `[{"MIX_TEST_PARTITION" => "3"}, "mise", "exec", "--", "mix", "test", "--seed", "0", "test/a_test.exs"]` for `build("exunit", EXUNIT, partition: 3)`.
 9. A profile that names `{partition}` without one: `command.call` raises `Usage` with `--partition N is required to run tests with <p>` (lazy, as today: `--uncovered` and an empty replay need none). One that names none, given a partition: `build` raises `profile <p> takes no --partition`.
 10. `test_settings_are_read_as_utf_8_whatever_the_locale`: a profile name with `→`, read under `with_ascii_locale`, loads (`BreakCheck.read`).
-11. `load` (not `build`, which the MINITEST uncovered test calls where its paths don't exist) refuses a `watched` path absent under the root: `profile <p>: watched path <w> does not exist`.
+11. `load` (not `build`, which the MINITEST uncovered test calls where its paths don't exist) refuses a `watched` path absent under the root: `profile <p>: watched path <w> does not exist`. `load` builds and checks every profile, the partition passed to the chosen one only, so a broken profile shows before it is picked.
 12. `dispatch` loads the profile before every command, `--table` and plain `--stale` included: `test_table_and_stale_refuse_without_settings` (CLI, exit 2).
 
 - [ ] **Step 1:** Slices 1–10, each: write the test, run `ruby plugins/engineering-review/scripts/test_break_check/profile_test.rb -n <test>`, see it fail for the right reason, write the code, see it pass.
