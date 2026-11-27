@@ -195,3 +195,7 @@ engineering-principles (4 Minor) and writing-for-agents (2 Important, 5 Minor), 
 ### Round 2: `1165ab6..630ca0a`
 
 engineering-principles (2 Minor) and writing-for-agents (3 Minor), all fixed: break-check's first pointer says the Break checks part comes from the runner's `--table`, in a sentence of its own; the agent loads `cadre:pr-description` with the `Skill` tool, alongside the other skills; the v0.22.0 note says "it is not verified that a plugin listed from outside the case directory loads, nor that every other case's run reports `cadre:pr-description` as not loaded".
+
+### Round 3: `630ca0a..ce70443`
+
+engineering-principles: clean. writing-for-agents: clean. The reviews stop here.
