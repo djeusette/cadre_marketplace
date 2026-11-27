@@ -2,6 +2,7 @@ require_relative "test_helper"
 require_relative "../break_check"
 require_relative "fake_profile"
 require "digest"
+require "open3"
 require "rbconfig"
 require "stringio"
 
@@ -329,7 +330,28 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_ruby_older_than_3_2_refuses
+    output, status = load_as_ruby("3.1.4")
+
+    assert_equal 2, status.exitstatus
+    assert_equal "break_check.rb needs Ruby 3.2 or later; this is Ruby 3.1.4\n", output
+  end
+
+  def test_ruby_3_2_runs
+    output, status = load_as_ruby("3.2.0")
+
+    assert_equal 0, status.exitstatus
+    assert_equal "loaded\n", output
+  end
+
   private
+
+  # Loads the entry point in a Ruby that says it is `version`; stderr is dropped.
+  def load_as_ruby(version)
+    script = "Object.send(:remove_const, :RUBY_VERSION); RUBY_VERSION = #{version.dump}; " \
+      "load #{File.expand_path("../break_check.rb", __dir__).dump}; puts :loaded"
+    Open3.capture2(RbConfig.ruby, "-W0", "-e", script, err: File::NULL)
+  end
 
   # The CLI with the fake test command; returns [exit code, everything printed].
   def cli(argv) = run_cli(argv + ["--profile", "fake"])

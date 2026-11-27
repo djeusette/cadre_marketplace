@@ -13,11 +13,12 @@ module BreakCheck
     COMMANDS = %i[breaks stale uncovered table].freeze
 
     BANNER = <<~TEXT
-      Usage: ruby script/break_check.rb BREAKS.json --partition N        break each branch, record what is caught
-             ruby script/break_check.rb BREAKS.json --profile minitest   the runner's own tests
-             ruby script/break_check.rb --stale [--replay --partition N] list stale proofs, or rerun them
-             ruby script/break_check.rb --uncovered BASE                 changed lines since BASE with no fresh proof
-             ruby script/break_check.rb --table                          the ledger as the PR's table
+      Usage: ruby break_check.rb BREAKS.json [--profile NAME] [--partition N]  break each branch, record what is caught
+             ruby break_check.rb --stale [--replay [--partition N]]            list stale proofs, or rerun them
+             ruby break_check.rb --uncovered BASE                              changed lines since BASE with no fresh proof
+             ruby break_check.rb --table                                       the ledger as the PR's table
+      Run from the repository root; profiles come from its .break-check.json, and
+      --profile NAME, on any command, picks one other than its default.
     TEXT
 
     # Prints as it goes, so a run killed midway still shows its results.
