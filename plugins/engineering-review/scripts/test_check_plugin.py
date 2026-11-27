@@ -935,7 +935,10 @@ class SkillContentTest(unittest.TestCase):
         for text in ("`Cadre: <slug>/<n>`", "`cadre:cadre`"):
             self.assertIn(text, rule)
         self.assertIn("`Cadre: <slug>/<n>`", agent)
-        self.assertIn("**Cadre line (EP-F5).**", passes)
+        cadre_line = next(line for line in passes.splitlines() if line.startswith("- **Cadre line (EP-F5).**"))
+        self.assertIn("and no line of the description is a Cadre line in a form `cadre:pr-description` gives", cadre_line)
+        self.assertNotIn("reads exactly", cadre_line)
+        self.assertIn("or `Cadre: <slug>/<n> <app>` for a pull request for one app", parts)
         self.assertIn("| Cadre line | <present · missing · not needed> | <…> |", report)
 
     def test_the_pr_title_and_description_are_read_or_pasted(self):
