@@ -60,6 +60,35 @@ class ProfileTest < Minitest::Test
     end
   end
 
+  def test_load_all_gives_every_profile_and_the_default
+    files = {"script/break_check.rb" => "", "script/break_check/x.rb" => ""}
+    two = settings({"fast" => MINITEST.merge("timeout" => 5), "slow" => MINITEST.merge("timeout" => 50)}, default: "slow")
+    with_repo(files.merge(".break-check.json" => two)) do |root|
+      profiles, default = BreakCheck::Profiles.load_all(root, partition: nil)
+
+      assert_equal({"fast" => 5, "slow" => 50}, profiles.transform_values(&:timeout))
+      assert_equal %w[fast slow], profiles.values.map(&:name)
+      assert_equal "slow", default
+    end
+    with_repo(files.merge(".break-check.json" => settings({"only" => MINITEST}))) do |root|
+      assert_equal "only", BreakCheck::Profiles.load_all(root, partition: nil).last
+    end
+  end
+
+  def test_load_all_gives_the_partition_only_where_it_is_named
+    files = {"lib/a.ex" => "", "script/break_check.rb" => "", "script/break_check/x.rb" => ""}
+    with_repo(files.merge(".break-check.json" => settings({"app" => EXUNIT, "scripts" => MINITEST}, default: "scripts"))) do |root|
+      profiles, = BreakCheck::Profiles.load_all(root, partition: 3)
+
+      assert_equal({"MIX_TEST_PARTITION" => "3"}, profiles["app"].command.call(["t.exs"]).first)
+      assert_equal({}, profiles["scripts"].command.call(["t.rb"]).first)
+    end
+    with_repo(files.merge(".break-check.json" => settings({"scripts" => MINITEST}))) do |root|
+      error = assert_raises(BreakCheck::Usage) { BreakCheck::Profiles.load_all(root, partition: 3) }
+      assert_equal ".break-check.json: no profile takes --partition", error.message
+    end
+  end
+
   def test_two_profiles_without_a_default_refuse
     with_repo(".break-check.json" => settings({"a" => MINITEST, "b" => MINITEST}), "script/break_check.rb" => "") do |root|
       error = assert_raises(BreakCheck::Usage) { load_profile(root, name: "a") }

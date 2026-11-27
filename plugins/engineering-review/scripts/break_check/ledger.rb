@@ -26,10 +26,10 @@ module BreakCheck
       BreakCheck.read(@path).lines(chomp: true).reject(&:empty?).map { JSON.parse(_1) }
     end
 
-    def record(brk, line:, tests_failed:)
+    def record(brk, line:, tests_failed:, profile:)
       entry = {
         "name" => brk.name, "file" => brk.file, "line" => line, "from" => brk.from, "to" => brk.to,
-        "tests_failed" => tests_failed, "hashes" => hashes([brk.file, *brk.tests])
+        "tests_failed" => tests_failed, "hashes" => hashes([brk.file, *brk.tests]), "profile" => profile
       }
       kept = entries.reject { same_swap?(_1, brk) || (same_name?(_1, brk) && !once?(_1)) }
       write(kept + [entry])

@@ -21,7 +21,7 @@ class UncoveredTest < Minitest::Test
   def test_a_line_inside_a_fresh_proof_is_covered
     with_git_repo do |root|
       File.write("lib/a.ex", CHANGED_SOURCE)
-      BreakCheck::Ledger.new(root).record(brk(from: "a > 1"), line: 3, tests_failed: ["t"])
+      BreakCheck::Ledger.new(root).record(brk(from: "a > 1"), line: 3, tests_failed: ["t"], profile: "exunit")
 
       assert_equal [5], uncovered(root).call("HEAD").map { _1[:line] }
     end
@@ -30,7 +30,7 @@ class UncoveredTest < Minitest::Test
   def test_a_multi_line_proof_covers_every_line_it_spans
     with_git_repo do |root|
       File.write("lib/a.ex", CHANGED_SOURCE)
-      BreakCheck::Ledger.new(root).record(brk(from: "when a > 1, do: :big\n\n  def x(_a)", to: "x"), line: 3, tests_failed: ["t"])
+      BreakCheck::Ledger.new(root).record(brk(from: "when a > 1, do: :big\n\n  def x(_a)", to: "x"), line: 3, tests_failed: ["t"], profile: "exunit")
 
       assert_equal [], uncovered(root).call("HEAD")
     end
@@ -39,7 +39,7 @@ class UncoveredTest < Minitest::Test
   def test_a_stale_proof_covers_nothing
     with_git_repo do |root|
       File.write("lib/a.ex", CHANGED_SOURCE)
-      BreakCheck::Ledger.new(root).record(brk(from: "a > 1"), line: 3, tests_failed: ["t"])
+      BreakCheck::Ledger.new(root).record(brk(from: "a > 1"), line: 3, tests_failed: ["t"], profile: "exunit")
       File.write("test/a_test.exs", "test, edited")
 
       assert_equal [3, 5], uncovered(root).call("HEAD").map { _1[:line] }

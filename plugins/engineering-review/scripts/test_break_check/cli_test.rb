@@ -111,7 +111,7 @@ class CliTest < Minitest::Test
       cli([write_breaks([mode_break("fail")])])
       File.write("lib/a.ex", "mode=pass\n# edited\n")
 
-      code, out = cli(["--stale", "--replay"])
+      code, out = run_cli(["--stale", "--replay"])
 
       assert_equal 0, code
       assert_includes out, "caught  mode fail"
@@ -125,7 +125,7 @@ class CliTest < Minitest::Test
       cli([write_breaks([mode_break("fail")])])
       File.write("lib/a.ex", "mode=other\n")
 
-      code, out = cli(["--stale", "--replay"])
+      code, out = run_cli(["--stale", "--replay"])
 
       assert_equal 1, code
       assert_includes out, "gone lib/a.ex:1 mode fail"
@@ -139,6 +139,8 @@ class CliTest < Minitest::Test
       cli([write_breaks([mode_break("fail"), mode_break("fail", name: "y", file: "lib/b.ex", from: "mode=pass\ny = 1")])])
       File.write("lib/a.ex", "mode=pass\n# edited\n")
       File.write("lib/b.ex", "mode=pass\n")
+      # A proof that names no profile replays with the default, exunit, which needs --partition.
+      File.write(".breaks/ledger.jsonl", File.read(".breaks/ledger.jsonl").gsub(/,"profile":"fake"/, ""))
 
       code, out = run_cli(["--stale", "--replay"])
 
@@ -146,6 +148,109 @@ class CliTest < Minitest::Test
       assert_includes out, "gone lib/b.ex:1 y"
       assert_includes out, "--partition"
       assert_equal 2, BreakCheck::Ledger.new(root).entries.size
+    end
+  end
+
+  def test_stale_replay_reruns_each_proof_with_its_own_profile
+    with_repo(FILES.merge(".break-check.json" => two_fakes(default: "fake"))) do |root|
+      run_cli([write_breaks([mode_break("fail")]), "--profile", "fake"])
+      run_cli([write_breaks([mode_break("fail", name: "b", file: "lib/b.ex")], "b.json"), "--profile", "short"])
+      File.write("lib/a.ex", "mode=pass\n# edited\n")
+      File.write("lib/b.ex", "mode=pass\n# edited\n")
+
+      code, = run_cli(["--stale", "--replay"])
+
+      assert_equal 0, code
+      assert_equal({"lib/a.ex" => ["fake", ["test big (ATest)"]], "lib/b.ex" => ["short", ["big"]]},
+        BreakCheck::Ledger.new(root).entries.to_h { [_1["file"], [_1["profile"], _1["tests_failed"]]] })
+    end
+  end
+
+  def test_a_proof_without_a_profile_replays_with_the_default
+    with_repo(FILES.merge(".break-check.json" => two_fakes(default: "short"))) do |root|
+      run_cli([write_breaks([mode_break("fail")]), "--profile", "fake"])
+      File.write(".breaks/ledger.jsonl", File.read(".breaks/ledger.jsonl").sub(/,"profile":"fake"/, ""))
+      File.write("lib/a.ex", "mode=pass\n# edited\n")
+
+      code, = run_cli(["--stale", "--replay"])
+
+      assert_equal 0, code
+      BreakCheck::Ledger.new(root).entries => [entry]
+      assert_equal ["short", ["big"]], [entry["profile"], entry["tests_failed"]]
+    end
+  end
+
+  def test_a_proof_whose_profile_is_gone_stops_the_replay_before_it_runs
+    with_repo(FILES.merge(".break-check.json" => two_fakes(default: "fake"))) do |root|
+      run_cli([write_breaks([mode_break("fail")]), "--profile", "fake"])
+      File.write(".breaks/ledger.jsonl", File.read(".breaks/ledger.jsonl").sub(/"profile":"fake"/, '"profile":"old"'))
+      File.write("lib/a.ex", "mode=pass\n# edited\n")
+      File.delete(".invoked")
+
+      code, out = run_cli(["--stale", "--replay"])
+
+      assert_equal 2, code
+      assert_includes out, "mode fail: its proof names profile old, which .break-check.json does not have"
+      refute File.exist?(".invoked")
+      assert_equal 1, BreakCheck::Ledger.new(root).entries.size
+    end
+  end
+
+  def test_a_replay_passes_the_partition_only_to_the_profiles_that_take_it
+    parted = FakeProfile.fields.merge("env" => {"PART" => "{partition}"})
+    with_repo(FILES.merge(".break-check.json" => RepoHelper.settings({"fake" => FakeProfile.fields, "parted" => parted}, default: "fake"))) do
+      run_cli([write_breaks([mode_break("fail")]), "--profile", "fake"])
+      run_cli([write_breaks([mode_break("fail", name: "b", file: "lib/b.ex")], "b.json"), "--profile", "parted", "--partition", "1"])
+      File.write("lib/a.ex", "mode=pass\n# edited\n")
+      File.write("lib/b.ex", "mode=pass\n# edited\n")
+
+      code, out = run_cli(["--stale", "--replay", "--partition", "1"])
+
+      assert_equal 0, code
+      assert_includes out, "caught  mode fail"
+      assert_includes out, "caught  b"
+    end
+  end
+
+  def test_a_proof_whose_profile_is_gone_is_proven_again_from_a_breaks_file
+    with_repo(FILES.merge(".break-check.json" => two_fakes(default: "fake"))) do |root|
+      run_cli([write_breaks([mode_break("fail")]), "--profile", "fake"])
+      File.write(".breaks/ledger.jsonl", File.read(".breaks/ledger.jsonl").sub(/"profile":"fake"/, '"profile":"old"'))
+      File.write("lib/a.ex", "mode=pass\n# edited\n")
+
+      code, = run_cli([write_breaks([mode_break("fail")], "again.json"), "--profile", "short"])
+
+      assert_equal 0, code
+      assert_equal [["short", ["big"]]], BreakCheck::Ledger.new(root).entries.map { [_1["profile"], _1["tests_failed"]] }
+      assert_equal [0, "0 stale\n"], run_cli(["--stale"])
+    end
+  end
+
+  def test_a_replay_missing_a_partition_runs_no_profile
+    parted = FakeProfile.fields.merge("env" => {"PART" => "{partition}"})
+    with_repo(FILES.merge(".break-check.json" => RepoHelper.settings({"fake" => FakeProfile.fields, "parted" => parted}, default: "fake"))) do |root|
+      run_cli([write_breaks([mode_break("fail")]), "--profile", "fake"])
+      run_cli([write_breaks([mode_break("fail", name: "b", file: "lib/b.ex")], "b.json"), "--profile", "parted", "--partition", "1"])
+      File.write("lib/a.ex", "mode=pass\n# edited\n")
+      File.write("lib/b.ex", "mode=pass\n# edited\n")
+      File.delete(".invoked")
+      before = File.read(".breaks/ledger.jsonl")
+
+      code, out = run_cli(["--stale", "--replay"])
+
+      assert_equal 2, code
+      assert_includes out, "--partition N is required to run tests with parted"
+      refute File.exist?(".invoked")
+      assert_equal before, File.read(".breaks/ledger.jsonl")
+    end
+  end
+
+  def test_replay_with_a_profile_refuses
+    with_repo(FILES) do
+      code, out = run_cli(["--stale", "--replay", "--profile", "fake"])
+
+      assert_equal 2, code
+      assert_includes out, "--replay replays each proof with its own profile: leave out --profile"
     end
   end
 
@@ -356,6 +461,13 @@ class CliTest < Minitest::Test
     script = "Object.send(:remove_const, :RUBY_VERSION); RUBY_VERSION = #{version.dump}; " \
       "load #{File.expand_path("../break_check.rb", __dir__).dump}; puts :loaded"
     Open3.capture2(RbConfig.ruby, "-W0", "-e", script, err: File::NULL)
+  end
+
+  # Two fake profiles that name a failing test differently: `fake` as
+  # `test big (ATest)`, `short` as `big`.
+  def two_fakes(default:)
+    short = FakeProfile.fields.merge("failing_test" => '^\s+\d+\) test (.+) \([\w.]+\)$')
+    RepoHelper.settings({"fake" => FakeProfile.fields, "short" => short}, default:)
   end
 
   # The CLI with the fake test command; returns [exit code, everything printed].

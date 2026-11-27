@@ -11,12 +11,13 @@ class LedgerTest < Minitest::Test
   def test_record_writes_the_fields
     with_repo(FILES) do |root|
       ledger = BreakCheck::Ledger.new(root)
-      ledger.record(brk, line: 1, tests_failed: ["test big (ATest)"])
+      ledger.record(brk, line: 1, tests_failed: ["test big (ATest)"], profile: "exunit")
 
       ledger.entries => [entry]
-      assert_equal %w[name file line from to tests_failed hashes].sort, entry.keys.sort
+      assert_equal %w[name file line from to tests_failed hashes profile].sort, entry.keys.sort
       assert_equal 1, entry["line"]
       assert_equal ["test big (ATest)"], entry["tests_failed"]
+      assert_equal "exunit", entry["profile"]
       assert_equal({"lib/a.ex" => Digest::SHA256.hexdigest(SOURCE), "test/a_test.exs" => Digest::SHA256.hexdigest("test")},
         entry["hashes"])
     end
@@ -25,8 +26,8 @@ class LedgerTest < Minitest::Test
   def test_record_replaces_the_proof_of_the_same_swap
     with_repo(FILES) do |root|
       ledger = BreakCheck::Ledger.new(root)
-      ledger.record(brk(name: "first"), line: 1, tests_failed: ["t"])
-      ledger.record(brk(name: "second"), line: 1, tests_failed: ["t"])
+      ledger.record(brk(name: "first"), line: 1, tests_failed: ["t"], profile: "exunit")
+      ledger.record(brk(name: "second"), line: 1, tests_failed: ["t"], profile: "exunit")
 
       assert_equal ["second"], ledger.entries.map { _1["name"] }
     end
@@ -35,8 +36,8 @@ class LedgerTest < Minitest::Test
   def test_record_keeps_two_swaps_on_one_from
     with_repo(FILES) do |root|
       ledger = BreakCheck::Ledger.new(root)
-      ledger.record(brk(name: "drop the guard value", to: "a >= 1"), line: 1, tests_failed: ["t"])
-      ledger.record(brk(name: "flip the guard", to: "a < 1"), line: 1, tests_failed: ["t"])
+      ledger.record(brk(name: "drop the guard value", to: "a >= 1"), line: 1, tests_failed: ["t"], profile: "exunit")
+      ledger.record(brk(name: "flip the guard", to: "a < 1"), line: 1, tests_failed: ["t"], profile: "exunit")
 
       assert_equal ["a >= 1", "a < 1"], ledger.entries.map { _1["to"] }
     end
@@ -46,7 +47,7 @@ class LedgerTest < Minitest::Test
     with_repo(FILES) do |root|
       ledger = recorded(root)
       File.write("lib/a.ex", "def x(b) when b > 1, do: :big\n")
-      ledger.record(brk(from: "b > 1", to: "b >= 1"), line: 1, tests_failed: ["t"])
+      ledger.record(brk(from: "b > 1", to: "b >= 1"), line: 1, tests_failed: ["t"], profile: "exunit")
 
       assert_equal ["b > 1"], ledger.entries.map { _1["from"] }
       assert_equal({replayable: [], gone: []}, ledger.stale)
@@ -56,8 +57,8 @@ class LedgerTest < Minitest::Test
   def test_record_replaces_a_same_name_line_only_when_it_is_gone
     with_repo(FILES.merge("lib/a.ex" => "a > 1\nb > 1\n")) do |root|
       ledger = BreakCheck::Ledger.new(root)
-      ledger.record(brk(name: "guard", from: "a > 1"), line: 1, tests_failed: ["t"])
-      ledger.record(brk(name: "guard", from: "b > 1", to: "b >= 1"), line: 2, tests_failed: ["t"])
+      ledger.record(brk(name: "guard", from: "a > 1"), line: 1, tests_failed: ["t"], profile: "exunit")
+      ledger.record(brk(name: "guard", from: "b > 1", to: "b >= 1"), line: 2, tests_failed: ["t"], profile: "exunit")
 
       assert_equal ["a > 1", "b > 1"], ledger.entries.map { _1["from"] }
     end
@@ -75,7 +76,7 @@ class LedgerTest < Minitest::Test
   def test_drop_removes_the_given_entries
     with_repo(FILES.merge("lib/b.ex" => "b && c\n")) do |root|
       ledger = recorded(root)
-      ledger.record(brk(name: "other", file: "lib/b.ex", from: "b && c", to: "b || c"), line: 1, tests_failed: ["t"])
+      ledger.record(brk(name: "other", file: "lib/b.ex", from: "b && c", to: "b || c"), line: 1, tests_failed: ["t"], profile: "exunit")
 
       ledger.drop(ledger.entries.select { _1["name"] == "other" })
 
@@ -136,7 +137,7 @@ class LedgerTest < Minitest::Test
   def test_table_lists_only_fresh_entries
     with_repo(FILES.merge("lib/b.ex" => "b && c\n")) do |root|
       ledger = recorded(root)
-      ledger.record(brk(name: "other", file: "lib/b.ex", from: "b && c", to: "b || c"), line: 1, tests_failed: ["t"])
+      ledger.record(brk(name: "other", file: "lib/b.ex", from: "b && c", to: "b || c"), line: 1, tests_failed: ["t"], profile: "exunit")
       File.write("lib/b.ex", "b && c\nmore\n")
 
       table = ledger.table
@@ -150,7 +151,7 @@ class LedgerTest < Minitest::Test
   def test_table_escapes_pipes_and_newlines
     with_repo(FILES.merge("lib/b.ex" => "a |> b\nc\n")) do |root|
       ledger = BreakCheck::Ledger.new(root)
-      ledger.record(brk(file: "lib/b.ex", from: "a |> b\nc", to: "a"), line: 1, tests_failed: ["t"])
+      ledger.record(brk(file: "lib/b.ex", from: "a |> b\nc", to: "a"), line: 1, tests_failed: ["t"], profile: "exunit")
 
       assert_includes ledger.table, "`a \\|> b⏎c`"
     end
@@ -159,8 +160,8 @@ class LedgerTest < Minitest::Test
   def test_table_fences_a_swap_that_holds_a_backtick
     with_repo(FILES.merge("lib/b.ex" => "x = `ls`\ny = a``b\n")) do |root|
       ledger = BreakCheck::Ledger.new(root)
-      ledger.record(brk(name: "one", file: "lib/b.ex", from: "x = `ls`", to: "x = ls"), line: 1, tests_failed: ["t"])
-      ledger.record(brk(name: "two", file: "lib/b.ex", from: "y = a``b", to: "`y`"), line: 2, tests_failed: ["t"])
+      ledger.record(brk(name: "one", file: "lib/b.ex", from: "x = `ls`", to: "x = ls"), line: 1, tests_failed: ["t"], profile: "exunit")
+      ledger.record(brk(name: "two", file: "lib/b.ex", from: "y = a``b", to: "`y`"), line: 2, tests_failed: ["t"], profile: "exunit")
 
       table = ledger.table
       assert_includes table, "| lib/b.ex:1 | `` x = `ls` `` → `x = ls` |"
@@ -172,7 +173,7 @@ class LedgerTest < Minitest::Test
     with_repo(FILES.merge("lib/b.ex" => "a → b\n")) do |root|
       with_ascii_locale do
         ledger = BreakCheck::Ledger.new(root)
-        ledger.record(brk(name: "arrow", file: "lib/b.ex", from: "a → b", to: "b"), line: 1, tests_failed: ["t ⏎"])
+        ledger.record(brk(name: "arrow", file: "lib/b.ex", from: "a → b", to: "b"), line: 1, tests_failed: ["t ⏎"], profile: "exunit")
 
         assert_equal({replayable: [], gone: []}, ledger.stale)
         assert_includes ledger.table, "`a → b` → `b` | t ⏎ |"
@@ -183,7 +184,7 @@ class LedgerTest < Minitest::Test
   private
 
   def recorded(root)
-    BreakCheck::Ledger.new(root).tap { _1.record(brk, line: 1, tests_failed: ["test big (ATest)"]) }
+    BreakCheck::Ledger.new(root).tap { _1.record(brk, line: 1, tests_failed: ["test big (ATest)"], profile: "exunit") }
   end
 
   def names(stale) = stale.transform_values { |entries| entries.map { _1["name"] } }

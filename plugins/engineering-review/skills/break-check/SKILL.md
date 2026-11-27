@@ -26,7 +26,7 @@ Whoever wrote the code runs its breaks, in the same session: a fresh agent's sta
 
 Look for a committed runner (a `break_check` script its `AGENTS.md` or a README names) first: while a repository still keeps one, a committed runner of the repository's own wins, and `<runner>` below is that one, called as its `AGENTS.md` or README says.
 
-Otherwise, `<runner>` is `ruby <this skill's base directory>/../../scripts/break_check.rb`, run from the repository root; the session shows the base directory when this skill loads. It reads the repository's profiles from `.break-check.json` at the root. `<runner> --help` lists its flags: `--profile NAME` picks a profile other than the file's `default`, and `--partition N` is required by a profile whose `command` or `env` names `{partition}`, so its tests run beside other sessions': pick an N no other session uses. A repository with more than one profile (such as the app's and a script folder's) runs each recipe below once for each profile whose watched paths the change touches; when stale proofs of two suites stop a replay, see the known gaps in [contract.md](contract.md).
+Otherwise, `<runner>` is `ruby <this skill's base directory>/../../scripts/break_check.rb`, run from the repository root; the session shows the base directory when this skill loads. It reads the repository's profiles from `.break-check.json` at the root. `<runner> --help` lists its flags: `--profile NAME` picks a profile other than the file's `default`, and `--partition N` is required by a profile whose `command` or `env` names `{partition}`, so its tests run beside other sessions': pick an N no other session uses. A repository with more than one profile (such as the app's and a script folder's) runs `--uncovered` and its breaks once for each profile whose watched paths the change touches, naming it with `--profile`; `--stale --replay` runs once and replays each proof with the profile that made it.
 
 A repository with neither gets `.break-check.json` before its first break, committed with `.breaks/` in its `.gitignore`. Write one profile per test suite, in the fields [contract.md's `.break-check.json`](contract.md#break-checkjson) gives, its patterns copied from what its tests really print: run one failing test and one that doesn't compile, and read the output. Each profile's check is one break of a branch that already has a test, run with `--profile <name>`: `caught` shows the profile reads its suite. Breaks go through the runner, since only it records a proof a later step or a review can read. The PR description's Break checks part, as `cadre:pr-description` gives it, comes from the runner's `--table`.
 
@@ -67,7 +67,7 @@ A breaks file is a JSON array, one object per branch:
 
 ## Results
 
-A run prints one line per break as it happens, then a summary line (`<n> caught, <n> not caught, <n> doesn't compile, <n> inconclusive`):
+A run prints one line per break as it happens, then a summary line (`<n> caught, <n> not caught, <n> doesn't compile, <n> inconclusive`), one per profile on a replay:
 
 | Line | Means | Do |
 |---|---|---|
@@ -83,7 +83,7 @@ A run prints one line per break as it happens, then a summary line (`<n> caught,
 
 - **0** every break was caught or already `proven`, or nothing is left.
 - **1** something is left: a break not caught, one that doesn't compile or is inconclusive, a stale or gone proof listed, a line no proof covers, a gone proof dropped. A normal end of `--uncovered`, `--stale` and `--stale --replay`: read the lines.
-- **2** the runner refused and broke nothing: no `.break-check.json` at the root or a bad one, an unknown profile, a `--partition` missing or not taken, Ruby older than 3.2, the lock is held, a swap missed, a bad breaks file, tests red before any break, a bad command line, an unexpected error.
+- **2** the runner refused and broke nothing: no `.break-check.json` at the root or a bad one, an unknown profile, a `--partition` missing or not taken, a stale proof whose profile the file no longer has (break it again with `--profile`, and its new proof replaces it), Ruby older than 3.2, the lock is held, a swap missed, a bad breaks file, tests red before any break, a bad command line, an unexpected error.
 - **3** a file could not be restored, or changed while it held a break. The message names the journal entry that holds the original. When the file differs from the original only by the break, put the original back; when someone edited it meanwhile, undo the break by hand and keep their edit. Then delete the entry, or every command exits 3 again.
 
 ## The ledger
@@ -94,10 +94,11 @@ A run prints one line per break as it happens, then a summary line (`<n> caught,
 {"name": "same second is not after", "file": "lib/cadre/source_control/change_requests.ex", "line": 42,
  "from": "DateTime.compare(head_committed_at, submitted_at) == :gt", "to": "DateTime.compare(head_committed_at, submitted_at) != :lt",
  "tests_failed": ["test a commit in the same second is not after the review (Cadre.SourceControl.ChangeRequestsTest)"],
- "hashes": {"lib/cadre/source_control/change_requests.ex": "<sha256>", "test/cadre/source_control/change_requests_test.exs": "<sha256>"}}
+ "hashes": {"lib/cadre/source_control/change_requests.ex": "<sha256>", "test/cadre/source_control/change_requests_test.exs": "<sha256>"},
+ "profile": "exunit"}
 ```
 
-`line` is where `from` was when the break ran. `hashes` holds the SHA-256 of `file` and of each test file, which tells fresh from stale. A newer proof replaces the one with the same swap in the same file, and one with the same `file` and name whose `from` no longer occurs exactly once.
+`line` is where `from` was when the break ran. `hashes` holds the SHA-256 of `file` and of each test file, which tells fresh from stale. `profile` names the profile that ran the break; a line without one reads as the file's `default` profile. A newer proof replaces the one with the same swap in the same file, and one with the same `file` and name whose `from` no longer occurs exactly once.
 
 A proof **belongs** to a change when its `from` spans a line the change adds or changes, or sits next to a line it deletes. `<runner> --table` prints every fresh proof in this worktree, whichever change it belongs to, in this shape, `|` escaped as `\|`, a newline as `⏎`, and a swap that holds a backtick fenced with more backticks than it holds:
 
