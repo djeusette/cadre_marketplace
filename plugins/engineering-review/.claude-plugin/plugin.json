@@ -10,5 +10,5 @@
   "repository": "https://github.com/djeusette/cadre_marketplace",
   "license": "MIT",
   "keywords": ["code-review", "clean-code", "concurrency", "testing", "documentation", "database", "conventions"],
-  "dependencies": ["security-audit"]
+  "dependencies": ["security-audit", "cadre"]
 }

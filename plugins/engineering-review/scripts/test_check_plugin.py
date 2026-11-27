@@ -1599,12 +1599,14 @@ class SecurityLayerSourceTest(unittest.TestCase):
 
             self.assertEqual(check_plugin.check_manifests(root, plugin_dir), [])
 
-    def test_the_plugin_depends_on_the_pinned_security_audit_skill(self):
+    def test_the_plugin_depends_on_cadre_and_the_pinned_security_audit_skill(self):
         plugin = json.loads((PLUGIN_DIR / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
         marketplace = json.loads((PLUGIN_DIR.parent.parent / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))
         entry = next(entry for entry in marketplace["plugins"] if entry["name"] == "security-audit")
+        cadre = next(entry for entry in marketplace["plugins"] if entry["name"] == "cadre")
 
-        self.assertIn("security-audit", plugin["dependencies"])
+        self.assertEqual(plugin["dependencies"], ["security-audit", "cadre"])
+        self.assertEqual(cadre["source"], "./plugins/cadre")
         self.assertEqual(entry["source"]["repo"], "cloudflare/security-audit-skill")
         self.assertRegex(entry["source"]["sha"], r"^[0-9a-f]{40}$")
 
