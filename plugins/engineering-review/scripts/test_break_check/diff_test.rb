@@ -84,6 +84,14 @@ class DiffTest < Minitest::Test
     end
   end
 
+  def test_an_untracked_file_whose_name_git_quotes_is_read
+    with_git_repo("lib/a.ex" => "a\n") do |root|
+      File.write("lib/q\"z.ex", "if x\n")
+
+      assert_equal [["lib/q\"z.ex", "if x"]], since(root).added.map { [_1[:file], _1[:text]] }
+    end
+  end
+
   def test_untracked_paths_that_are_not_files_hold_no_lines
     with_git_repo("lib/a.ex" => "a\n") do |root|
       File.symlink("missing.ex", "lib/dangling.ex")

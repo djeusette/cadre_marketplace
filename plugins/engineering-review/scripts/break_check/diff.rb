@@ -30,7 +30,8 @@ module BreakCheck
     def self.since(root, base, paths = [])
       diff = git(root, "diff", "--no-color", "--no-ext-diff", "-M", "--src-prefix=a/", "--dst-prefix=b/", "-U0",
         "--end-of-options", base, "--", *paths)
-      untracked = git(root, "ls-files", "--others", "--exclude-standard", "--", *paths).lines(chomp: true)
+      # -z: names come back as they are, never quoted.
+      untracked = git(root, "ls-files", "-z", "--others", "--exclude-standard", "--", *paths).split("\0")
         .select { File.file?(File.join(root, _1)) }
       Change.new(hunks: parse(diff), untracked: untracked.flat_map { whole_file(root, _1) })
     end
@@ -50,9 +51,9 @@ module BreakCheck
     # A file's `+++` header comes before its first hunk; inside a hunk,
     # every `+` or `-` line is code, even one that starts with `++` or
     # `--`. Git ends a header path holding a space with a tab, and names a
-    # deleted file's new side /dev/null, whose hunks are left out. A path
-    # git quotes (one holding `"`, `\` or a control character) refuses, so
-    # its lines never read as unchanged.
+    # deleted file's new side /dev/null, whose hunks are left out. The runner
+    # refuses a path git quotes (one holding `"`, `\` or a control
+    # character), so its lines never read as unchanged.
     def self.parse(diff)
       hunks = []
       file = nil

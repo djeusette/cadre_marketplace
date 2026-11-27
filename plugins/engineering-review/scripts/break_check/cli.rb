@@ -115,8 +115,8 @@ module BreakCheck
       raise Usage, problems.join("\n") if problems.any?
 
       groups.transform_keys { profiles.fetch(_1) }.tap do |by|
-        # A command called with no files runs nothing, and refuses a missing
-        # --partition before any profile runs.
+        # Building each command's argv refuses a missing --partition before
+        # any profile runs.
         by.each_key { _1.command.call([]) }
       end
     end
