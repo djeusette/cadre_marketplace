@@ -2,13 +2,21 @@
 
 ## Checks
 
-Run `LANG=en_US.UTF-8 ruby plugins/cadre/test/plugin_test.rb`. Without `LANG` it dies with "invalid byte sequence in US-ASCII".
+Run each before a commit:
 
-`plugin_test.rb` pins the skill's exact wording: change the test first, watch it go red, then the text.
+- `LANG=en_US.UTF-8 ruby plugins/cadre/test/plugin_test.rb`. Without `LANG` it dies with "invalid byte sequence in US-ASCII".
+- `python3 -m unittest discover -s plugins/engineering-review/scripts -p 'test_*.py'`
+- `python3 plugins/engineering-review/scripts/check_plugin.py plugin plugins/engineering-review`
+- `ruby test/check_version_bumps_test.rb`
+
+`plugin_test.rb` and `test_check_plugin.py` pin their plugin's exact wording: change the test first, watch it go red, then the text.
 
 ## Release
 
-Bump the version in `plugins/cadre/.claude-plugin/plugin.json`, in `.claude-plugin/marketplace.json` and in `test_marketplace_lists_cadre_at_the_plugin_version`.
+Every merge to `main` is a release: a pull request that changes `plugins/<name>/` bumps that plugin's version.
+
+- cadre: in `plugins/cadre/.claude-plugin/plugin.json`, in `.claude-plugin/marketplace.json` and in `test_marketplace_lists_cadre_at_the_plugin_version`.
+- engineering-review: in `plugins/engineering-review/.claude-plugin/plugin.json` and in `.claude-plugin/marketplace.json`.
 
 ## Skills
 

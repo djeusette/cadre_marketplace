@@ -22,8 +22,4 @@ Or commit them to a repo's `.claude/settings.json` so the whole team gets them a
 
 ## Development
 
-```bash
-LANG=en_US.UTF-8 ruby plugins/cadre/test/plugin_test.rb
-```
-
-To release a plugin, follow "Release" in [AGENTS.md](AGENTS.md).
+To run the checks, follow "Checks" in [AGENTS.md](AGENTS.md). To release a plugin, follow "Release" in [AGENTS.md](AGENTS.md).

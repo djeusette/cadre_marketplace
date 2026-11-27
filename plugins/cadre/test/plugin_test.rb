@@ -66,6 +66,12 @@ class ManifestTest < Minitest::Test
     refute_includes readme, "bumping its version"
   end
 
+  def test_readme_leaves_the_checks_to_agents_md
+    readme = File.read(File.join(ROOT, "README.md"))
+    assert_includes readme, "To run the checks, follow \"Checks\" in [AGENTS.md](AGENTS.md)."
+    refute_includes readme, "ruby plugins/cadre/test/plugin_test.rb"
+  end
+
   def test_readme_lists_cadre
     assert_match(/^- \*\*cadre\*\* — /, File.read(File.join(ROOT, "README.md")))
   end
@@ -81,6 +87,9 @@ class ManifestTest < Minitest::Test
   def test_agents_md_names_the_checks_the_release_and_which_skill_wins
     ["`LANG=en_US.UTF-8 ruby plugins/cadre/test/plugin_test.rb`", "invalid byte sequence in US-ASCII",
      "change the test first, watch it go red, then the text", "`test_marketplace_lists_cadre_at_the_plugin_version`",
+     "`python3 -m unittest discover -s plugins/engineering-review/scripts -p 'test_*.py'`",
+     "`python3 plugins/engineering-review/scripts/check_plugin.py plugin plugins/engineering-review`",
+     "`ruby test/check_version_bumps_test.rb`", "bumps that plugin's version",
      "`mattpocock-skills:writing-for-agents` wins", "starts with `Cadre`",
      "enable its plugin under `enabledPlugins` in `.claude/settings.json`"].each { |text| assert_includes agents_md, text }
     assert_includes ManifestTest.public_instance_methods, :test_marketplace_lists_cadre_at_the_plugin_version
