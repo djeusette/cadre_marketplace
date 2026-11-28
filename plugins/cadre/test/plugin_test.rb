@@ -50,7 +50,7 @@ class ManifestTest < Minitest::Test
   # No place in the list is pinned: the marketplace lists other plugins too.
   def test_marketplace_lists_cadre_at_the_plugin_version
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.35.1", manifest["version"]
+    assert_equal "0.36.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -1068,11 +1068,16 @@ class SkillTest < Minitest::Test
     skill_files.each { |path| refute_match(/colette/i, File.read(path), path) }
   end
 
-  def test_skill_files_call_only_superpowers_skills_and_cadre_itself
+  def test_skill_files_call_only_superpowers_cadre_and_a_listed_break_check
     # cadre:brainstorming and cadre:writing-plans are cadre's own skills, which "Create a project" and
-    # "Start a milestone" call (EP-I3).
+    # "Start a milestone" call (EP-I3). cadre never depends on engineering-review: it names
+    # engineering-review:break-check only for a repo whose Skills table lists it.
     calls = skill_files.flat_map { |path| File.read(path).scan(/`([a-z][a-z0-9-]*:[a-z][a-z0-9-]*)`/).flatten }
-    assert_equal %w[cadre:brainstorming cadre:cadre cadre:pr-description cadre:writing-plans superpowers:brainstorming superpowers:using-git-worktrees superpowers:writing-plans], calls.uniq.sort
+    assert_equal %w[cadre:brainstorming cadre:cadre cadre:pr-description cadre:writing-plans engineering-review:break-check superpowers:brainstorming superpowers:using-git-worktrees superpowers:writing-plans], calls.uniq.sort
+    mentions = skill_files.sum { |path| File.read(path).scan("engineering-review").size }
+    conditional = File.read(File.join(PLUGIN, "skills", "writing-plans", "SKILL.md"))
+                      .scan(/When the (?:Skills table in the repo's root `AGENTS\.md`|repo's Skills table) lists `engineering-review:break-check`/).size
+    assert_equal mentions, conditional
     skill_files.each { |path| refute_match(/\bEP-[A-Z]\d/, File.read(path), path) }
   end
 
@@ -1527,12 +1532,20 @@ class WritingPlansTest < Minitest::Test
     ["`superpowers:writing-plans`", "`superpowers` plugin", "`claude-plugins-official`", "and stop"].each { |text| assert_includes before_you_start, text }
   end
 
+  def test_it_checks_the_break_check_skill_and_ruby_when_the_skills_table_lists_it
+    ["2. When the Skills table in the repo's root `AGENTS.md` lists `engineering-review:break-check`, check that the skill is among your available skills and that `ruby --version`, run from the repo's root, prints Ruby 3.2 or later: the plan runs its break check.",
+     "When the skill is missing, tell the person its row's Install command.",
+     "When Ruby is missing or older, tell the person to put Ruby 3.2 or later first on `PATH`.",
+     "Either way, stop."].each { |text| assert_includes before_you_start, text }
+    assert_operator before_you_start.index("`engineering-review:break-check`"), :<, before_you_start.index("[the cadre skill]")
+  end
+
   def test_it_says_what_it_chose_and_why
     assert_includes before_you_start, %q{Find what to plan, as "What to plan" says. Except when handed over, tell the person what you chose and why.}
   end
 
   def test_before_you_start_routes_to_the_case_section
-    assert_includes before_you_start, %q{4. Follow the section named for the case; when handed over, go to step 3 of "A Cadre milestone".}
+    assert_includes before_you_start, %q{5. Follow the section named for the case; when handed over, go to step 3 of "A Cadre milestone".}
     refute_includes what_to_plan, "go to step 3"
   end
 

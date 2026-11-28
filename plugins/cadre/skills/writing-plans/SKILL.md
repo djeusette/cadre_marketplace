@@ -10,9 +10,10 @@ You plan one pull request at a time through `superpowers:writing-plans`: one rep
 ## Before you start
 
 1. Check that `superpowers:writing-plans` is among your available skills. When it is missing, tell the person to install and enable the `superpowers` plugin from the `claude-plugins-official` marketplace, and stop.
-2. Find what to plan, as "What to plan" says. Except when handed over, tell the person what you chose and why.
-3. For "A Cadre milestone" and "A spec not tracked in Cadre", run only "Before you start", "Install or update the CLI" and "Sign in" in [the cadre skill](../cadre/SKILL.md), then come back here. When one of those sections says to stop, the planning stops too. This step is done once "Sign in" ends with the person signed in. The cadre skill's rules for a command's flags and for a refusal no file names, at the end of its "What to read next", hold for the rest of this run.
-4. Follow the section named for the case; when handed over, go to step 3 of "A Cadre milestone".
+2. When the Skills table in the repo's root `AGENTS.md` lists `engineering-review:break-check`, check that the skill is among your available skills and that `ruby --version`, run from the repo's root, prints Ruby 3.2 or later: the plan runs its break check. When the skill is missing, tell the person its row's Install command. When Ruby is missing or older, tell the person to put Ruby 3.2 or later first on `PATH`. Either way, stop.
+3. Find what to plan, as "What to plan" says. Except when handed over, tell the person what you chose and why.
+4. For "A Cadre milestone" and "A spec not tracked in Cadre", run only "Before you start", "Install or update the CLI" and "Sign in" in [the cadre skill](../cadre/SKILL.md), then come back here. When one of those sections says to stop, the planning stops too. This step is done once "Sign in" ends with the person signed in. The cadre skill's rules for a command's flags and for a refusal no file names, at the end of its "What to read next", hold for the rest of this run.
+5. Follow the section named for the case; when handed over, go to step 3 of "A Cadre milestone".
 
 ## What to plan
 
