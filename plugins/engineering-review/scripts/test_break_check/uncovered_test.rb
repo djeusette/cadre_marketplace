@@ -21,7 +21,7 @@ class UncoveredTest < Minitest::Test
   def test_a_line_inside_a_fresh_proof_is_covered
     with_git_repo do |root|
       File.write("lib/a.ex", CHANGED_SOURCE)
-      BreakCheck::Ledger.new(root).record(brk(from: "a > 1"), line: 3, tests_failed: ["t"])
+      BreakCheck::Ledger.new(root).record(brk(from: "a > 1"), line: 3, tests_failed: ["t"], profile: "exunit")
 
       assert_equal [5], uncovered(root).call("HEAD").map { _1[:line] }
     end
@@ -30,7 +30,7 @@ class UncoveredTest < Minitest::Test
   def test_a_multi_line_proof_covers_every_line_it_spans
     with_git_repo do |root|
       File.write("lib/a.ex", CHANGED_SOURCE)
-      BreakCheck::Ledger.new(root).record(brk(from: "when a > 1, do: :big\n\n  def x(_a)", to: "x"), line: 3, tests_failed: ["t"])
+      BreakCheck::Ledger.new(root).record(brk(from: "when a > 1, do: :big\n\n  def x(_a)", to: "x"), line: 3, tests_failed: ["t"], profile: "exunit")
 
       assert_equal [], uncovered(root).call("HEAD")
     end
@@ -39,7 +39,7 @@ class UncoveredTest < Minitest::Test
   def test_a_stale_proof_covers_nothing
     with_git_repo do |root|
       File.write("lib/a.ex", CHANGED_SOURCE)
-      BreakCheck::Ledger.new(root).record(brk(from: "a > 1"), line: 3, tests_failed: ["t"])
+      BreakCheck::Ledger.new(root).record(brk(from: "a > 1"), line: 3, tests_failed: ["t"], profile: "exunit")
       File.write("test/a_test.exs", "test, edited")
 
       assert_equal [3, 5], uncovered(root).call("HEAD").map { _1[:line] }
@@ -66,7 +66,7 @@ class UncoveredTest < Minitest::Test
     with_git_repo do |root|
       File.write("lib/b.ex", "keep = 1\nkeep = 2\nkeep = 3\nkeep = 4\n")
       git("add", ".")
-      git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "b")
+      commit("b")
       git("config", "diff.renames", "false")
       git("mv", "lib/b.ex", "lib/c.ex")
       File.write("lib/c.ex", "keep = 1\nkeep = 2\nkeep = 3\nkeep = 4\nadded = 5\n")
@@ -147,7 +147,7 @@ class UncoveredTest < Minitest::Test
       File.write("lib/café.ex", "x = 1\n")
       File.write("lib/a b.ex", "y = 1\n")
       git("add", ".")
-      git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "names")
+      commit("names")
       File.write("lib/café.ex", "x = 2\n")
       File.write("lib/a b.ex", "y = 2\n")
       File.write("lib/né.ex", "z = 1\n")
@@ -168,7 +168,112 @@ class UncoveredTest < Minitest::Test
     end
   end
 
+  GUARDS = "defmodule A do\n  def x(a) when a > 1, do: :big\n  # small\n  def x(_a), do: :small\nend\n"
+
+  def test_a_deletion_is_uncovered_at_the_line_after_it
+    with_base(GUARDS) do |root|
+      File.write("lib/a.ex", GUARDS.sub("  def x(_a), do: :small\n", ""))
+
+      assert_equal [{file: "lib/a.ex", line: 4, text: "(deleted)   def x(_a), do: :small"}], uncovered(root).call("HEAD")
+    end
+  end
+
+  def test_a_deletion_of_noise_only_is_left_out
+    with_base(GUARDS) do |root|
+      File.write("lib/a.ex", GUARDS.sub("  # small\n", ""))
+
+      assert_equal [], uncovered(root).call("HEAD")
+    end
+  end
+
+  def test_the_first_deleted_line_that_is_not_noise_stands_for_it
+    with_base(GUARDS) do |root|
+      File.write("lib/a.ex", GUARDS.sub("  # small\n  def x(_a), do: :small\n", ""))
+
+      assert_equal [[3, "(deleted)   def x(_a), do: :small"]], uncovered(root).call("HEAD").map { [_1[:line], _1[:text]] }
+    end
+  end
+
+  def test_a_deletion_beside_a_rewritten_comment_is_listed
+    with_base(GUARDS) do |root|
+      File.write("lib/a.ex", GUARDS.sub("  # small\n  def x(_a), do: :small\n", "  # big only\n"))
+
+      assert_equal [[4, "(deleted)   def x(_a), do: :small"]], uncovered(root).call("HEAD").map { [_1[:line], _1[:text]] }
+    end
+  end
+
+  def test_deleted_doc_lines_are_left_out
+    source = "defmodule A do\n  @doc \"\"\"\n  Big when a > 1.\n  Small otherwise.\n  \"\"\"\n  def x(a), do: a\nend\n"
+    with_base(source) do |root|
+      File.write("lib/a.ex", source.sub("  Small otherwise.\n", ""))
+      assert_equal [], uncovered(root).call("HEAD")
+
+      File.write("lib/a.ex", source.sub("  @doc \"\"\"\n  Big when a > 1.\n  Small otherwise.\n  \"\"\"\n", ""))
+      assert_equal [], uncovered(root).call("HEAD")
+    end
+  end
+
+  def test_a_proof_on_the_line_above_or_below_covers_a_deletion
+    with_base(GUARDS) do |root|
+      File.write("lib/a.ex", GUARDS.sub("  def x(_a), do: :small\n", ""))
+      ledger = BreakCheck::Ledger.new(root)
+
+      ledger.record(brk(from: "defmodule A", to: "defmodule B"), line: 1, tests_failed: ["t"], profile: "exunit")
+      assert_equal [4], uncovered(root).call("HEAD").map { _1[:line] }
+
+      ledger.record(brk(name: "above", from: "# small", to: "# big"), line: 3, tests_failed: ["t"], profile: "exunit")
+      assert_equal [], uncovered(root).call("HEAD")
+    end
+    with_base(GUARDS) do |root|
+      File.write("lib/a.ex", GUARDS.sub("  def x(_a), do: :small\n", ""))
+      BreakCheck::Ledger.new(root).record(brk(name: "below", from: "end", to: "end end"), line: 4, tests_failed: ["t"], profile: "exunit")
+
+      assert_equal [], uncovered(root).call("HEAD")
+    end
+  end
+
+  def test_a_deletion_at_the_top_of_a_file
+    with_base("def a, do: 1\ndef b, do: 2\n") do |root|
+      File.write("lib/a.ex", "def b, do: 2\n")
+      assert_equal [[1, "(deleted) def a, do: 1"]], uncovered(root).call("HEAD").map { [_1[:line], _1[:text]] }
+
+      BreakCheck::Ledger.new(root).record(brk(from: "def b", to: "def c"), line: 1, tests_failed: ["t"], profile: "exunit")
+      assert_equal [], uncovered(root).call("HEAD")
+    end
+  end
+
+  def test_a_deletion_at_the_end_of_a_file
+    with_base("def a, do: 1\ndef b, do: 2\n") do |root|
+      File.write("lib/a.ex", "def a, do: 1\n")
+      assert_equal [[2, "(deleted) def b, do: 2"]], uncovered(root).call("HEAD").map { [_1[:line], _1[:text]] }
+
+      BreakCheck::Ledger.new(root).record(brk(from: "def a", to: "def c"), line: 1, tests_failed: ["t"], profile: "exunit")
+      assert_equal [], uncovered(root).call("HEAD")
+    end
+  end
+
+  def test_cli_prints_a_deletion
+    with_base(GUARDS) do
+      File.write("lib/a.ex", GUARDS.sub("  def x(_a), do: :small\n", ""))
+
+      code, out = run_cli(["--uncovered", "HEAD"])
+
+      assert_equal 1, code
+      assert_includes out, "lib/a.ex:4 | (deleted)   def x(_a), do: :small\n"
+    end
+  end
+
   private
+
+  # A repository whose lib/a.ex holds `source` at HEAD.
+  def with_base(source)
+    with_git_repo do |root|
+      File.write("lib/a.ex", source)
+      git("add", ".")
+      commit("source")
+      yield root
+    end
+  end
 
   def uncovered(root) = BreakCheck::Uncovered.new(root, BreakCheck::Profiles.build("exunit", EXUNIT, partition: nil))
 
@@ -177,17 +282,7 @@ class UncoveredTest < Minitest::Test
     [BreakCheck::CLI.run(argv, out:), out.string]
   end
 
-  def with_git_repo
-    with_repo("lib/a.ex" => BASE_SOURCE, "test/a_test.exs" => "test", ".break-check.json" => RepoHelper.settings({"exunit" => EXUNIT})) do |root|
-      git("init", "-q")
-      git("add", ".")
-      git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "base")
-      yield root
-    end
-  end
-
-  def git(*args)
-    _, status = Open3.capture2e("git", *args)
-    raise "git #{args.join(" ")} failed" unless status.success?
+  def with_git_repo(&)
+    super({"lib/a.ex" => BASE_SOURCE, "test/a_test.exs" => "test", ".break-check.json" => RepoHelper.settings({"exunit" => EXUNIT})}, &)
   end
 end

@@ -20,6 +20,15 @@ class RunTest < Minitest::Test
     end
   end
 
+  def test_a_caught_break_records_its_profile
+    with_repo(FILES) do |root|
+      run_breaks([mode_break("fail")])
+
+      BreakCheck::Ledger.new(root).entries => [entry]
+      assert_equal "fake", entry["profile"]
+    end
+  end
+
   def test_utf_8_test_names_are_read_whatever_the_locale
     with_repo(FILES) do
       with_ascii_locale do

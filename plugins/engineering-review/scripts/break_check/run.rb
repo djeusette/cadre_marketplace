@@ -66,7 +66,7 @@ module BreakCheck
         outcome = attempt(brk) if outcome == :infrastructure
         outcome = Outcome.new(brk:, result: :inconclusive, tests_failed: [], reason: "infrastructure failed twice") if outcome == :infrastructure
       end
-      @ledger.record(brk, line:, tests_failed: outcome.tests_failed) if outcome.result == :caught
+      @ledger.record(brk, line:, tests_failed: outcome.tests_failed, profile: @profile.name) if outcome.result == :caught
       print_outcome(outcome)
       outcome
     end

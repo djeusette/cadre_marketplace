@@ -26,20 +26,21 @@ module BreakCheck
       BreakCheck.read(@path).lines(chomp: true).reject(&:empty?).map { JSON.parse(_1) }
     end
 
-    def record(brk, line:, tests_failed:)
+    def record(brk, line:, tests_failed:, profile:)
       entry = {
         "name" => brk.name, "file" => brk.file, "line" => line, "from" => brk.from, "to" => brk.to,
-        "tests_failed" => tests_failed, "hashes" => hashes([brk.file, *brk.tests])
+        "tests_failed" => tests_failed, "hashes" => hashes([brk.file, *brk.tests]), "profile" => profile
       }
-      kept = entries.reject { same_swap?(_1, brk) || (same_name?(_1, brk) && !once?(_1)) }
+      kept = entries.reject { same_swap?(_1, brk) || (same_name?(_1, brk) && !fresh?(_1)) }
       write(kept + [entry])
     end
 
     # A name is a branch's identity in its file, so a new break may take
-    # a name only from a gone proof.
+    # a name only from a proof that is not fresh, whose new proof then
+    # replaces it.
     def name_conflicts(breaks)
       breaks.filter_map do |brk|
-        next unless entries.any? { same_name?(_1, brk) && !same_swap?(_1, brk) && once?(_1) }
+        next unless entries.any? { same_name?(_1, brk) && !same_swap?(_1, brk) && fresh?(_1) }
 
         "#{brk.name}: a proof in #{brk.file} already has this name"
       end
@@ -59,17 +60,29 @@ module BreakCheck
 
     def fresh_entries = entries.select { fresh?(_1) }
 
+    # The lines a fresh proof's `from` covers in its file now.
+    def span(entry)
+      start = Breaks.occurrences(BreakCheck.read(File.join(@root, entry["file"])), entry["from"]).first
+      start..(start + entry["from"].count("\n"))
+    end
+
     # The fresh proof of this exact break, if there is one.
     def proof(brk) = fresh_entries.find { same_swap?(_1, brk) }
 
-    def table
-      fresh = fresh_entries
-      rows = fresh.map do |entry|
+    # The fresh proofs whose `from` spans a line `change` touches in their
+    # file: one it adds or changes, or one just above or below a deletion.
+    def belonging(change)
+      touched = change.touched
+      fresh_entries.select { |entry| span(entry).any? { touched.include?([entry["file"], _1]) } }
+    end
+
+    def table(proofs = fresh_entries)
+      rows = proofs.map do |entry|
         swap = "#{code(entry["from"])} → #{code(entry["to"])}"
         "| #{entry["file"]}:#{entry["line"]} | #{swap} | #{cell(entry["tests_failed"].join(", "))} |"
       end
       <<~MARKDOWN
-        <details><summary>Break checks (#{fresh.size})</summary>
+        <details><summary>Break checks (#{proofs.size})</summary>
 
         | Branch | Swap | Caught by |
         |---|---|---|
@@ -101,7 +114,15 @@ module BreakCheck
       end
     end
 
-    def code(text) = "`#{cell(text)}`"
+    # A fence longer than any run of backticks inside, padded with the one
+    # space on each side that Markdown strips, so a backtick at either end
+    # stays code.
+    def code(text)
+      return "`#{cell(text)}`" unless text.include?("`")
+
+      fence = "`" * (text.scan(/`+/).map(&:size).max + 1)
+      "#{fence} #{cell(text)} #{fence}"
+    end
 
     def cell(text) = text.gsub("|", "\\|").gsub("\n", "⏎")
 

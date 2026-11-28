@@ -1,5 +1,6 @@
-require "open3"
+require "set"
 require_relative "breaks"
+require_relative "diff"
 require_relative "ledger"
 
 module BreakCheck
@@ -12,79 +13,62 @@ module BreakCheck
       @ledger = Ledger.new(root)
     end
 
+    # The added lines, and one line per deletion, at the line now after it.
     def call(base)
-      added = added_lines(base)
-      skipped = covered_lines | doc_lines(added.map { _1[:file] }.uniq)
-      added.reject { |line| skipped.include?([line[:file], line[:line]]) || line[:text].match?(@profile.noise) }
+      change = Diff.since(@root, base, @profile.watched)
+      covered = covered_lines
+      added = change.added.reject { |line| covered.include?([line[:file], line[:line]]) || branchless?(line) }
+      deletions = change.hunks.filter_map { deletion(_1, covered) }
+      (added + deletions).sort_by { [_1[:file], _1[:line]] }
     end
 
     private
 
-    # Every line of a doc block, its opening and closing lines included.
-    def doc_lines(files)
-      return Set.new unless @profile.doc_open
+    # A line that holds no branch: noise, or inside a doc block.
+    def branchless?(line) = line[:text].match?(@profile.noise) || doc_lines(line[:file]).include?(line[:line])
 
-      files.flat_map do |file|
-        inside = false
-        BreakCheck.read(File.join(@root, file)).each_line(chomp: true).with_index(1).filter_map do |text, number|
-          inside = true if text.match?(@profile.doc_open)
-          next unless inside
+    # A hunk that deletes a line holding a branch and adds none, as the
+    # line now just after it; a fresh proof on either line around it
+    # covers it.
+    def deletion(hunk, covered)
+      return if hunk.added.any? { !branchless?(_1) }
+      return if hunk.around.any? { covered.include?([hunk.file, _1]) }
 
-          inside = false if text.match?(@profile.doc_close)
-          [file, number]
-        end
-      end.to_set
+      inside, = doc_scan(lines_of(hunk.file).first(hunk.above))
+      _, docs = doc_scan(hunk.deleted, inside:)
+      text = hunk.deleted.each_with_index.find { |deleted, index| !docs[index] && !deleted.match?(@profile.noise) }&.first
+      {file: hunk.file, line: hunk.below, text: "(deleted) #{text}"} if text
     end
+
+    # The numbers of the lines of `file` inside a doc block, its opening
+    # and closing lines included.
+    def doc_lines(file)
+      @doc_lines ||= Hash.new do |cache, path|
+        _, docs = doc_scan(lines_of(path))
+        cache[path] = docs.each_index.select { docs[_1] }.map { _1 + 1 }.to_set
+      end
+      @doc_lines[file]
+    end
+
+    # Whether a doc block is still open after `lines`, and which of them
+    # sit in one, given whether one was open before the first.
+    def doc_scan(lines, inside: false)
+      return [false, lines.map { false }] unless @profile.doc_open
+
+      docs = lines.map do |text|
+        inside ||= text.match?(@profile.doc_open)
+        next false unless inside
+
+        inside = !text.match?(@profile.doc_close)
+        true
+      end
+      [inside, docs]
+    end
+
+    def lines_of(file) = BreakCheck.read(File.join(@root, file)).lines(chomp: true)
 
     def covered_lines
-      @ledger.fresh_entries.flat_map do |entry|
-        start = Breaks.occurrences(BreakCheck.read(File.join(@root, entry["file"])), entry["from"]).first
-        (start..start + entry["from"].count("\n")).map { [entry["file"], _1] }
-      end.to_set
-    end
-
-    # Lines added since `base`, committed or not, and every line of a new
-    # file not yet added to git.
-    def added_lines(base)
-      diff = git("diff", "--no-color", "--no-ext-diff", "-M", "--src-prefix=a/", "--dst-prefix=b/", "-U0", base, "--", *@profile.watched)
-      untracked = git("ls-files", "--others", "--exclude-standard", "--", *@profile.watched).lines(chomp: true)
-      parse(diff) + untracked.flat_map { |file| whole_file(file) }
-    end
-
-    def whole_file(file)
-      BreakCheck.read(File.join(@root, file)).each_line(chomp: true).with_index(1).map { |text, line| {file:, line:, text:} }
-    end
-
-    # Paths come back as they are: no quoting of accented names.
-    def git(*args)
-      output, status = Open3.capture2e("git", "-c", "core.quotePath=false", *args, chdir: @root)
-      raise Error, "git #{args.first} failed: #{output.strip}" unless status.success?
-
-      output.force_encoding(Encoding::UTF_8).scrub
-    end
-
-    # A file's `+++` header comes before its first hunk; inside a hunk,
-    # every `+` line is code, even one that starts with `++`. Git ends a
-    # header path holding a space with a tab.
-    def parse(diff)
-      added = []
-      file = nil
-      number = nil
-      in_hunk = false
-      diff.each_line(chomp: true) do |line|
-        if line.start_with?("diff --git ")
-          in_hunk = false
-        elsif !in_hunk && line.start_with?("+++ ")
-          file = line[%r{\A\+\+\+ b/(.+?)\t?\z}, 1]
-        elsif line =~ /\A@@ -\S+ \+(\d+)/
-          in_hunk = true
-          number = $1.to_i
-        elsif line.start_with?("+")
-          added << {file:, line: number, text: line[1..]}
-          number += 1
-        end
-      end
-      added
+      @ledger.fresh_entries.flat_map { |entry| @ledger.span(entry).map { [entry["file"], _1] } }.to_set
     end
   end
 end

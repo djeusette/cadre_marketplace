@@ -5,10 +5,11 @@ module BreakCheck
   class Usage < Error; end
 
   # How a repo runs its tests, how to read their output, and where its
-  # branches live. `failing_test` captures each failing test's name in its
+  # branches live. `name` is its key in .break-check.json, which each proof
+  # it makes records. `failing_test` captures each failing test's name in its
   # first group; `noise` matches changed lines that hold no branch; a doc
   # block runs from a `doc_open` line to the next `doc_close` line.
-  Profile = Data.define(:command, :failing_test, :compile_error, :infrastructure, :refusal, :timeout,
+  Profile = Data.define(:name, :command, :failing_test, :compile_error, :infrastructure, :refusal, :timeout,
     :watched, :noise, :doc_open, :doc_close)
 
   module Profiles
@@ -17,16 +18,39 @@ module BreakCheck
     # Checks every profile in the file, so a broken one shows before it is
     # picked; the partition goes to the chosen one only.
     def self.load(root, name:, partition:)
+      profiles, default = read(root)
+      chosen = name || default
+      raise Usage, "unknown profile #{chosen} (#{SETTINGS} has #{profiles.keys.join(", ")})" unless profiles.key?(chosen)
+
+      build_all(root, profiles) { (partition if _1 == chosen) }.fetch(chosen)
+    end
+
+    # Every profile, and the name of the one a proof that records none
+    # takes. The partition goes to each profile that names {partition}.
+    def self.load_all(root, partition:)
+      profiles, default = read(root)
+      built = build_all(root, profiles) { nil }
+      return [built, default] unless partition
+
+      takers = profiles.select { |_, fields| takes_partition?(fields) }.keys
+      raise Usage, "#{SETTINGS}: no profile takes --partition" if takers.empty?
+
+      [built.merge(takers.to_h { [_1, build(_1, profiles[_1], partition:)] }), default]
+    end
+
+    # The profiles as the file holds them, and the default: the one it
+    # names, or the only one.
+    def self.read(root)
       path = File.join(root, SETTINGS)
       raise Usage, "no #{SETTINGS} in #{root}: run from the repository root, or write one (see contract.md)" unless File.file?(path)
 
       profiles, default = parse(path)
-      chosen = name || default || profiles.keys.first
-      raise Usage, "unknown profile #{chosen} (#{SETTINGS} has #{profiles.keys.join(", ")})" unless profiles.key?(chosen)
+      [profiles, default || profiles.keys.first]
+    end
 
-      built = profiles.to_h { |each_name, fields| [each_name, build(each_name, fields, partition: (partition if each_name == chosen))] }
+    def self.build_all(root, profiles)
+      built = profiles.to_h { |each_name, fields| [each_name, build(each_name, fields, partition: yield(each_name))] }
       built.each { |each_name, profile| check_watched(root, each_name, profile) }
-      built.fetch(chosen)
     end
 
     def self.check_watched(root, name, profile)
@@ -46,7 +70,7 @@ module BreakCheck
       refuse(name, "failing_test needs a group that captures the test's name") if groups(patterns[:failing_test]).zero?
       refuse(name, "doc_open and doc_close come together") if patterns[:doc_open].nil? != patterns[:doc_close].nil?
 
-      Profile.new(command: command(name, fields, partition), timeout: fields["timeout"], watched: fields["watched"], **patterns)
+      Profile.new(name:, command: command(name, fields, partition), timeout: fields["timeout"], watched: fields["watched"], **patterns)
     end
 
     def self.check_keys(name, fields)
@@ -78,7 +102,7 @@ module BreakCheck
     def self.command(name, fields, partition)
       env = fields.fetch("env", {})
       argv = fields["command"]
-      takes_partition = [*argv, *env.values].any? { _1.include?("{partition}") }
+      takes_partition = takes_partition?(fields)
       raise Usage, "#{SETTINGS}: profile #{name} takes no --partition" if partition && !takes_partition
 
       lambda do |files|
@@ -88,6 +112,9 @@ module BreakCheck
         [env.transform_values(&fill), *argv.flat_map { _1 == "{files}" ? files : [fill.call(_1)] }]
       end
     end
+
+    # Only for fields `check_values` has passed.
+    def self.takes_partition?(fields) = [*fields["command"], *fields.fetch("env", {}).values].any? { _1.include?("{partition}") }
 
     # Flags go inline, as in `(?m)`.
     def self.pattern(name, key, source)
