@@ -1619,8 +1619,10 @@ class WritingPlansTest < Minitest::Test
   def test_the_break_check_sections_it_points_at_are_there
     # The rule points at these sections of engineering-review's break-check skill: a rename there makes the pointer stale.
     headings = File.read(File.join(ROOT, "plugins", "engineering-review", "skills", "break-check", "SKILL.md")).scan(/^## .*$/)
-    ["## The runner", "## After a task's tests are green", "## Before the PR"].each { |heading| assert_includes headings, heading }
-    ["\"The runner\"", "\"After a task's tests are green\"", "\"Before the PR\""].each { |name| assert_includes break_check_rule, name }
+    ["The runner", "After a task's tests are green", "Before the PR"].each do |name|
+      assert_includes headings, "## #{name}"
+      assert_includes break_check_rule, %Q{"#{name}"}
+    end
   end
 
   def test_execution_stays_with_superpowers
