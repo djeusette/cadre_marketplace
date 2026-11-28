@@ -183,7 +183,7 @@ The stacks: ExUnit (cadre, colette-api, kinfield's umbrella with its two partiti
 - **Deployable alone:** a repo without the row plans as today.
 - **Consumers:** cadre (which lists the row from increment 2).
 - **Code files:** 2 — `plugins/cadre/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (the skill and its tests are docs and tests).
-- [ ] Not shipped
+- [x] PR #46
 
 ### Increment 5 — The other eight repos adopt it (colette-api, kinfield, colette-app, rooms-app, admin-app, club-mobile, cadre_marketplace, colette-marketplace)
 
