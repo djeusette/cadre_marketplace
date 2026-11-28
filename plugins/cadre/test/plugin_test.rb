@@ -50,7 +50,7 @@ class ManifestTest < Minitest::Test
   # No place in the list is pinned: the marketplace lists other plugins too.
   def test_marketplace_lists_cadre_at_the_plugin_version
     assert_equal "./plugins/cadre", entry["source"]
-    assert_equal "0.35.1", manifest["version"]
+    assert_equal "0.36.0", manifest["version"]
     assert_equal manifest["version"], entry["version"]
   end
 
@@ -1068,11 +1068,16 @@ class SkillTest < Minitest::Test
     skill_files.each { |path| refute_match(/colette/i, File.read(path), path) }
   end
 
-  def test_skill_files_call_only_superpowers_skills_and_cadre_itself
+  def test_skill_files_call_only_superpowers_cadre_and_a_listed_break_check
     # cadre:brainstorming and cadre:writing-plans are cadre's own skills, which "Create a project" and
-    # "Start a milestone" call (EP-I3).
+    # "Start a milestone" call (EP-I3). cadre never depends on engineering-review: it names
+    # engineering-review:break-check only for a repo whose Skills table lists it.
     calls = skill_files.flat_map { |path| File.read(path).scan(/`([a-z][a-z0-9-]*:[a-z][a-z0-9-]*)`/).flatten }
-    assert_equal %w[cadre:brainstorming cadre:cadre cadre:pr-description cadre:writing-plans superpowers:brainstorming superpowers:using-git-worktrees superpowers:writing-plans], calls.uniq.sort
+    assert_equal %w[cadre:brainstorming cadre:cadre cadre:pr-description cadre:writing-plans engineering-review:break-check superpowers:brainstorming superpowers:using-git-worktrees superpowers:writing-plans], calls.uniq.sort
+    mentions = skill_files.sum { |path| File.read(path).scan("engineering-review").size }
+    conditional = File.read(File.join(PLUGIN, "skills", "writing-plans", "SKILL.md"))
+                      .scan(/When the (?:Skills table in the repo's root `AGENTS\.md`|repo's Skills table) lists `engineering-review:break-check`/).size
+    assert_equal mentions, conditional
     skill_files.each { |path| refute_match(/\bEP-[A-Z]\d/, File.read(path), path) }
   end
 
@@ -1527,12 +1532,19 @@ class WritingPlansTest < Minitest::Test
     ["`superpowers:writing-plans`", "`superpowers` plugin", "`claude-plugins-official`", "and stop"].each { |text| assert_includes before_you_start, text }
   end
 
+  def test_it_checks_the_break_check_skill_and_ruby_when_the_skills_table_lists_it
+    ["2. When the Skills table in the repo's root `AGENTS.md` lists `engineering-review:break-check`, the plan runs its break check, which needs that skill and Ruby 3.2 or later.",
+     %q{When the skill isn't among your available skills, name its row as "Check each row" in [skills.md](../cadre/skills.md) says, and stop.},
+     "When `ruby --version`, run from the repo's root, prints no Ruby 3.2 or later, tell the person to put Ruby 3.2 or later first on `PATH`, and stop."].each { |text| assert_includes before_you_start, text }
+    assert_operator before_you_start.index("`engineering-review:break-check`"), :<, before_you_start.index("[the cadre skill]")
+  end
+
   def test_it_says_what_it_chose_and_why
     assert_includes before_you_start, %q{Find what to plan, as "What to plan" says. Except when handed over, tell the person what you chose and why.}
   end
 
   def test_before_you_start_routes_to_the_case_section
-    assert_includes before_you_start, %q{4. Follow the section named for the case; when handed over, go to step 3 of "A Cadre milestone".}
+    assert_includes before_you_start, %q{5. Follow the section named for the case; when handed over, go to step 3 of "A Cadre milestone".}
     refute_includes what_to_plan, "go to step 3"
   end
 
@@ -1590,7 +1602,27 @@ class WritingPlansTest < Minitest::Test
 
   def test_later_review_rounds_review_only_the_new_commits
     ["Before the pull request task, the plan has a final review task.", "Its first round reviews the whole branch", "`git diff <last-reviewed-sha>..HEAD`",
-     "lists every earlier ruling as a standing decision", "records, in that task, the commit it reviewed up to and its rulings", "The review ends when a round is clean."].each { |text| assert_includes run_section, text }
+     "lists every earlier ruling as a standing decision", "records, in that task, the commit it reviewed up to and its rulings", "The review ends when a round is clean;"].each { |text| assert_includes run_section, text }
+  end
+
+  def break_check_rule = run_section[/^   - \*\*The break check\.\*\* .*?(?=^   - \*\*The pull request task\.\*\*)/m] || flunk("no break check rule")
+
+  def test_the_plan_runs_the_break_check_when_the_skills_table_lists_it
+    ["   - **The break check.** When the repo's Skills table lists `engineering-review:break-check`, the plan proves a test catches each branch its tasks add or change, with that skill's break check, run as that skill says. Each task named below lists the skill among its skills:\n",
+     %Q{     - **The first task**, when the repo has neither `.break-check.json` nor a break-check runner of its own, writes `.break-check.json` and checks it with one caught break per profile of a branch that already has a test, as that skill's "The runner" says.\n},
+     %Q{     - **Each task that changes code** runs that skill's "After a task's tests are green" on its lines, in the session that wrote them.\n},
+     %Q{     - **The final review task**, once a round is clean, runs that skill's "Before the PR" up to its table: `--stale --replay`, then `--uncovered <the pull request's base commit>`, then a break for each branch on the lines it lists. When this commits a test or a fix, another round reviews that delta and the break check runs again; the review ends when a break check after a clean round commits nothing.\n},
+     "     - **The pull request task** runs `--table <the pull request's base commit>` for the description's Break checks part, as `cadre:pr-description` says.\n"].each { |text| assert_includes break_check_rule, text }
+    assert_includes run_section, %q{when the plan runs the break check, it ends as "The break check" says.}
+  end
+
+  def test_the_break_check_sections_it_points_at_are_there
+    # The rule points at these sections of engineering-review's break-check skill: a rename there makes the pointer stale.
+    headings = File.read(File.join(ROOT, "plugins", "engineering-review", "skills", "break-check", "SKILL.md")).scan(/^## .*$/)
+    ["The runner", "After a task's tests are green", "Before the PR"].each do |name|
+      assert_includes headings, "## #{name}"
+      assert_includes break_check_rule, %Q{"#{name}"}
+    end
   end
 
   def test_execution_stays_with_superpowers

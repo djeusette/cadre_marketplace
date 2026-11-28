@@ -1,6 +1,6 @@
 {
   "name": "cadre",
-  "version": "0.35.1",
+  "version": "0.36.0",
   "description": "Run Cadre from Claude Code: register a feature's milestones, start them, connect repos and deploy them, tracked across repos in deploy order.",
   "author": {
     "name": "Colette Club",
