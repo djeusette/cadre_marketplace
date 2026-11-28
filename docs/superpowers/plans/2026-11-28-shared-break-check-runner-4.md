@@ -101,12 +101,11 @@ In `WritingPlansTest`:
 def break_check_rule = run_section[/^   - \*\*The break check\.\*\* .*?(?=^   - \*\*The pull request task\.\*\*)/m] || flunk("no break check rule")
 
 def test_the_plan_runs_the_break_check_when_the_skills_table_lists_it
-  ["   - **The break check.** When the repo's Skills table lists `engineering-review:break-check`, the plan proves a test catches each branch it adds or changes, with that skill's break check. Each task named here lists that skill among its skills.",
-   "When the repo's root holds no `.break-check.json`, the plan's first task writes it, as that skill says, and checks it with one caught break per profile of a branch that already has a test.",
-   "Each task that changes code runs the break check on its lines once its tests are green and before its commit, in the session that wrote them, as that skill says.",
-   "The final review task, once a round is clean, runs the break check before the pull request, as that skill says: `--stale --replay`, then `--uncovered <the pull request's base commit>`, then a break for each branch on the lines it lists.",
-   "When the break check commits a test or a fix, another round reviews that delta, and the break check runs again after it. The final review ends when a break check after a clean round commits nothing.",
-   "The pull request task runs `--table <the pull request's base commit>` and, when the table has a row, puts it in the description's Break checks part."].each { |text| assert_includes break_check_rule, text }
+  ["   - **The break check.** When the repo's Skills table lists `engineering-review:break-check`, the plan proves a test catches each branch it adds or changes with that skill's break check, run as that skill says by a task that lists the skill among its skills:\n",
+   "     - **The first task**, when the repo's root holds no `.break-check.json`, writes it and checks it with one caught break per profile of a branch that already has a test.\n",
+   "     - **Each task that changes code**, once its tests are green and before its commit, runs the break check on its lines in the session that wrote them.\n",
+   "     - **The final review task**, once a round is clean, runs `--stale --replay`, then `--uncovered <the pull request's base commit>`, then a break for each branch on the lines it lists. When this commits a test or a fix, another round reviews that delta and the break check runs again. The final review ends when a break check after a clean round commits nothing.\n",
+   "     - **The pull request task** runs `--table <the pull request's base commit>`; when the table has a row, it is the description's Break checks part.\n"].each { |text| assert_includes break_check_rule, text }
 end
 ```
 
@@ -117,7 +116,7 @@ Expected: 1 failure ("no break check rule").
 
 - [ ] **Step 3: Write the rule**
 
-In step 2 of "## Run superpowers writing-plans", add "The break check" as a bullet between "The final review" and "The pull request task", in the tested sentences, as one paragraph like its neighbours.
+In step 2 of "## Run superpowers writing-plans", add "The break check" as a bullet between "The final review" and "The pull request task", in the tested words: its condition, then one sub-bullet per kind of task (written as one paragraph first; `mattpocock-skills:writing-for-agents` split it: nine sentences, "as that skill says" three times, and dry run B could not tell which tasks "Each task named here" meant).
 
 - [ ] **Step 4: Run the Checks green**
 
@@ -141,6 +140,11 @@ Three subagents, each told to follow this checkout's `plugins/cadre/skills/writi
 - [ ] **C — no row:** this repo (`cadre_marketplace`), a one-line change to a cadre skill. Expected: no Ruby check, no break check anywhere in the plan.
 
 Record each outcome here. A failure is fixed in Task 1 or 2's text, test first, and the dry run reruns.
+
+Outcomes:
+- A (a 403 joins `[400, 401]` in `google_play.ex`): passed. Ruby 3.4.4 checked from cadre's root; no `.break-check.json` task; every task lists the skill; the code task breaks each guard value after green; the final review runs the three steps after a clean round, loops on a commit and ends on a break check that commits nothing; the PR task runs `--table <base>`. It took `--partition`, the rerun until `0 stale` and the branches outside the watched paths from the break-check skill, as "run as that skill says" asks.
+- B (`Shelf#add` refuses a duplicate): passed. Task 1 writes `.break-check.json` and `.gitignore`'s `.breaks/`, checked by `@books.size >= @capacity` → `> @capacity` caught. Flagged "Each task named here" as unclear: the rule was split into sub-bullets, and B reran on the new text.
+- C (a sentence in `cadre:pr-description`, in this repo's main checkout): passed. No row, no `ruby --version`, and `rg "break.check|--stale|--uncovered|--table"` hits only an `AGENTS.md` Check the plan copies.
 
 ### Task 4: final review
 
