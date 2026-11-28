@@ -14,7 +14,7 @@
 
 ## Global Constraints
 
-- cadre's skills cite no EP IDs and never write "colette" (`test_skill_files_call_only_superpowers_skills_and_cadre_itself`, `test_no_skill_file_names_colette`).
+- cadre's skills cite no EP IDs and never write "colette" (`test_skill_files_call_only_superpowers_cadre_and_a_listed_break_check`, `test_no_skill_file_names_colette`).
 - `cadre` never depends on `engineering-review`: `cadre:writing-plans` names `engineering-review:break-check` only for a repo whose Skills table lists it. `plugin.json`'s `dependencies` stay `["superpowers@claude-plugins-official"]`.
 - The cadre skill states the steps in its own words, without EP IDs.
 - Ruby 3.2 or later on the machine that runs breaks.
@@ -151,6 +151,10 @@ Outcomes:
 **Skills:** `engineering-review:engineering-principles`, `mattpocock-skills:writing-for-agents`.
 
 - [ ] **Step 1: Review rounds.** Round 1 reviews the whole branch (`git diff main...HEAD`); each later round reviews only `git diff <last-reviewed-sha>..HEAD`, its brief listing every earlier ruling as a standing decision. Two lenses per round: engineering-principles rule by rule, and writing-for-agents. Each round fixes what it finds and records here, in one form, `Round <n> (<sha>): <lens> (<n> Minor), fixed: <file> says <what>.` or `Round <n> (<sha>): clean on both.`; that form is passed to the reviewer as a standing decision. The review ends when a round is clean on both.
+Record:
+
+- Round 1 (b33ca1e): engineering-principles (4 Minor), writing-for-agents (4 Important, 5 Minor), fixed: writing-plans' SKILL.md says the missing skill is named as skills.md's "Check each row" says, stops inside each failure, points each break-check step at that skill's section, ends the final review in one place, covers a repo with a runner of its own, and leaves the Break checks part to `cadre:pr-description`; the plan names the renamed test.
+
 - [ ] **Step 2: No break check.** This repo's Skills table has no break-check row, and the change adds or changes no runner branch, so the PR has no Break checks part.
 
 ### Task 5: pull request
