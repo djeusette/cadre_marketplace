@@ -101,7 +101,7 @@ In `WritingPlansTest`:
 def break_check_rule = run_section[/^   - \*\*The break check\.\*\* .*?(?=^   - \*\*The pull request task\.\*\*)/m] || flunk("no break check rule")
 
 def test_the_plan_runs_the_break_check_when_the_skills_table_lists_it
-  ["   - **The break check.** When the repo's Skills table lists `engineering-review:break-check`, the plan proves a test catches each branch it adds or changes, with that skill's break check. Each task below names that skill among its skills.",
+  ["   - **The break check.** When the repo's Skills table lists `engineering-review:break-check`, the plan proves a test catches each branch it adds or changes, with that skill's break check. Each task named here lists that skill among its skills.",
    "When the repo's root holds no `.break-check.json`, the plan's first task writes it, as that skill says, and checks it with one caught break per profile of a branch that already has a test.",
    "Each task that changes code runs the break check on its lines once its tests are green and before its commit, in the session that wrote them, as that skill says.",
    "The final review task, once a round is clean, runs the break check before the pull request, as that skill says: `--stale --replay`, then `--uncovered <the pull request's base commit>`, then a break for each branch on the lines it lists.",

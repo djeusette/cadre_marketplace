@@ -1606,6 +1606,17 @@ class WritingPlansTest < Minitest::Test
      "lists every earlier ruling as a standing decision", "records, in that task, the commit it reviewed up to and its rulings", "The review ends when a round is clean."].each { |text| assert_includes run_section, text }
   end
 
+  def break_check_rule = run_section[/^   - \*\*The break check\.\*\* .*?(?=^   - \*\*The pull request task\.\*\*)/m] || flunk("no break check rule")
+
+  def test_the_plan_runs_the_break_check_when_the_skills_table_lists_it
+    ["   - **The break check.** When the repo's Skills table lists `engineering-review:break-check`, the plan proves a test catches each branch it adds or changes, with that skill's break check. Each task named here lists that skill among its skills.",
+     "When the repo's root holds no `.break-check.json`, the plan's first task writes it, as that skill says, and checks it with one caught break per profile of a branch that already has a test.",
+     "Each task that changes code runs the break check on its lines once its tests are green and before its commit, in the session that wrote them, as that skill says.",
+     "The final review task, once a round is clean, runs the break check before the pull request, as that skill says: `--stale --replay`, then `--uncovered <the pull request's base commit>`, then a break for each branch on the lines it lists.",
+     "When the break check commits a test or a fix, another round reviews that delta, and the break check runs again after it. The final review ends when a break check after a clean round commits nothing.",
+     "The pull request task runs `--table <the pull request's base commit>` and, when the table has a row, puts it in the description's Break checks part."].each { |text| assert_includes break_check_rule, text }
+  end
+
   def test_execution_stays_with_superpowers
     assert_includes run_section, "Execute the plan as `superpowers:writing-plans` offers."
   end
