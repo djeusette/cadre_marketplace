@@ -30,6 +30,8 @@
 4. **The table in the PR is stale or empty.** The PR task runs `--table <base>` itself, after the final review, and adds the Break checks part only when the table has a row. Pinned in Task 2.
 5. **A repo with the row and no `.break-check.json`.** The plan's first task writes it, checked by one caught break per profile of a branch that already has a test, before any task's break check needs it. Pinned in Task 2, exercised by dry run B.
 
+Review rounds 1 and 2 rewrote the strings quoted in Tasks 1 and 2; `plugin_test.rb` holds the current ones.
+
 ---
 
 ### Task 1: "Before you start" checks the break-check skill and Ruby
@@ -154,6 +156,7 @@ Outcomes:
 Record:
 
 - Round 1 (b33ca1e): engineering-principles (4 Minor), writing-for-agents (4 Important, 5 Minor), fixed: writing-plans' SKILL.md says the missing skill is named as skills.md's "Check each row" says, stops inside each failure, points each break-check step at that skill's section, ends the final review in one place, covers a repo with a runner of its own, and leaves the Break checks part to `cadre:pr-description`; the plan names the renamed test.
+- Round 2 (bc9737a): engineering-principles (3 Minor), writing-for-agents (3 Minor), fixed: plugin_test.rb pins the plain review ending in its own test and the break-check headings the rule points at; writing-plans' SKILL.md says "among your available skills", "one caught break per profile" and ends the review with "; when the plan runs the break check, it ends as"; the plan says its quoted strings were rewritten.
 
 - [ ] **Step 2: No break check.** This repo's Skills table has no break-check row, and the change adds or changes no runner branch, so the PR has no Break checks part.
 

@@ -1534,7 +1534,7 @@ class WritingPlansTest < Minitest::Test
 
   def test_it_checks_the_break_check_skill_and_ruby_when_the_skills_table_lists_it
     ["2. When the Skills table in the repo's root `AGENTS.md` lists `engineering-review:break-check`, the plan runs its break check, which needs that skill and Ruby 3.2 or later.",
-     %q{When the skill doesn't load, name its row as "Check each row" in [skills.md](../cadre/skills.md) says, and stop.},
+     %q{When the skill isn't among your available skills, name its row as "Check each row" in [skills.md](../cadre/skills.md) says, and stop.},
      "When `ruby --version`, run from the repo's root, prints no Ruby 3.2 or later, tell the person to put Ruby 3.2 or later first on `PATH`, and stop."].each { |text| assert_includes before_you_start, text }
     assert_operator before_you_start.index("`engineering-review:break-check`"), :<, before_you_start.index("[the cadre skill]")
   end
@@ -1602,18 +1602,25 @@ class WritingPlansTest < Minitest::Test
 
   def test_later_review_rounds_review_only_the_new_commits
     ["Before the pull request task, the plan has a final review task.", "Its first round reviews the whole branch", "`git diff <last-reviewed-sha>..HEAD`",
-     "lists every earlier ruling as a standing decision", "records, in that task, the commit it reviewed up to and its rulings"].each { |text| assert_includes run_section, text }
+     "lists every earlier ruling as a standing decision", "records, in that task, the commit it reviewed up to and its rulings", "The review ends when a round is clean;"].each { |text| assert_includes run_section, text }
   end
 
   def break_check_rule = run_section[/^   - \*\*The break check\.\*\* .*?(?=^   - \*\*The pull request task\.\*\*)/m] || flunk("no break check rule")
 
   def test_the_plan_runs_the_break_check_when_the_skills_table_lists_it
     ["   - **The break check.** When the repo's Skills table lists `engineering-review:break-check`, the plan proves a test catches each branch its tasks add or change, with that skill's break check, run as that skill says. Each task named below lists the skill among its skills:\n",
-     %Q{     - **The first task**, when the repo has neither `.break-check.json` nor a break-check runner of its own, writes `.break-check.json` and checks it with a caught break of a branch that already has a test, as that skill's "The runner" says.\n},
+     %Q{     - **The first task**, when the repo has neither `.break-check.json` nor a break-check runner of its own, writes `.break-check.json` and checks it with one caught break per profile of a branch that already has a test, as that skill's "The runner" says.\n},
      %Q{     - **Each task that changes code** runs that skill's "After a task's tests are green" on its lines, in the session that wrote them.\n},
      %Q{     - **The final review task**, once a round is clean, runs that skill's "Before the PR" up to its table: `--stale --replay`, then `--uncovered <the pull request's base commit>`, then a break for each branch on the lines it lists. When this commits a test or a fix, another round reviews that delta and the break check runs again; the review ends when a break check after a clean round commits nothing.\n},
      "     - **The pull request task** runs `--table <the pull request's base commit>` for the description's Break checks part, as `cadre:pr-description` says.\n"].each { |text| assert_includes break_check_rule, text }
-    assert_includes run_section, %q{The review ends when a round is clean, or, when the plan runs the break check, as "The break check" says.}
+    assert_includes run_section, %q{when the plan runs the break check, it ends as "The break check" says.}
+  end
+
+  def test_the_break_check_sections_it_points_at_are_there
+    # The rule points at these sections of engineering-review's break-check skill: a rename there makes the pointer stale.
+    headings = File.read(File.join(ROOT, "plugins", "engineering-review", "skills", "break-check", "SKILL.md")).scan(/^## .*$/)
+    ["## The runner", "## After a task's tests are green", "## Before the PR"].each { |heading| assert_includes headings, heading }
+    ["\"The runner\"", "\"After a task's tests are green\"", "\"Before the PR\""].each { |name| assert_includes break_check_rule, name }
   end
 
   def test_execution_stays_with_superpowers
